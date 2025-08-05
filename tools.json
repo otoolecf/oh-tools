@@ -3,10 +3,19 @@
     {
       "id": "barcode-generator",
       "name": "Barcode Generator",
-      "description": "Generate various types of barcodes including QR codes, Code128, EAN, and more. Customize colors, sizes, and export as PNG, JPEG, or SVG.",
+      "description": "Generate various types of barcodes including QR codes, Code128, EAN, and more. Customize colors, sizes, transparencies, and export as PNG, JPEG, or SVG.",
       "path": "/barcode-generator/",
       "icon": "barcode",
       "tags": ["barcode", "qr code", "generator", "export"],
+      "status": "active"
+    },
+    {
+      "id": "json-utilities",
+      "name": "JSON Utilities",
+      "description": "Clean, format, validate, and compare JSON data with a powerful editor. Features JSON repair, beautification, minification, and diff comparison.",
+      "path": "/json-utilities/",
+      "icon": "json",
+      "tags": ["json", "format", "validate", "clean", "diff", "compare"],
       "status": "active"
     }
   ]

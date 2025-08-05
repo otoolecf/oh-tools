@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JSON Utilities - Clean, Format, Validate & Diff</title>
+    <link rel="stylesheet" href="../global.css">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <header class="main-header">
+        <div class="container">
+            <nav class="nav">
+                <a href="../" class="nav-brand">OToolebox</a>
+                <div class="nav-links">
+                    <button id="themeToggle" class="theme-toggle" title="Toggle theme"></button>
+                    <a href="../" class="nav-link">All Tools</a>
+                    <a href="../json-utilities/" class="nav-link active">JSON Utilities</a>
+                </div>
+            </nav>
+        </div>
+    </header>
+    
+    <div class="container">
+        <div class="hero">
+            <h1>JSON Utilities</h1>
+            <p>Clean, format, validate, and diff JSON data. All processing happens in your browser - no data is sent to any server.</p>
+            <p style="font-size: 0.9rem; color: var(--text-secondary); margin-top: 0.5rem;">
+                <strong>Clean</strong> removes comments, fixes quotes, handles MongoDB syntax, and repairs malformed JSON
+            </p>
+        </div>
+        
+        <main class="tool-container">
+            
+            <!-- Action Buttons -->
+            <div class="section-card">
+                <div class="button-grid">
+                    <button id="validateBtn" class="btn-enhanced">Validate</button>
+                    <button id="cleanBtn" class="btn-enhanced">Clean</button>
+                    <button id="formatBtn" class="btn-enhanced">Format</button>
+                </div>
+            </div>
+
+            <!-- JSON Editor -->
+            <div class="section-card">
+                <div class="editor-header">
+                    <h3>JSON Editor</h3>
+                    <button id="copyBtn" class="btn-enhanced secondary">Copy</button>
+                </div>
+                <div class="editor-wrapper">
+                    <textarea id="jsonEditor" class="json-textarea" placeholder="Paste your JSON here..." rows="20"></textarea>
+                    <div id="errorMarker" class="error-marker" style="display: none;">
+                        <span class="error-arrow">▶</span>
+                        <span class="error-line-num"></span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Results & Messages -->
+            <div id="messageContainer" class="message-container" style="display: none;">
+                <div id="messageContent" class="message-content"></div>
+            </div>
+
+        </main>
+        
+        <footer class="main-footer">
+            <p>&copy; 2025 OToolebox. All tools run locally in your browser.</p>
+            <div style="margin-top: 1rem;">
+                <script type='text/javascript' src='https://storage.ko-fi.com/cdn/widget/Widget_2.js'></script>
+                <script type='text/javascript'>kofiwidget2.init('Buy Me a Coffee or Beer', '#64748b', 'F1F41J70Y8');kofiwidget2.draw();</script>
+            </div>
+        </footer>
+    </div>
+    
+    <!-- External Libraries -->
+    <script src="https://cdn.jsdelivr.net/npm/jsonrepair@3.8.0/lib/umd/jsonrepair.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/json5@2.2.3/dist/index.min.js"></script>
+    
+    <script src="script.js"></script>
+    <script>
+        // Theme toggle functionality
+        const themeToggle = document.getElementById('themeToggle');
+        const currentTheme = localStorage.getItem('theme') || 'light';
+        
+        document.documentElement.setAttribute('data-theme', currentTheme);
+        
+        themeToggle.addEventListener('click', () => {
+            const theme = document.documentElement.getAttribute('data-theme');
+            const newTheme = theme === 'dark' ? 'light' : 'dark';
+            
+            document.documentElement.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+        });
+    </script>
+</body>
+</html>

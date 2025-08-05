@@ -1,0 +1,153 @@
+/* JSON Utilities Specific Styles */
+
+.button-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.75rem;
+    max-width: 400px;
+    margin: 0 auto;
+}
+
+.editor-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.75rem;
+}
+
+.editor-header .btn-enhanced {
+    padding: 0.5rem 0.75rem;
+    font-size: 0.875rem;
+}
+
+.editor-wrapper {
+    position: relative;
+}
+
+.json-textarea {
+    width: 100%;
+    min-height: 400px;
+    padding: 1rem;
+    border: 2px solid var(--border-color);
+    border-radius: 8px;
+    font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+    font-size: 14px;
+    line-height: 1.5;
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
+    resize: vertical;
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.json-textarea:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(100, 116, 139, 0.1);
+}
+
+/* Error state for textarea */
+.json-textarea.has-error {
+    border-color: #ef4444;
+    background-color: #fef2f2;
+}
+
+[data-theme="dark"] .json-textarea.has-error {
+    background-color: rgba(239, 68, 68, 0.1);
+}
+
+/* Error marker */
+.error-marker {
+    position: absolute;
+    right: 1rem;
+    background: #ef4444;
+    color: white;
+    padding: 0.5rem 0.75rem;
+    border-radius: 6px;
+    font-size: 0.8rem;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    z-index: 10;
+    box-shadow: 0 2px 8px rgba(239, 68, 68, 0.3);
+}
+
+.error-arrow {
+    /* No animation */
+}
+
+.error-line-num {
+    font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+}
+
+/* Remove animations - keeping it simple */
+
+/* Selection color for error highlighting */
+.json-textarea::selection {
+    background-color: #fbbf24;
+    color: #000;
+}
+
+.json-textarea::-moz-selection {
+    background-color: #fbbf24;
+    color: #000;
+}
+
+.message-container {
+    margin: 1rem 0;
+}
+
+.message-content {
+    padding: 1rem 1.5rem;
+    border-radius: 8px;
+    font-weight: 500;
+}
+
+.message-content.success {
+    background: #f0fdf4;
+    border: 1px solid #86efac;
+    color: #166534;
+}
+
+.message-content.error {
+    background: #fef2f2;
+    border: 1px solid #fecaca;
+    color: #991b1b;
+}
+
+.message-content.info {
+    background: #eff6ff;
+    border: 1px solid #93c5fd;
+    color: #1e40af;
+}
+
+[data-theme="dark"] .message-content.success {
+    background: #166534;
+    border: 1px solid #22c55e;
+    color: #bbf7d0;
+}
+
+[data-theme="dark"] .message-content.error {
+    background: #991b1b;
+    border: 1px solid #ef4444;
+    color: #fecaca;
+}
+
+[data-theme="dark"] .message-content.info {
+    background: #1e40af;
+    border: 1px solid #3b82f6;
+    color: #dbeafe;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .button-grid {
+        grid-template-columns: 1fr;
+        max-width: 200px;
+    }
+    
+    .json-textarea {
+        min-height: 300px;
+        font-size: 13px;
+    }
+}

@@ -1,0 +1,2 @@
+## Preferences
+- No emojis please!
