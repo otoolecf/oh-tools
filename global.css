@@ -1,8 +1,13 @@
 :root {
   --primary-color: #64748b;
   --primary-hover: #475569;
+  --primary-dark: #334155;
+  --button-bg: #475569;
+  --button-hover: #334155;
+  --button-text: #ffffff;
   --text-primary: #1e293b;
   --text-secondary: #64748b;
+  --text-light: #f8fafc;
   --bg-primary: #ffffff;
   --bg-secondary: #f8fafc;
   --border-color: #e2e8f0;
@@ -20,8 +25,13 @@
 [data-theme="dark"] {
   --primary-color: #94a3b8;
   --primary-hover: #cbd5e1;
+  --primary-dark: #475569;
+  --button-bg: #374151;
+  --button-hover: #1f2937;
+  --button-text: #f9fafb;
   --text-primary: #f1f5f9;
   --text-secondary: #cbd5e1;
+  --text-light: #f1f5f9;
   --bg-primary: #0f172a;
   --bg-secondary: #020617;
   --border-color: #334155;
@@ -151,14 +161,12 @@ body {
   padding: 0.75rem 1.5rem;
   font-weight: 500;
   font-size: 0.9rem;
-  transition: all 0.2s ease;
+  transition: background-color 0.2s ease;
   cursor: pointer;
 }
 
 .btn-enhanced:hover {
   background: var(--primary-hover);
-  transform: translateY(-1px);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.12);
 }
 
 /* Container styles */
@@ -207,10 +215,10 @@ body {
 
 .flex-group-center {
   display: flex;
-  gap: 0.5rem;
+  gap: 0.75rem;
   justify-content: center;
   align-items: center;
-  max-width: 300px;
+  max-width: 350px;
   margin: 0 auto;
 }
 
@@ -228,7 +236,7 @@ body {
 }
 
 .w-60 {
-  width: 15rem;
+  width: 4rem;
 }
 
 .w-80 {
@@ -318,11 +326,14 @@ textarea {
 /* Color input specific styles */
 input[type="color"] {
   height: 45px;
+  width: 60px;
   cursor: pointer;
+  padding: 0;
+  border: 2px solid var(--border-color);
 }
 
 input[type="color"]:hover {
-  transform: scale(1.02);
+  border-color: var(--primary-color);
 }
 
 /* Range input styles */
@@ -334,6 +345,8 @@ input[type="range"] {
   background: var(--border-color);
   outline: none;
   padding: 0;
+  border: none;
+  min-width: 120px;
 }
 
 input[type="range"]::-webkit-slider-thumb {
@@ -349,8 +362,7 @@ input[type="range"]::-webkit-slider-thumb {
 }
 
 input[type="range"]::-webkit-slider-thumb:hover {
-  transform: scale(1.1);
-  box-shadow: 0 4px 12px rgba(100, 116, 139, 0.4);
+  background: var(--primary-hover);
 }
 
 input[type="range"]::-moz-range-thumb {

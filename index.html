@@ -11,9 +11,13 @@
     <style>
         .tools-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
             gap: 2rem;
             margin-top: 2rem;
+            justify-content: center;
+            max-width: 1000px;
+            margin-left: auto;
+            margin-right: auto;
         }
         
         .tool-card {
@@ -25,8 +29,7 @@
         }
         
         .tool-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
         }
         
         .tool-card h3 {
@@ -43,15 +46,20 @@
         .tool-link {
             display: inline-block;
             padding: 0.5rem 1rem;
-            background: var(--primary-color);
-            color: white;
+            background: var(--button-bg);
+            color: var(--button-text);
             text-decoration: none;
             border-radius: 4px;
             transition: background-color 0.2s;
+            font-weight: 500;
         }
         
         .tool-link:hover {
-            background: var(--primary-hover);
+            background: var(--button-hover);
+        }
+        
+        .tool-link:visited {
+            color: var(--button-text);
         }
         
         .hero {

@@ -30,6 +30,7 @@
 /* Export controls */
 .export-controls {
   margin-top: 1.5rem;
+  text-align: center;
 }
 
 .export-controls h3 {
@@ -71,10 +72,22 @@
   display: block;
 }
 
+/* Generate button styling - full width and centered */
+#generateBtn {
+  width: 100%;
+  grid-column: span 2;
+  margin-top: 1rem;
+  justify-self: center;
+}
+
 /* Mobile responsive adjustments */
 @media (max-width: 768px) {
   .custom-size-group {
     flex-direction: column;
     gap: 0.5rem;
+  }
+  
+  #generateBtn {
+    grid-column: span 1;
   }
 }
