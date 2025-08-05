@@ -1,0 +1,13 @@
+{
+  "tools": [
+    {
+      "id": "barcode-generator",
+      "name": "Barcode Generator",
+      "description": "Generate various types of barcodes including QR codes, Code128, EAN, and more. Customize colors, sizes, and export as PNG, JPEG, or SVG.",
+      "path": "/barcode-generator/",
+      "icon": "barcode",
+      "tags": ["barcode", "qr code", "generator", "export"],
+      "status": "active"
+    }
+  ]
+}

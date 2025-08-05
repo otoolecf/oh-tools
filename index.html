@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OToolebox - Client-Side Tools Collection</title>
+    <link rel="stylesheet" href="global.css">
+    <style>
+        .tools-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+        
+        .tool-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 1.5rem;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        
+        .tool-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+        
+        .tool-card h3 {
+            margin: 0 0 0.5rem 0;
+            color: var(--primary-color);
+        }
+        
+        .tool-card p {
+            color: var(--text-secondary);
+            margin: 0 0 1rem 0;
+            line-height: 1.6;
+        }
+        
+        .tool-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background: var(--primary-color);
+            color: white;
+            text-decoration: none;
+            border-radius: 4px;
+            transition: background-color 0.2s;
+        }
+        
+        .tool-link:hover {
+            background: var(--primary-hover);
+        }
+        
+        .hero {
+            text-align: center;
+            padding: 3rem 0;
+        }
+        
+        .hero h1 {
+            margin: 0 0 1rem 0;
+            font-size: 2.5rem;
+            color: var(--primary-color);
+        }
+        
+        .hero p {
+            font-size: 1.2rem;
+            color: var(--text-secondary);
+            max-width: 600px;
+            margin: 0 auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header class="main-header">
+            <nav class="nav">
+                <a href="/" class="nav-brand">OToolebox</a>
+                <div class="nav-links">
+                    <a href="/" class="nav-link active">Tools</a>
+                    <a href="https://github.com/yourusername/otoolbox" class="nav-link">GitHub</a>
+                </div>
+            </nav>
+        </header>
+        
+        <div class="hero">
+            <h1>OToolebox</h1>
+            <p>A collection of useful client-side tools that run entirely in your browser. No data leaves your device.</p>
+        </div>
+        
+        <main>
+            <div class="tools-grid" id="toolsGrid">
+                <!-- Tools will be loaded dynamically from tools.json -->
+            </div>
+        </main>
+        
+        <footer class="main-footer">
+            <p>&copy; 2025 OToolebox. All tools run locally in your browser.</p>
+        </footer>
+    </div>
+    
+    <script>
+        async function loadTools() {
+            try {
+                const response = await fetch('tools.json');
+                const data = await response.json();
+                const toolsGrid = document.getElementById('toolsGrid');
+                
+                data.tools.forEach(tool => {
+                    if (tool.status === 'active') {
+                        const toolCard = document.createElement('div');
+                        toolCard.className = 'tool-card';
+                        toolCard.innerHTML = `
+                            <h3>${tool.name}</h3>
+                            <p>${tool.description}</p>
+                            <a href="${tool.path}" class="tool-link">Open Tool</a>
+                        `;
+                        toolsGrid.appendChild(toolCard);
+                    }
+                });
+            } catch (error) {
+                console.error('Failed to load tools:', error);
+                document.getElementById('toolsGrid').innerHTML = `
+                    <div class="error-message">
+                        Failed to load tools. Please check the console for details.
+                    </div>
+                `;
+            }
+        }
+        
+        // Load tools when page loads
+        document.addEventListener('DOMContentLoaded', loadTools);
+    </script>
+</body>
+</html>
