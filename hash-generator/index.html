@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hash Generator - Create Checksums and Digests</title>
+    <link rel="stylesheet" href="../global.css">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <header class="main-header">
+        <div class="container">
+            <nav class="nav">
+                <a href="../" class="nav-brand">OToolebox</a>
+                <div class="nav-links">
+                    <button id="themeToggle" class="theme-toggle" title="Toggle theme"></button>
+                    <a href="../" class="nav-link">All Tools</a>
+                    <a href="../hash-generator/" class="nav-link active">Hash Generator</a>
+                </div>
+            </nav>
+        </div>
+    </header>
+    
+    <div class="container">
+        <div class="hero">
+            <h1>Hash Generator</h1>
+            <p>Generate cryptographic hashes and checksums from text or data using popular algorithms like SHA-256, MD5, SHA-3, and more. All processing happens in your browser - no data is sent to any server.</p>
+            
+            <div class="usage-guide">
+                <button class="hmac-toggle" id="hmacToggle">
+                    <span class="toggle-icon">▶</span>
+                    Learn more about HMAC verification
+                </button>
+                <div class="hmac-content" id="hmacContent" style="display: none;">
+                    <h3>HMAC (Hash-based Message Authentication Code)</h3>
+                    <p><strong>HMAC</strong> combines a secret key with your message to create a signature that proves both authenticity and integrity. Use it for:</p>
+                    <ul>
+                        <li><strong>API Authentication:</strong> Sign requests with a shared secret key</li>
+                        <li><strong>Data Integrity:</strong> Verify that data hasn't been tampered with</li>
+                        <li><strong>Message Verification:</strong> Confirm the sender knows the secret key</li>
+                    </ul>
+                    
+                    <h4>How to Generate HMAC:</h4>
+                    <ol>
+                        <li>Select an HMAC algorithm (e.g., HMAC-SHA-256)</li>
+                        <li>Enter your secret key</li>
+                        <li>Enter your message text</li>
+                        <li>Click "Generate Hash" to create the HMAC signature</li>
+                    </ol>
+                    
+                    <h4>How to Verify HMAC:</h4>
+                    <ol>
+                        <li>Select the same HMAC algorithm used for generation</li>
+                        <li>Enter the same secret key</li>
+                        <li><strong>Enter the exact same message text</strong> (verification compares against this)</li>
+                        <li>Switch to "Verify Hash" mode</li>
+                        <li>Paste the HMAC signature to verify</li>
+                        <li>Click "Verify Hash" - you'll see ✓ VALID or ✗ INVALID</li>
+                    </ol>
+                    
+                    <p><strong>Important:</strong> For verification to work, the message, secret key, and algorithm must all match exactly what was used during generation.</p>
+                </div>
+            </div>
+        </div>
+        
+        <main class="tool-container">
+            
+            <!-- Input Section -->
+            <div class="section-card">
+                <div class="input-section">
+                    <label for="inputText">Input Text:</label>
+                    <textarea id="inputText" class="input-textarea" placeholder="Enter text to hash..." rows="6"></textarea>
+                    <div class="input-options">
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="treatAsHex">
+                            Treat input as hexadecimal
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Algorithm Selection -->
+            <div class="section-card">
+                <div class="algorithm-section">
+                    <div class="control-group">
+                        <label for="algorithmSelect">Hash Algorithm:</label>
+                        <select id="algorithmSelect" class="select-input">
+                            <optgroup label="Common Algorithms">
+                                <option value="SHA-256" selected>SHA-256 (256-bit, Recommended)</option>
+                                <option value="SHA-512">SHA-512 (512-bit)</option>
+                                <option value="SHA-1">SHA-1 (160-bit, Legacy)</option>
+                                <option value="MD5">MD5 (128-bit, Legacy)</option>
+                            </optgroup>
+                            <optgroup label="SHA-2 Family">
+                                <option value="SHA-384">SHA-384 (384-bit)</option>
+                            </optgroup>
+                            <optgroup label="SHA-3 Family">
+                                <option value="SHA3-224">SHA3-224 (224-bit)</option>
+                                <option value="SHA3-256">SHA3-256 (256-bit)</option>
+                                <option value="SHA3-384">SHA3-384 (384-bit)</option>
+                                <option value="SHA3-512">SHA3-512 (512-bit)</option>
+                            </optgroup>
+                            <optgroup label="Other Algorithms">
+                                <option value="RIPEMD160">RIPEMD-160 (160-bit)</option>
+                            </optgroup>
+                            <optgroup label="HMAC Algorithms">
+                                <option value="HMAC-SHA-256">HMAC-SHA-256 (with secret key)</option>
+                                <option value="HMAC-SHA-512">HMAC-SHA-512 (with secret key)</option>
+                                <option value="HMAC-SHA-1">HMAC-SHA-1 (with secret key)</option>
+                            </optgroup>
+                        </select>
+                    </div>
+                    <div class="control-group" id="secretKeyGroup" style="display: none;">
+                        <label for="secretKey">Secret Key:</label>
+                        <input type="text" id="secretKey" class="input-field" placeholder="Enter secret key for HMAC...">
+                        <div class="key-options">
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="keyAsHex">
+                                Treat key as hexadecimal
+                            </label>
+                        </div>
+                    </div>
+                    <div class="control-group" id="verifyHashGroup" style="display: none;">
+                        <label for="expectedHash">Expected Hash (for verification):</label>
+                        <input type="text" id="expectedHash" class="input-field" placeholder="Enter hash to verify against...">
+                    </div>
+                    <div class="control-group" id="modeGroup" style="display: none;">
+                        <label>Mode:</label>
+                        <div class="mode-options">
+                            <label class="radio-label">
+                                <input type="radio" name="mode" value="generate" id="generateMode" checked>
+                                Generate Hash
+                            </label>
+                            <label class="radio-label">
+                                <input type="radio" name="mode" value="verify" id="verifyMode">
+                                Verify Hash
+                            </label>
+                        </div>
+                    </div>
+                    <div class="action-buttons">
+                        <button id="generateBtn" class="btn-enhanced">Generate Hash</button>
+                        <button id="clearBtn" class="btn-enhanced secondary">Clear All</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Results Section -->
+            <div class="section-card" id="resultsSection" style="display: none;">
+                <div class="results-header">
+                    <h3>Generated Hash</h3>
+                    <button id="copyBtn" class="btn-copy">Copy Hash</button>
+                </div>
+                <div class="results-container" id="resultsContainer">
+                    <!-- Results will be populated here -->
+                </div>
+            </div>
+
+        </main>
+        
+        <footer class="main-footer">
+            <p>&copy; 2025 OToolebox. All tools run locally in your browser.</p>
+            <div style="margin-top: 1rem;">
+                <script type='text/javascript' src='https://storage.ko-fi.com/cdn/widget/Widget_2.js'></script>
+                <script type='text/javascript'>kofiwidget2.init('Buy Me a Coffee or Beer', '#64748b', 'F1F41J70Y8');kofiwidget2.draw();</script>
+            </div>
+        </footer>
+    </div>
+    
+    <!-- MD5 Library -->
+    <script src="https://cdn.jsdelivr.net/npm/crypto-js@4.1.1/crypto-js.js"></script>
+    
+    <script src="script.js"></script>
+    <script>
+        // Theme toggle functionality
+        const themeToggle = document.getElementById('themeToggle');
+        const currentTheme = localStorage.getItem('theme') || 'light';
+        
+        document.documentElement.setAttribute('data-theme', currentTheme);
+        
+        themeToggle.addEventListener('click', () => {
+            const theme = document.documentElement.getAttribute('data-theme');
+            const newTheme = theme === 'dark' ? 'light' : 'dark';
+            
+            document.documentElement.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+        });
+    </script>
+</body>
+</html>

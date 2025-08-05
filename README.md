@@ -2,6 +2,16 @@
 
 A collection of client-side web tools that run entirely in the browser. No data is sent to servers, ensuring privacy and security for all operations.
 
+## Development Server
+
+To run the development server locally:
+
+```bash
+npx serve . --listen 8000
+```
+
+Then open `http://localhost:8000` in your browser.
+
 ## Project Structure
 
 ```

@@ -17,6 +17,33 @@
       "icon": "json",
       "tags": ["json", "format", "validate", "clean", "diff", "compare"],
       "status": "active"
+    },
+    {
+      "id": "uuid-generator",
+      "name": "UUID Generator",
+      "description": "Generate unique identifiers (UUIDs) instantly with customizable formats. Create single or multiple UUIDs with options for uppercase, lowercase, and dash formatting.",
+      "path": "/uuid-generator/",
+      "icon": "key",
+      "tags": ["uuid", "generator", "unique", "identifier", "guid"],
+      "status": "active"
+    },
+    {
+      "id": "hash-generator",
+      "name": "Hash Generator",
+      "description": "Generate cryptographic hashes, checksums, and HMAC signatures using MD5, SHA, SHA-3, and HMAC algorithms. Features hash verification for data integrity and API authentication.",
+      "path": "/hash-generator/",
+      "icon": "shield",
+      "tags": ["hash", "checksum", "md5", "sha256", "sha512", "hmac", "crypto", "security", "verification"],
+      "status": "active"
+    },
+    {
+      "id": "passphrase-generator",
+      "name": "Passphrase Generator",
+      "description": "Generate human memorable natural language or secure random passphrases with customizable options. Choose between memorable word combinations or cryptographically secure random strings.",
+      "path": "/passphrase-generator/",
+      "icon": "key",
+      "tags": ["passphrase", "password", "security", "generator", "random", "human-readable"],
+      "status": "active"
     }
   ]
 }

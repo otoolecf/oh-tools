@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Passphrase Generator - Generate Secure and Memorable Passphrases</title>
+    <link rel="stylesheet" href="../global.css">
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/secure-random-password@0.2.3/dist/secure-random-password.min.js"></script>
+    <script type="module">
+        console.log('Attempting to load human-id from Skypack...');
+        try {
+            const module = await import('https://cdn.skypack.dev/human-id');
+            console.log('Module loaded:', module);
+            window.humanId = module.humanId || module.default;
+            console.log('window.humanId set to:', window.humanId);
+            
+            // Dispatch event to let other scripts know the library is ready
+            window.dispatchEvent(new CustomEvent('humanIdReady'));
+        } catch (error) {
+            console.error('Skypack failed:', error);
+            console.log('Trying esm.sh...');
+            try {
+                const module2 = await import('https://esm.sh/human-id@4.0.0');
+                console.log('esm.sh module loaded:', module2);
+                window.humanId = module2.humanId || module2.default;
+                window.dispatchEvent(new CustomEvent('humanIdReady'));
+            } catch (error2) {
+                console.error('esm.sh also failed:', error2);
+                window.dispatchEvent(new CustomEvent('humanIdFailed'));
+            }
+        }
+    </script>
+</head>
+<body>
+    <header class="main-header">
+        <div class="container">
+            <nav class="nav">
+                <a href="../" class="nav-brand">OToolebox</a>
+                <div class="nav-links">
+                    <button id="themeToggle" class="theme-toggle" title="Toggle theme"></button>
+                    <a href="../" class="nav-link">All Tools</a>
+                    <a href="../passphrase-generator/" class="nav-link active">Passphrase Generator</a>
+                </div>
+            </nav>
+        </div>
+    </header>
+    
+    <div class="container">
+        <div class="hero">
+            <h1>Passphrase Generator</h1>
+            <p>Generate human memorable natural language or secure random passphrases. Choose between memorable word combinations or cryptographically secure random strings. All generation happens in your browser.</p>
+        </div>
+        
+        <main class="tool-container">
+            
+            <!-- Passphrase Type Selection -->
+            <div class="section-card">
+                <h3>Passphrase Type</h3>
+                <div class="passphrase-type-selection">
+                    <label class="radio-option">
+                        <input type="radio" name="passphraseType" value="human" id="humanType" checked>
+                        <span class="radio-label">Human Memorable Natural Language</span>
+                        <span class="radio-description">Easy to remember word combinations</span>
+                    </label>
+                    <label class="radio-option">
+                        <input type="radio" name="passphraseType" value="secure" id="secureType">
+                        <span class="radio-label">Secure Random</span>
+                        <span class="radio-description">Cryptographically secure random strings</span>
+                    </label>
+                </div>
+            </div>
+
+            <!-- Human Readable Options -->
+            <div class="section-card" id="humanOptions">
+                <h3>Human Memorable Natural Language Options</h3>
+                <div class="controls-grid">
+                    <div class="control-group">
+                        <label for="humanCount">Number of passphrases:</label>
+                        <input type="number" id="humanCount" min="1" max="20" value="1" class="number-input">
+                    </div>
+                    <div class="control-group">
+                        <label for="separator">Word separator:</label>
+                        <select id="separator" class="select-input">
+                            <option value="">None</option>
+                            <option value="-">Dash (-)</option>
+                            <option value="_">Underscore (_)</option>
+                            <option value=" ">Space</option>
+                        </select>
+                    </div>
+                    <div class="control-group">
+                        <label for="caseOption">Word case:</label>
+                        <select id="caseOption" class="select-input">
+                            <option value="capitalize">Capitalize (BrightEagle)</option>
+                            <option value="lowercase">Lowercase (brighteagle)</option>
+                            <option value="uppercase">Uppercase (BRIGHTEAGLE)</option>
+                        </select>
+                    </div>
+                    <div class="control-group checkbox-group">
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="includeAdverb">
+                            Include adverb (4 words total)
+                        </label>
+                    </div>
+                </div>
+                
+                <div class="enhancement-options">
+                    <h4>Enhancement Options</h4>
+                    <div class="controls-grid">
+                        <div class="control-group checkbox-group">
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="addNumbers">
+                                Add numbers (2-4 digits)
+                            </label>
+                        </div>
+                        <div class="control-group checkbox-group">
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="addSymbols">
+                                Add special characters (!@#$%&*)
+                            </label>
+                        </div>
+                        <div class="control-group">
+                            <label for="enhancementPosition">Position:</label>
+                            <select id="enhancementPosition" class="select-input" disabled>
+                                <option value="sprinkle" selected>Sprinkle throughout</option>
+                                <option value="beginning">Beginning</option>
+                                <option value="middle">Middle</option>
+                                <option value="end">End</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Secure Random Options -->
+            <div class="section-card" id="secureOptions" style="display: none;">
+                <h3>Secure Random Options</h3>
+                <div class="controls-grid">
+                    <div class="control-group">
+                        <label for="secureCount">Number of passphrases:</label>
+                        <input type="number" id="secureCount" min="1" max="20" value="1" class="number-input">
+                    </div>
+                    <div class="control-group">
+                        <label for="passwordLength">Length:</label>
+                        <input type="range" id="passwordLength" min="8" max="64" value="16" class="range-input">
+                        <span id="lengthValue" class="range-value">16</span>
+                    </div>
+                </div>
+                
+                <div class="character-sets">
+                    <h4>Character Sets</h4>
+                    <div class="controls-grid">
+                        <div class="control-group checkbox-group">
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="includeUppercase" checked>
+                                Uppercase letters (A-Z)
+                            </label>
+                        </div>
+                        <div class="control-group checkbox-group">
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="includeLowercase" checked>
+                                Lowercase letters (a-z)
+                            </label>
+                        </div>
+                        <div class="control-group checkbox-group">
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="includeNumbers" checked>
+                                Numbers (0-9)
+                            </label>
+                        </div>
+                        <div class="control-group checkbox-group">
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="includeSymbols">
+                                Symbols (!@#$%^&*)
+                            </label>
+                        </div>
+                        <div class="control-group checkbox-group">
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="avoidAmbiguous">
+                                Avoid ambiguous characters (0,O,l,1)
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Generate Button -->
+            <div class="section-card">
+                <button id="generateBtn" class="btn-enhanced">Generate Passphrases</button>
+            </div>
+
+            <!-- Results -->
+            <div class="section-card">
+                <div class="editor-header">
+                    <h3>Generated Passphrases</h3>
+                    <div class="header-buttons">
+                        <button id="copyAllBtn" class="btn-copy" style="display: none;">Copy All</button>
+                        <button id="clearBtn" class="btn-copy" style="display: none;">Clear</button>
+                    </div>
+                </div>
+                <div class="passphrase-results" id="passphraseResults">
+                    <div class="placeholder-message">
+                        Select your options and click "Generate Passphrases" to create secure passphrases
+                    </div>
+                </div>
+            </div>
+
+        </main>
+        
+        <footer class="main-footer">
+            <p>&copy; 2025 OToolebox. All tools run locally in your browser.</p>
+            <div style="margin-top: 1rem;">
+                <script type='text/javascript' src='https://storage.ko-fi.com/cdn/widget/Widget_2.js'></script>
+                <script type='text/javascript'>kofiwidget2.init('Buy Me a Coffee or Beer', '#64748b', 'F1F41J70Y8');kofiwidget2.draw();</script>
+            </div>
+        </footer>
+    </div>
+    
+    <script src="script.js"></script>
+    <script>
+        // Theme toggle functionality
+        const themeToggle = document.getElementById('themeToggle');
+        const currentTheme = localStorage.getItem('theme') || 'light';
+        
+        document.documentElement.setAttribute('data-theme', currentTheme);
+        
+        themeToggle.addEventListener('click', () => {
+            const theme = document.documentElement.getAttribute('data-theme');
+            const newTheme = theme === 'dark' ? 'light' : 'dark';
+            
+            document.documentElement.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+        });
+    </script>
+</body>
+</html>

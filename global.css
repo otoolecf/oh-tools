@@ -169,6 +169,23 @@ body {
   background: var(--primary-hover);
 }
 
+/* Small copy button style */
+.btn-copy {
+  padding: 0.25rem 0.75rem;
+  font-size: 0.8rem;
+  background: var(--button-bg);
+  color: var(--button-text);
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  font-weight: 500;
+}
+
+.btn-copy:hover {
+  background: var(--button-hover);
+}
+
 /* Container styles */
 .tool-container {
   background: var(--bg-primary);
@@ -373,6 +390,19 @@ input[type="range"]::-moz-range-thumb {
   cursor: pointer;
   border: none;
   box-shadow: 0 2px 8px rgba(100, 116, 139, 0.3);
+}
+
+/* Number input spinner styles */
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: auto;
+  appearance: auto;
+  opacity: 1;
+}
+
+/* Firefox number input styling - show arrows */
+input[type="number"] {
+  -moz-appearance: number-input;
 }
 
 /* Enhanced label styles */

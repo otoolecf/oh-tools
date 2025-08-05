@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UUID Generator - Generate Unique Identifiers</title>
+    <link rel="stylesheet" href="../global.css">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <header class="main-header">
+        <div class="container">
+            <nav class="nav">
+                <a href="../" class="nav-brand">OToolebox</a>
+                <div class="nav-links">
+                    <button id="themeToggle" class="theme-toggle" title="Toggle theme"></button>
+                    <a href="../" class="nav-link">All Tools</a>
+                    <a href="../uuid-generator/" class="nav-link active">UUID Generator</a>
+                </div>
+            </nav>
+        </div>
+    </header>
+    
+    <div class="container">
+        <div class="hero">
+            <h1>UUID Generator</h1>
+            <p>Generate unique identifiers (UUIDs) instantly. All generation happens in your browser - no data is sent to any server.</p>
+        </div>
+        
+        <main class="tool-container">
+            
+            <!-- Generator Controls -->
+            <div class="section-card">
+                <div class="generator-controls">
+                    <div class="control-group">
+                        <label for="uuidCount">Number of UUIDs:</label>
+                        <input type="number" id="uuidCount" min="1" max="100" value="1" class="number-input">
+                    </div>
+                    <div class="control-group">
+                        <label for="uuidFormat">Format:</label>
+                        <select id="uuidFormat" class="select-input">
+                            <option value="default">Default (lowercase with dashes)</option>
+                            <option value="uppercase">Uppercase with dashes</option>
+                            <option value="nodashes">No dashes (lowercase)</option>
+                            <option value="nodashes-upper">No dashes (uppercase)</option>
+                        </select>
+                    </div>
+                    <button id="generateBtn" class="btn-enhanced">Generate UUIDs</button>
+                </div>
+            </div>
+
+            <!-- Generated UUIDs -->
+            <div class="section-card">
+                <div class="editor-header">
+                    <h3>Generated UUIDs</h3>
+                    <div class="header-buttons">
+                        <button id="copyAllBtn" class="btn-copy" style="display: none;">Copy All</button>
+                        <button id="clearBtn" class="btn-copy" style="display: none;">Clear</button>
+                    </div>
+                </div>
+                <div class="uuid-results" id="uuidResults">
+                    <div class="placeholder-message">
+                        Click "Generate UUIDs" to create unique identifiers
+                    </div>
+                </div>
+            </div>
+
+        </main>
+        
+        <footer class="main-footer">
+            <p>&copy; 2025 OToolebox. All tools run locally in your browser.</p>
+            <div style="margin-top: 1rem;">
+                <script type='text/javascript' src='https://storage.ko-fi.com/cdn/widget/Widget_2.js'></script>
+                <script type='text/javascript'>kofiwidget2.init('Buy Me a Coffee or Beer', '#64748b', 'F1F41J70Y8');kofiwidget2.draw();</script>
+            </div>
+        </footer>
+    </div>
+    
+    <script src="script.js"></script>
+    <script>
+        // Theme toggle functionality
+        const themeToggle = document.getElementById('themeToggle');
+        const currentTheme = localStorage.getItem('theme') || 'light';
+        
+        document.documentElement.setAttribute('data-theme', currentTheme);
+        
+        themeToggle.addEventListener('click', () => {
+            const theme = document.documentElement.getAttribute('data-theme');
+            const newTheme = theme === 'dark' ? 'light' : 'dark';
+            
+            document.documentElement.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+        });
+    </script>
+</body>
+</html>
