@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Barcode Generator</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Barcode Generator</h1>
+        
+        <div class="controls">
+            <div class="control-group" style="grid-column: span 2;">
+                <label for="barcodeData">Data / URL:</label>
+                <textarea id="barcodeData" placeholder="Enter barcode data, text, or URL" rows="3">123456789</textarea>
+            </div>
+            
+            <div class="control-group">
+                <label for="barcodeType">Barcode Type:</label>
+                <select id="barcodeType">
+                    <option value="code128">Code 128</option>
+                    <option value="code39">Code 39</option>
+                    <option value="ean13">EAN-13</option>
+                    <option value="ean8">EAN-8</option>
+                    <option value="upca">UPC-A</option>
+                    <option value="upce">UPC-E</option>
+                    <option value="qrcode">QR Code</option>
+                    <option value="datamatrix">Data Matrix</option>
+                    <option value="pdf417">PDF417</option>
+                    <option value="azteccode">Aztec Code</option>
+                </select>
+            </div>
+            
+            <div class="control-group">
+                <label>Size:</label>
+                <div class="size-controls">
+                    <select id="sizeMode">
+                        <option value="scale">Scale</option>
+                        <option value="pixels">Pixels</option>
+                    </select>
+                    <div class="scale-group" id="scaleGroup">
+                        <input type="range" id="scale" min="1" max="10" value="3" step="0.5">
+                        <input type="number" id="scaleNumber" min="1" max="10" value="3" step="0.5">
+                    </div>
+                    <div class="pixel-group" id="pixelGroup" style="display: none;">
+                        <input type="number" id="pixelSize" min="50" max="1000" value="200" placeholder="Width in pixels">
+                        <span>px</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="control-group">
+                <label for="foregroundColor">Foreground Color:</label>
+                <div class="color-controls">
+                    <input type="color" id="foregroundColor" value="#000000">
+                    <input type="text" id="foregroundColorText" value="#000000" placeholder="#000000 or rgb(0,0,0)">
+                </div>
+            </div>
+            
+            <div class="control-group">
+                <label for="backgroundColor">Background Color:</label>
+                <div class="color-controls">
+                    <input type="color" id="backgroundColor" value="#ffffff">
+                    <input type="text" id="backgroundColorText" value="#ffffff" placeholder="#ffffff or rgb(255,255,255)">
+                </div>
+            </div>
+            
+            <div class="control-group">
+                <label for="backgroundOpacity">Background Opacity:</label>
+                <div class="opacity-controls">
+                    <input type="range" id="backgroundOpacity" min="0" max="100" value="100">
+                    <input type="number" id="opacityNumber" min="0" max="100" value="100">
+                    <span>%</span>
+                </div>
+            </div>
+            
+            <div class="control-group">
+                <label>Canvas Size:</label>
+                <div class="canvas-size-controls">
+                    <select id="canvasSizeMode">
+                        <option value="auto">Auto (fit barcode)</option>
+                        <option value="custom">Custom dimensions</option>
+                    </select>
+                    <div class="custom-size-group" id="customSizeGroup" style="display: none;">
+                        <div class="dimension-input">
+                            <label for="canvasWidth">Width:</label>
+                            <input type="number" id="canvasWidth" min="100" max="2000" value="400" placeholder="Width">
+                            <span>px</span>
+                        </div>
+                        <div class="dimension-input">
+                            <label for="canvasHeight">Height:</label>
+                            <input type="number" id="canvasHeight" min="100" max="2000" value="600" placeholder="Height">
+                            <span>px</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <button id="generateBtn" class="btn btn-primary">Generate Barcode</button>
+        </div>
+        
+        <div class="output-section">
+            <div id="canvasContainer">
+                <canvas id="barcodeCanvas"></canvas>
+            </div>
+            
+            <div class="export-controls">
+                <h3>Save Barcode</h3>
+                <div class="save-group">
+                    <select id="fileFormat">
+                        <option value="png">PNG</option>
+                        <option value="jpeg">JPEG</option>
+                        <option value="svg">SVG</option>
+                    </select>
+                    <button id="saveBtn" class="btn btn-export">Save</button>
+                </div>
+            </div>
+        </div>
+        
+        <div id="errorMessage" class="error-message"></div>
+    </div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/bwip-js@3/dist/bwip-js-min.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
