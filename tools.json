@@ -44,6 +44,15 @@
       "icon": "key",
       "tags": ["passphrase", "password", "security", "generator", "random", "human-readable"],
       "status": "active"
+    },
+    {
+      "id": "diff-utilities",
+      "name": "Diff Utilities",
+      "description": "Compare text, JSON, CSS, and arrays with visual side-by-side diff highlighting. Features proper JSON object comparison, CSS syntax awareness, array-specific diffing, and text comparison with whitespace/case options.",
+      "path": "/diff-utilities/",
+      "icon": "compare",
+      "tags": ["diff", "compare", "text", "json", "css", "array", "visual", "highlight", "merge"],
+      "status": "active"
     }
   ]
 }

@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Diff Utilities - OToolebox</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../global.css">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <header class="main-header">
+        <div class="container">
+            <nav class="nav">
+                <a href="/" class="nav-brand">OToolebox</a>
+                <div class="nav-links">
+                    <button id="themeToggle" class="theme-toggle" title="Toggle theme"></button>
+                    <a href="/" class="nav-link">Tools</a>
+                    <span class="nav-link active">Diff Utilities</span>
+                </div>
+            </nav>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="hero">
+            <h1>Diff Utilities</h1>
+            <p>Compare text and JSON data with visual diff highlighting</p>
+        </div>
+
+        <main>
+            <div class="tool-section">
+                <div class="tool-tabs">
+                    <button class="tab-button active" data-tab="text">Text Diff</button>
+                    <button class="tab-button" data-tab="json">JSON Diff</button>
+                    <button class="tab-button" data-tab="css">CSS Diff</button>
+                    <button class="tab-button" data-tab="array">Array Diff</button>
+                </div>
+
+                <div class="tab-content active" id="text-tab">
+                    <div class="diff-container">
+                        <div class="input-section">
+                            <div class="input-group">
+                                <label for="text1">Original Text</label>
+                                <textarea id="text1" placeholder="Enter original text here..."></textarea>
+                            </div>
+                            <div class="input-group">
+                                <label for="text2">Modified Text</label>
+                                <textarea id="text2" placeholder="Enter modified text here..."></textarea>
+                            </div>
+                        </div>
+                        <div class="controls">
+                            <button id="compareText" class="btn btn-primary">Compare Text</button>
+                            <button id="clearText" class="btn btn-secondary">Clear</button>
+                            <div class="options">
+                                <label>
+                                    <input type="checkbox" id="ignoreWhitespace"> Ignore whitespace
+                                </label>
+                                <label>
+                                    <input type="checkbox" id="ignoreCase"> Ignore case
+                                </label>
+                            </div>
+                        </div>
+                        <div id="textDiffResult" class="diff-result"></div>
+                    </div>
+                </div>
+
+                <div class="tab-content" id="json-tab">
+                    <div class="diff-container">
+                        <div class="input-section">
+                            <div class="input-group">
+                                <label for="json1">Original JSON</label>
+                                <textarea id="json1" placeholder="Enter original JSON here..."></textarea>
+                            </div>
+                            <div class="input-group">
+                                <label for="json2">Modified JSON</label>
+                                <textarea id="json2" placeholder="Enter modified JSON here..."></textarea>
+                            </div>
+                        </div>
+                        <div class="controls">
+                            <button id="compareJSON" class="btn btn-primary">Compare JSON</button>
+                            <button id="clearJSON" class="btn btn-secondary">Clear</button>
+                            <button id="formatJSON" class="btn btn-secondary">Format JSON</button>
+                        </div>
+                        <div id="jsonDiffResult" class="diff-result"></div>
+                    </div>
+                </div>
+
+                <div class="tab-content" id="css-tab">
+                    <div class="diff-container">
+                        <div class="input-section">
+                            <div class="input-group">
+                                <label for="css1">Original CSS</label>
+                                <textarea id="css1" placeholder="Enter original CSS here..."></textarea>
+                            </div>
+                            <div class="input-group">
+                                <label for="css2">Modified CSS</label>
+                                <textarea id="css2" placeholder="Enter modified CSS here..."></textarea>
+                            </div>
+                        </div>
+                        <div class="controls">
+                            <button id="compareCSS" class="btn btn-primary">Compare CSS</button>
+                            <button id="clearCSS" class="btn btn-secondary">Clear</button>
+                        </div>
+                        <div id="cssDiffResult" class="diff-result"></div>
+                    </div>
+                </div>
+
+                <div class="tab-content" id="array-tab">
+                    <div class="diff-container">
+                        <div class="input-section">
+                            <div class="input-group">
+                                <label for="array1">Original Array (JSON format)</label>
+                                <textarea id="array1" placeholder='Enter original array here... e.g. ["a", "b", "c"]'></textarea>
+                            </div>
+                            <div class="input-group">
+                                <label for="array2">Modified Array (JSON format)</label>
+                                <textarea id="array2" placeholder='Enter modified array here... e.g. ["a", "c", "d"]'></textarea>
+                            </div>
+                        </div>
+                        <div class="controls">
+                            <button id="compareArray" class="btn btn-primary">Compare Arrays</button>
+                            <button id="clearArray" class="btn btn-secondary">Clear</button>
+                            <button id="formatArray" class="btn btn-secondary">Format Arrays</button>
+                        </div>
+                        <div id="arrayDiffResult" class="diff-result"></div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <footer class="main-footer">
+            <p>&copy; 2025 OToolebox. All tools run locally in your browser.</p>
+        </footer>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/diff@5.1.0/dist/diff.min.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
