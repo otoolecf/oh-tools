@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Clipboard Transfer</title>
+    <link rel="stylesheet" href="../global.css" />
+    <link rel="stylesheet" href="styles.css" />
+    <script src="https://cdn.jsdelivr.net/npm/bwip-js@4.5.1/dist/bwip-js-min.js"></script>
+  </head>
+  <body>
+    <header class="main-header">
+      <div class="container">
+        <nav class="nav">
+          <a href="../" class="nav-brand">OToolebox</a>
+          <div class="nav-links">
+            <button
+              id="themeToggle"
+              class="theme-toggle"
+              title="Toggle theme"
+            ></button>
+            <a href="../" class="nav-link">All Tools</a>
+            <a href="../clipboard-transfer/" class="nav-link active"
+              >Clipboard Transfer</a
+            >
+          </div>
+        </nav>
+      </div>
+    </header>
+
+    <main class="container">
+      <div class="tool-container">
+        <h1>Clipboard & File Transfer</h1>
+        <p>
+          Share clipboard content and files between devices using WebRTC
+          (peer-to-peer, no servers)
+        </p>
+
+        <!-- Progress Tracker -->
+        <div
+          id="progress-tracker"
+          class="progress-tracker"
+          style="display: none"
+        >
+          <div class="progress-steps">
+            <div class="progress-step" data-step="share">
+              <div class="step-number">1</div>
+              <div class="step-label">Share Link</div>
+            </div>
+            <div class="progress-step" data-step="connect">
+              <div class="step-number">2</div>
+              <div class="step-label">Other Device Joins</div>
+            </div>
+            <div class="progress-step" data-step="answer">
+              <div class="step-number">3</div>
+              <div class="step-label">Complete Connection</div>
+            </div>
+            <div class="progress-step" data-step="connected">
+              <div class="step-number">4</div>
+              <div class="step-label">Connected</div>
+            </div>
+          </div>
+          <div class="progress-bar">
+            <div class="progress-fill" id="progress-fill"></div>
+          </div>
+        </div>
+
+        <!-- Connection Setup Section -->
+        <div id="connection-setup-section" class="section-card">
+          <h2>Connection Setup</h2>
+
+          <!-- Connection Mode Toggle -->
+          <div class="control-group">
+            <label>Connection Type:</label>
+            <div class="flex-group">
+              <input
+                type="radio"
+                id="lan-mode"
+                name="connection-mode"
+                value="lan"
+                checked
+              />
+              <label for="lan-mode">LAN Only (same Wi-Fi)</label>
+              <input
+                type="radio"
+                id="internet-mode"
+                name="connection-mode"
+                value="internet"
+              />
+              <label for="internet-mode">Internet (with STUN)</label>
+            </div>
+          </div>
+
+          <!-- Role Selection -->
+          <div class="control-group">
+            <div class="control-grid">
+              <button id="create-session-btn" class="btn-enhanced">
+                Create Session
+              </button>
+              <button id="join-session-btn" class="btn-enhanced">
+                Join Session
+              </button>
+            </div>
+          </div>
+
+          <!-- Connection Status -->
+          <div id="connection-status" class="status-display">
+            <span class="status-text">Ready to connect</span>
+          </div>
+
+          <!-- URL Processing Banner -->
+          <div
+            id="url-processing-banner"
+            class="url-banner"
+            style="display: none"
+          >
+            <h3>Processing URL Offer</h3>
+            <p>Automatically joining session from the shared URL...</p>
+          </div>
+        </div>
+
+        <!-- Session Creation/Join Section -->
+        <div id="session-section" class="section-card" style="display: none">
+          <h3 id="session-title">Create Session</h3>
+
+          <!-- QR Code Display -->
+          <div id="qr-display" class="qr-container" style="display: none">
+            <div class="text-center">
+              <canvas id="qr-canvas"></canvas>
+              <p>Scan this QR code with the other device</p>
+            </div>
+
+            <!-- URL Display for local testing -->
+            <div id="offer-url-section" class="url-section">
+              <label for="offer-url">Or copy this invitation link:</label>
+              <input type="text" id="offer-url" readonly class="url-input" />
+              <button id="copy-offer-btn" class="btn-copy">Copy Link</button>
+              <p class="text-sm">
+                Send this link to the other device via text, email, or any
+                messaging app
+              </p>
+            </div>
+          </div>
+
+          <!-- Manual Exchange -->
+          <div id="manual-exchange" class="control-group" style="display: none">
+            <label for="offer-answer-input"
+              >Paste the invitation or response here:</label
+            >
+            <textarea
+              id="offer-answer-input"
+              placeholder="Paste the invitation from the other device here..."
+              rows="4"
+            ></textarea>
+            <button id="process-offer-answer-btn" class="btn-enhanced">
+              Connect
+            </button>
+          </div>
+
+          <!-- Waiting for Response -->
+          <div
+            id="waiting-response"
+            class="control-group"
+            style="display: none"
+          >
+            <div class="status-display connecting">
+              <h4>Waiting for Response</h4>
+              <p>
+                Paste the response from the other device below to complete the
+                connection:
+              </p>
+              <textarea
+                id="response-input"
+                placeholder="Paste the response here..."
+                rows="3"
+              ></textarea>
+              <button id="process-response-btn" class="btn-enhanced">
+                Complete Connection
+              </button>
+            </div>
+          </div>
+
+          <!-- Generated Answer Display -->
+          <div id="answer-display" class="control-group" style="display: none">
+            <label>Send this response back to the original device:</label>
+
+            <!-- Answer QR Code -->
+            <div id="answer-qr-display" class="qr-container">
+              <canvas id="answer-qr-canvas"></canvas>
+              <p>Scan this QR code on the original device</p>
+
+              <!-- Answer URL Display -->
+              <div class="url-section">
+                <label for="answer-text">Or copy this response link:</label>
+                <textarea
+                  id="answer-text"
+                  readonly
+                  rows="3"
+                  class="url-input"
+                ></textarea>
+                <button id="copy-answer-btn" class="btn-copy">Copy Link</button>
+                <p class="text-sm">
+                  Send this link to the original device via text, email, or any
+                  messaging app
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Cancel Session -->
+          <div class="text-center">
+            <button id="cancel-session-btn" class="btn-secondary">
+              Cancel
+            </button>
+          </div>
+        </div>
+
+        <!-- Communication Section (shown when connected) -->
+        <div
+          id="communication-section"
+          class="section-card"
+          style="display: none"
+        >
+          <!-- Connected Banner -->
+          <div class="connected-banner">
+            <div class="connected-icon">✓</div>
+            <div class="connected-text">
+              <h3>Connected</h3>
+              <p>Secure peer-to-peer connection established</p>
+            </div>
+          </div>
+
+          <!-- Clipboard Share -->
+          <div class="control-group">
+            <h3>Share Clipboard</h3>
+            <textarea
+              id="clipboard-input"
+              placeholder="Type or paste text to share..."
+              rows="3"
+            ></textarea>
+            <div class="flex-group">
+              <button id="send-clipboard-btn" class="btn-enhanced">
+                Send Text
+              </button>
+              <button id="paste-clipboard-btn" class="btn-paste">
+                Paste from Clipboard
+              </button>
+            </div>
+          </div>
+
+          <!-- File Share -->
+          <div class="control-group">
+            <h3>Share Files</h3>
+            <div id="file-drop-zone" class="file-drop-zone">
+              <p>Drag & drop files here or click to select</p>
+              <input
+                type="file"
+                id="file-input"
+                multiple
+                style="display: none"
+              />
+              <button id="select-files-btn" class="btn-enhanced">
+                Select Files
+              </button>
+            </div>
+          </div>
+
+          <!-- Transfer Progress -->
+          <div
+            id="transfer-section"
+            class="control-group"
+            style="display: none"
+          >
+            <h4>Active Transfers</h4>
+            <div id="transfer-list"></div>
+          </div>
+
+          <!-- Message Feed -->
+          <div class="control-group">
+            <h3>Messages & Files</h3>
+            <div id="message-feed" class="message-feed"></div>
+          </div>
+
+          <!-- Disconnect -->
+          <div class="text-center">
+            <button id="disconnect-btn" class="btn-disconnect">
+              Disconnect
+            </button>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <footer class="main-footer">
+      <p>&copy; 2025 OToolebox. All tools run locally in your browser.</p>
+      <div style="margin-top: 1rem">
+        <script
+          type="text/javascript"
+          src="https://storage.ko-fi.com/cdn/widget/Widget_2.js"
+        ></script>
+        <script type="text/javascript">
+          kofiwidget2.init("Buy Me a Coffee or Beer", "#64748b", "F1F41J70Y8");
+          kofiwidget2.draw();
+        </script>
+      </div>
+    </footer>
+
+    <script>
+      // Theme toggle functionality
+      const themeToggle = document.getElementById("themeToggle");
+      const currentTheme = localStorage.getItem("theme") || "light";
+
+      document.documentElement.setAttribute("data-theme", currentTheme);
+
+      themeToggle.addEventListener("click", () => {
+        const theme = document.documentElement.getAttribute("data-theme");
+        const newTheme = theme === "dark" ? "light" : "dark";
+
+        document.documentElement.setAttribute("data-theme", newTheme);
+        localStorage.setItem("theme", newTheme);
+      });
+    </script>
+    <script src="script.js"></script>
+  </body>
+</html>
