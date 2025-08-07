@@ -1,0 +1,29 @@
+# Cloudflare Worker configuration for OTP signaling service
+name = "otoolebox-signaling"
+main = "cloudflare-worker.js"
+compatibility_date = "2024-01-15"
+
+# KV namespaces for temporary storage and rate limiting
+[[kv_namespaces]]
+binding = "TEMP_STORAGE_KV"
+id = "your-temp-storage-namespace-id"
+preview_id = "your-temp-storage-preview-id"
+
+[[kv_namespaces]]
+binding = "RATE_LIMIT_KV"
+id = "your-rate-limit-namespace-id"
+preview_id = "your-rate-limit-preview-id"
+
+# Environment variables (optional)
+[vars]
+# Add any environment-specific variables here
+
+# Worker settings
+[build]
+command = ""
+
+# Route configuration (set this to your domain)
+# route = "signaling.yourdomain.com/*"
+
+# For development, you can use workers.dev subdomain
+# The worker will be available at: otoolebox-signaling.your-subdomain.workers.dev

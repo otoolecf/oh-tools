@@ -9,10 +9,17 @@ class ClipboardTransfer {
         this.currentOfferUrl = null; // Store current offer URL for theme change regeneration
         this.currentAnswerData = null; // Store current answer data for theme change regeneration
         
+        // OTP mode properties
+        this.connectionMethod = 'direct'; // 'direct' or 'otp'
+        this.otpServerUrl = 'http://localhost:3001'; // Local testing - change to your worker URL for production
+        this.currentOtpCode = null;
+        this.currentAnswerOtp = null;
+        
         this.initializeElements();
         this.setupEventListeners();
         this.setupThemeChangeListener();
         this.checkForOfferInUrl();
+        this.checkHumanIdLibrary();
     }
 
     initializeElements() {
@@ -63,6 +70,34 @@ class ClipboardTransfer {
         // Connection mode
         this.lanModeRadio = document.getElementById('lan-mode');
         this.internetModeRadio = document.getElementById('internet-mode');
+        
+        // Connection method elements
+        this.directModeRadio = document.getElementById('direct-mode');
+        this.otpModeRadio = document.getElementById('otp-mode');
+        this.methodDescriptionText = document.getElementById('method-description-text');
+        this.connectionTypeGroup = document.getElementById('connection-type-group');
+        
+        // OTP type elements
+        this.otpTypeGroup = document.getElementById('otp-type-group');
+        this.numbersModeRadio = document.getElementById('numbers-mode');
+        this.wordsModeRadio = document.getElementById('words-mode');
+        
+        // OTP connection elements
+        this.otpConnectionSection = document.getElementById('otp-connection-section');
+        this.otpSectionTitle = document.getElementById('otp-section-title');
+        this.otpCreateDisplay = document.getElementById('otp-create-display');
+        this.otpCodeText = document.getElementById('otp-code-text');
+        this.copyOtpBtn = document.getElementById('copy-otp-btn');
+        this.otpJoinDisplay = document.getElementById('otp-join-display');
+        this.otpJoinInput = document.getElementById('otp-join-input');
+        this.joinWithOtpBtn = document.getElementById('join-with-otp-btn');
+        this.otpFinalDisplay = document.getElementById('otp-final-display');
+        this.otpFinalCodeText = document.getElementById('otp-final-code-text');
+        this.copyFinalOtpBtn = document.getElementById('copy-final-otp-btn');
+        this.otpAnswerDisplay = document.getElementById('otp-answer-display');
+        this.otpAnswerInput = document.getElementById('otp-answer-input');
+        this.completeOtpBtn = document.getElementById('complete-otp-btn');
+        this.cancelOtpBtn = document.getElementById('cancel-otp-btn');
     }
 
     setupEventListeners() {
@@ -97,6 +132,25 @@ class ClipboardTransfer {
         // Connection mode change
         this.lanModeRadio.addEventListener('change', () => this.updateConnectionMode());
         this.internetModeRadio.addEventListener('change', () => this.updateConnectionMode());
+        
+        // Connection method change
+        this.directModeRadio.addEventListener('change', () => this.updateConnectionMethod());
+        this.otpModeRadio.addEventListener('change', () => this.updateConnectionMethod());
+        
+        // OTP event listeners
+        this.copyOtpBtn.addEventListener('click', () => this.copyToClipboard('otp'));
+        this.copyFinalOtpBtn.addEventListener('click', () => this.copyToClipboard('final-otp'));
+        this.joinWithOtpBtn.addEventListener('click', () => this.joinWithOtpCode());
+        this.completeOtpBtn.addEventListener('click', () => this.completeOtpConnection());
+        this.cancelOtpBtn.addEventListener('click', () => this.cancelOtpSession());
+        
+        // Enter key support for OTP inputs
+        this.otpJoinInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') this.joinWithOtpCode();
+        });
+        this.otpAnswerInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') this.completeOtpConnection();
+        });
     }
 
     setupThemeChangeListener() {
@@ -375,42 +429,92 @@ class ClipboardTransfer {
         }
     }
 
+    updateConnectionMethod() {
+        if (this.connectionState !== 'disconnected') {
+            alert('Please disconnect first before changing connection method.');
+            return;
+        }
+        
+        this.connectionMethod = this.otpModeRadio.checked ? 'otp' : 'direct';
+        
+        // Update UI based on selected method
+        if (this.connectionMethod === 'otp') {
+            document.body.classList.add('otp-mode');
+            this.otpTypeGroup.style.display = 'block';
+            this.methodDescriptionText.textContent = 'Use simple codes to connect. Requires temporary signaling server.';
+        } else {
+            document.body.classList.remove('otp-mode');
+            this.otpTypeGroup.style.display = 'none';
+            this.methodDescriptionText.textContent = 'Share QR codes or URLs directly between devices. Maximum privacy - no servers involved.';
+        }
+    }
+
+    checkHumanIdLibrary() {
+        // Wait for humanId library to be available
+        if (typeof window.humanId !== 'undefined') {
+            console.log('human-id library is available');
+            return;
+        }
+        
+        // Listen for library ready event
+        window.addEventListener('humanIdReady', () => {
+            console.log('human-id library loaded');
+        });
+        
+        window.addEventListener('humanIdFailed', () => {
+            console.warn('human-id library failed to load, OTP mode may not work properly');
+        });
+    }
+
+    generateOtpCode() {
+        const useNumbers = this.numbersModeRadio?.checked !== false; // Default to numbers if radio not found
+        
+        if (useNumbers) {
+            return this.generateSixDigitCode();
+        } else {
+            return this.generateHumanId();
+        }
+    }
+
+    generateSixDigitCode() {
+        // Generate cryptographically secure 6-digit code
+        const array = new Uint32Array(1);
+        crypto.getRandomValues(array);
+        // Get a number between 100000 and 999999
+        const code = (array[0] % 900000) + 100000;
+        return code.toString();
+    }
+
+    generateHumanId() {
+        if (typeof window.humanId !== 'undefined') {
+            return window.humanId({
+                separator: '-',
+                capitalize: false
+            });
+        } else {
+            // Fallback to simple random code if library not available
+            const words = ['happy', 'clever', 'bright', 'swift', 'gentle', 'brave', 'calm', 'wise'];
+            const animals = ['tiger', 'eagle', 'dolphin', 'fox', 'owl', 'bear', 'wolf', 'deer'];
+            const actions = ['runs', 'flies', 'jumps', 'swims', 'sings', 'dances', 'climbs', 'soars'];
+            
+            const word = words[Math.floor(Math.random() * words.length)];
+            const animal = animals[Math.floor(Math.random() * animals.length)];
+            const action = actions[Math.floor(Math.random() * actions.length)];
+            
+            return `${word}-${animal}-${action}`;
+        }
+    }
+
     async createSession() {
         try {
             this.updateStatus('Initializing session...', 'connecting');
             this.isInitiator = true;
             
-            // Create peer connection
-            const iceConfig = this.getIceConfiguration();
-            this.pc = new RTCPeerConnection(iceConfig);
-            this.setupPeerConnection();
-            
-            // Create data channel
-            this.dataChannel = this.pc.createDataChannel('clipboard-transfer', {
-                ordered: true
-            });
-            this.setupDataChannel(this.dataChannel);
-            
-            // Create offer
-            const offer = await this.pc.createOffer();
-            await this.pc.setLocalDescription(offer);
-            
-            // Wait for ICE gathering to complete
-            await this.waitForIceGathering();
-            
-            // Show session UI
-            this.showSessionUI('Share Invitation');
-            await this.generateQRCode(this.pc.localDescription);
-            
-            this.updateStatus('Share the invitation with the other device', 'connecting');
-            
-            // Show waiting for response section after a brief delay
-            setTimeout(() => {
-                this.waitingResponse.style.display = 'block';
-                
-                // Don't advance progress - we don't know when other device actually joins
-                // Progress stays on "Share Link" until we get a response
-            }, 2000);
+            if (this.connectionMethod === 'otp') {
+                await this.createOtpSession();
+            } else {
+                await this.createDirectSession();
+            }
             
         } catch (error) {
             console.error('Error creating session:', error);
@@ -418,14 +522,319 @@ class ClipboardTransfer {
         }
     }
 
+    async createDirectSession() {
+        // Create peer connection
+        const iceConfig = this.getIceConfiguration();
+        this.pc = new RTCPeerConnection(iceConfig);
+        this.setupPeerConnection();
+        
+        // Create data channel
+        this.dataChannel = this.pc.createDataChannel('clipboard-transfer', {
+            ordered: true
+        });
+        this.setupDataChannel(this.dataChannel);
+        
+        // Create offer
+        const offer = await this.pc.createOffer();
+        await this.pc.setLocalDescription(offer);
+        
+        // Wait for ICE gathering to complete
+        await this.waitForIceGathering();
+        
+        // Show session UI
+        this.showSessionUI('Share Invitation');
+        await this.generateQRCode(this.pc.localDescription);
+        
+        this.updateStatus('Share the invitation with the other device', 'connecting');
+        
+        // Show waiting for response section after a brief delay
+        setTimeout(() => {
+            this.waitingResponse.style.display = 'block';
+        }, 2000);
+    }
+
+    async createOtpSession() {
+        // Create peer connection
+        const iceConfig = this.getIceConfiguration();
+        this.pc = new RTCPeerConnection(iceConfig);
+        this.setupPeerConnection();
+        
+        // Create data channel
+        this.dataChannel = this.pc.createDataChannel('clipboard-transfer', {
+            ordered: true
+        });
+        this.setupDataChannel(this.dataChannel);
+        
+        // Create offer
+        const offer = await this.pc.createOffer();
+        await this.pc.setLocalDescription(offer);
+        
+        // Wait for ICE gathering to complete
+        await this.waitForIceGathering();
+        
+        // Generate passcode based on user preference
+        this.currentOtpCode = this.generateOtpCode();
+        
+        // Encrypt and store the offer
+        const encryptedOffer = await this.encryptData(JSON.stringify(this.pc.localDescription), this.currentOtpCode);
+        
+        try {
+            const response = await fetch(`${this.otpServerUrl}/temp/${this.currentOtpCode}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    encryptedData: encryptedOffer,
+                    type: 'offer'
+                })
+            });
+            
+            if (!response.ok) {
+                throw new Error(`Server responded with ${response.status}`);
+            }
+            
+            // Show OTP UI
+            this.showOtpCreateUI();
+            this.updateStatus('Share the connection code with the other device', 'connecting');
+            
+            // Show answer input immediately - user will need it when they get the second code
+            setTimeout(() => {
+                this.showOtpAnswerUI();
+            }, 1000); // Just a short delay so user can see the first code
+            
+        } catch (error) {
+            console.error('Failed to store offer:', error);
+            this.updateStatus('Failed to store connection data. Please try direct mode.', 'error');
+        }
+    }
+
+    // Encryption/Decryption helpers for OTP mode
+    async encryptData(data, passphrase) {
+        try {
+            // Simple Base64 encoding for now - in production, use real encryption
+            const combined = passphrase + '|' + data;
+            return btoa(combined).replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
+        } catch (error) {
+            console.error('Encryption failed:', error);
+            throw error;
+        }
+    }
+
+    async decryptData(encryptedData, passphrase) {
+        try {
+            // Simple Base64 decoding - in production, use real decryption
+            let padded = encryptedData.replace(/-/g, '+').replace(/_/g, '/');
+            while (padded.length % 4) padded += '=';
+            
+            const combined = atob(padded);
+            const separator = combined.indexOf('|');
+            const storedPassphrase = combined.substring(0, separator);
+            const data = combined.substring(separator + 1);
+            
+            if (storedPassphrase !== passphrase) {
+                throw new Error('Invalid passphrase');
+            }
+            
+            return data;
+        } catch (error) {
+            console.error('Decryption failed:', error);
+            throw error;
+        }
+    }
+
+    showOtpCreateUI() {
+        console.log('Showing OTP create UI with code:', this.currentOtpCode);
+        
+        this.connectionSetupSection.style.display = 'none';
+        this.otpConnectionSection.style.display = 'block';
+        this.otpSectionTitle.textContent = 'Share Connection Code';
+        
+        // Show the create display
+        this.otpCreateDisplay.style.display = 'block';
+        this.otpCodeText.textContent = this.currentOtpCode;
+        
+        // Hide other displays
+        this.otpJoinDisplay.style.display = 'none';
+        this.otpFinalDisplay.style.display = 'none';
+        this.otpAnswerDisplay.style.display = 'none';
+        
+        // Show progress tracker
+        this.showProgressTracker();
+        this.updateProgress('share');
+        
+        console.log('OTP UI elements:', {
+            otpConnectionSection: this.otpConnectionSection.style.display,
+            otpCreateDisplay: this.otpCreateDisplay.style.display,
+            otpCodeText: this.otpCodeText.textContent
+        });
+    }
+
+    showOtpJoinUI() {
+        this.connectionSetupSection.style.display = 'none';
+        this.otpConnectionSection.style.display = 'block';
+        this.otpSectionTitle.textContent = 'Enter Connection Code';
+        
+        // Show the join display
+        this.otpJoinDisplay.style.display = 'block';
+        
+        // Hide other displays
+        this.otpCreateDisplay.style.display = 'none';
+        this.otpFinalDisplay.style.display = 'none';
+        this.otpAnswerDisplay.style.display = 'none';
+        
+        // Show progress tracker
+        this.showProgressTracker();
+        this.updateProgress('connect');
+    }
+
+    async joinWithOtpCode() {
+        const code = this.otpJoinInput.value.trim().toLowerCase();
+        if (!code) {
+            alert('Please enter a connection code');
+            return;
+        }
+
+        try {
+            this.updateStatus('Retrieving connection data...', 'connecting');
+            
+            // Fetch the offer from server
+            const response = await fetch(`${this.otpServerUrl}/temp/${code}`, {
+                method: 'GET'
+            });
+            
+            if (!response.ok) {
+                if (response.status === 404) {
+                    throw new Error('Connection code not found or expired');
+                } else {
+                    throw new Error(`Server error: ${response.status}`);
+                }
+            }
+            
+            const data = await response.json();
+            
+            // Decrypt the offer
+            const decryptedOffer = await this.decryptData(data.encryptedData, code);
+            const offer = JSON.parse(decryptedOffer);
+            
+            // Create peer connection and process offer
+            const iceConfig = this.getIceConfiguration();
+            this.pc = new RTCPeerConnection(iceConfig);
+            this.setupPeerConnection();
+            
+            await this.pc.setRemoteDescription(offer);
+            
+            // Create answer
+            const answer = await this.pc.createAnswer();
+            await this.pc.setLocalDescription(answer);
+            
+            // Wait for ICE gathering
+            await this.waitForIceGathering();
+            
+            // Generate code for answer and store it (using same method as first code)
+            this.currentAnswerOtp = this.generateOtpCode();
+            const encryptedAnswer = await this.encryptData(JSON.stringify(this.pc.localDescription), this.currentAnswerOtp);
+            
+            const storeResponse = await fetch(`${this.otpServerUrl}/temp/${this.currentAnswerOtp}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    encryptedData: encryptedAnswer,
+                    type: 'answer'
+                })
+            });
+            
+            if (!storeResponse.ok) {
+                throw new Error('Failed to store answer');
+            }
+            
+            // Show final code display
+            this.showOtpFinalUI();
+            this.updateStatus('Share the final code with the first device', 'connecting');
+            // Keep progress at 'connect' - the second device is still "joining"
+            this.updateProgress('connect');
+            
+        } catch (error) {
+            console.error('Failed to join with OTP code:', error);
+            this.updateStatus(`Failed to join: ${error.message}`, 'error');
+        }
+    }
+
+    showOtpFinalUI() {
+        this.otpFinalDisplay.style.display = 'block';
+        this.otpFinalCodeText.textContent = this.currentAnswerOtp;
+        
+        // Hide other displays
+        this.otpJoinDisplay.style.display = 'none';
+        this.otpCreateDisplay.style.display = 'none';
+        this.otpAnswerDisplay.style.display = 'none';
+    }
+
+
+    showOtpAnswerUI() {
+        this.otpAnswerDisplay.style.display = 'block';
+        // Keep the create display visible so user can still see their original code
+        // this.otpCreateDisplay.style.display = 'none'; // Don't hide this!
+        this.updateStatus('Enter the final code from the other device below', 'connecting');
+        // First device advances to step 3 when waiting for the final answer
+        this.updateProgress('answer');
+    }
+
+    async completeOtpConnection() {
+        const code = this.otpAnswerInput.value.trim().toLowerCase();
+        if (!code) {
+            alert('Please enter the final connection code');
+            return;
+        }
+
+        try {
+            this.updateStatus('Completing connection...', 'connecting');
+            
+            // Fetch the answer from server
+            const response = await fetch(`${this.otpServerUrl}/temp/${code}`, {
+                method: 'GET'
+            });
+            
+            if (!response.ok) {
+                throw new Error('Final code not found or invalid');
+            }
+            
+            const data = await response.json();
+            
+            // Decrypt the answer
+            const decryptedAnswer = await this.decryptData(data.encryptedData, code);
+            const answer = JSON.parse(decryptedAnswer);
+            
+            // Set remote description (answer)
+            await this.pc.setRemoteDescription(answer);
+            
+            this.updateStatus('Connection established!', 'connected');
+            this.updateProgress('connected');
+            
+        } catch (error) {
+            console.error('Failed to complete OTP connection:', error);
+            this.updateStatus(`Connection failed: ${error.message}`, 'error');
+        }
+    }
+
+    cancelOtpSession() {
+        this.disconnect();
+    }
+
     async joinSession() {
         try {
             this.updateStatus('Ready to join session', 'connecting');
             this.isInitiator = false;
             
-            // Show session UI for joining
-            this.showSessionUI('Join Session');
-            this.manualExchange.style.display = 'block';
+            if (this.connectionMethod === 'otp') {
+                this.showOtpJoinUI();
+            } else {
+                // Show session UI for joining
+                this.showSessionUI('Join Session');
+                this.manualExchange.style.display = 'block';
+            }
             
         } catch (error) {
             console.error('Error joining session:', error);
@@ -852,8 +1261,9 @@ class ClipboardTransfer {
         // Update progress to final step
         this.updateProgress('connected');
         
-        // Hide session section and show communication
+        // Hide session sections and show communication
         this.sessionSection.style.display = 'none';
+        this.otpConnectionSection.style.display = 'none'; // Hide OTP section too
         this.communicationSection.style.display = 'block';
         
         // Add connection message to feed
@@ -1386,14 +1796,28 @@ class ClipboardTransfer {
     }
 
     async copyToClipboard(type) {
-        const button = type === 'offer' ? this.copyOfferBtn : this.copyAnswerBtn;
-        let content;
+        let button, content;
         
-        if (type === 'offer') {
-            // For offers, copy the URL from the input field or the stored data
-            content = this.offerUrl ? this.offerUrl.value : button.getAttribute('data-content');
-        } else {
-            content = this.answerText.value;
+        switch (type) {
+            case 'offer':
+                button = this.copyOfferBtn;
+                content = this.offerUrl ? this.offerUrl.value : button.getAttribute('data-content');
+                break;
+            case 'answer':
+                button = this.copyAnswerBtn;
+                content = this.answerText.value;
+                break;
+            case 'otp':
+                button = this.copyOtpBtn;
+                content = this.currentOtpCode;
+                break;
+            case 'final-otp':
+                button = this.copyFinalOtpBtn;
+                content = this.currentAnswerOtp;
+                break;
+            default:
+                console.error('Unknown copy type:', type);
+                return;
         }
 
         try {
@@ -1473,15 +1897,22 @@ class ClipboardTransfer {
         this.connectionState = 'disconnected';
         this.sessionSection.style.display = 'none';
         this.communicationSection.style.display = 'none';
+        this.otpConnectionSection.style.display = 'none'; // Hide OTP section
         this.connectionSetupSection.style.display = 'block'; // Show connection options again
         this.hideProgressTracker(); // Hide progress tracker when disconnecting
         this.isInitiator = false;
+        
+        // Clear OTP data
+        this.currentOtpCode = null;
+        this.currentAnswerOtp = null;
         
         // Clear form fields
         this.offerAnswerInput.value = '';
         this.answerText.value = '';
         this.responseInput.value = '';
         this.clipboardInput.value = '';
+        this.otpJoinInput.value = '';
+        this.otpAnswerInput.value = '';
         
         // Clear message feed
         this.messageFeed.innerHTML = '';

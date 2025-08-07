@@ -272,7 +272,7 @@
 .file-drop-zone.drag-over {
     border-color: var(--primary-color);
     background: var(--bg-primary);
-    transform: scale(1.02);
+    transform: scale(1.005);
 }
 
 /* Message Feed */
@@ -588,6 +588,161 @@ input[type="radio"] {
     from {
         opacity: 0;
         transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* OTP Connection Styles */
+.method-selection {
+    flex-wrap: wrap;
+    gap: 0.75rem;
+}
+
+.method-description {
+    margin-top: 0.75rem;
+    padding: 0.75rem;
+    background: var(--bg-secondary);
+    border-radius: 6px;
+    border-left: 3px solid var(--primary-color);
+}
+
+.method-description span {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    font-style: italic;
+}
+
+.otp-display {
+    margin: 1.5rem 0;
+}
+
+.otp-instruction {
+    margin-bottom: 1.5rem;
+}
+
+.otp-instruction p {
+    font-size: 1rem;
+    color: var(--text-primary);
+    margin-bottom: 0.75rem;
+}
+
+.otp-instruction ol {
+    margin: 0.5rem 0 0 1.5rem;
+    color: var(--text-secondary);
+}
+
+.otp-instruction ol li {
+    margin-bottom: 0.5rem;
+    line-height: 1.4;
+}
+
+.otp-code-display {
+    text-align: center;
+    margin: 2rem 0;
+}
+
+.otp-code {
+    display: inline-block;
+    font-family: 'Monaco', 'Courier New', monospace;
+    font-size: 1.4rem;
+    font-weight: bold;
+    color: var(--primary-color);
+    background: var(--bg-primary);
+    padding: 1rem 2rem;
+    border: 2px solid var(--primary-color);
+    border-radius: 8px;
+    margin-bottom: 1rem;
+    letter-spacing: 2px;
+    text-transform: lowercase;
+    box-shadow: var(--shadow-sm);
+    min-width: 200px;
+}
+
+.otp-input-group {
+    display: flex;
+    gap: 0.75rem;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin: 1.5rem 0;
+}
+
+.otp-input {
+    font-family: 'Monaco', 'Courier New', monospace;
+    font-size: 1.1rem;
+    padding: 0.75rem 1rem;
+    border: 2px solid var(--border-color);
+    border-radius: 6px;
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    min-width: 250px;
+    text-align: center;
+    text-transform: lowercase;
+    transition: border-color 0.3s ease;
+}
+
+.otp-input:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.otp-input::placeholder {
+    color: var(--text-secondary);
+    opacity: 0.7;
+}
+
+.otp-status {
+    text-align: center;
+    margin-top: 1.5rem;
+}
+
+.otp-status p {
+    color: var(--text-secondary);
+    font-style: italic;
+}
+
+/* Hide connection type group in OTP mode */
+.otp-mode #connection-type-group {
+    display: none;
+}
+
+/* Responsive OTP styles */
+@media (max-width: 768px) {
+    .otp-input-group {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .otp-input {
+        min-width: auto;
+        width: 100%;
+    }
+    
+    .otp-code {
+        font-size: 1.2rem;
+        padding: 0.75rem 1rem;
+        min-width: auto;
+        letter-spacing: 1px;
+    }
+    
+    .method-selection {
+        flex-direction: column;
+    }
+}
+
+/* Subtle animation for OTP code display */
+.otp-code {
+    animation: otpAppear 0.2s ease-out;
+}
+
+@keyframes otpAppear {
+    from {
+        opacity: 0;
+        transform: translateY(-2px);
     }
     to {
         opacity: 1;
