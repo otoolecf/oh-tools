@@ -1,0 +1,23 @@
+{
+  "name": "otoolebox",
+  "version": "1.0.0",
+  "description": "A collection of client-side web tools that run entirely in the browser. No data is sent to servers, ensuring privacy and security for all operations.",
+  "main": "dev-server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/otoolecf/otoolebox.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/otoolecf/otoolebox/issues"
+  },
+  "homepage": "https://github.com/otoolecf/otoolebox#readme",
+  "dependencies": {
+    "wasm-vips": "^0.0.14"
+  }
+}

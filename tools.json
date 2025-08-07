@@ -53,6 +53,24 @@
       "icon": "compare",
       "tags": ["diff", "compare", "text", "json", "css", "array", "visual", "highlight", "merge"],
       "status": "active"
+    },
+    {
+      "id": "closed-loop",
+      "name": "Closed Loop",
+      "description": "Secure private connection for sharing files and text between devices using WebRTC. Create a temporary closed loop between two devices with no servers involved.",
+      "path": "/closed-loop/",
+      "icon": "link",
+      "tags": ["webrtc", "file transfer", "secure", "p2p", "private", "sharing"],
+      "status": "active"
+    },
+    {
+      "id": "image-editor",
+      "name": "Image Editor",
+      "description": "Powerful image manipulation tool with resize, crop, rotate, flip, effects, and format conversion. Features before/after comparison, operation chaining, and metadata inspection powered by wasm-vips.",
+      "path": "/image-editor/",
+      "icon": "image",
+      "tags": ["image", "photo", "edit", "resize", "crop", "rotate", "effects", "convert", "exif", "metadata"],
+      "status": "active"
     }
   ]
 }

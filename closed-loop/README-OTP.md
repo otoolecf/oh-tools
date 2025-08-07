@@ -1,6 +1,6 @@
 # OTP Connection Mode Setup
 
-This guide explains how to set up the OTP (One-Time Passcode) connection mode for the Clipboard Transfer tool using Cloudflare Workers.
+This guide explains how to set up the OTP (One-Time Passcode) connection mode for the Closed Loop tool using Cloudflare Workers.
 
 ## What is OTP Mode?
 
@@ -8,7 +8,7 @@ OTP mode provides an easier way to connect devices using human-memorable codes i
 
 1. **Device A** creates a session and gets a code like `happy-tiger-runs`
 2. **Device B** enters that code to join
-3. **Device B** gets a second code like `clever-bird-soars` 
+3. **Device B** gets a second code like `clever-bird-soars`
 4. **Device A** enters the second code to complete the connection
 5. Devices are now connected peer-to-peer for secure file/clipboard sharing
 
@@ -25,33 +25,37 @@ OTP mode provides an easier way to connect devices using human-memorable codes i
 ### 1. Deploy the Cloudflare Worker
 
 1. Install Wrangler CLI:
+
    ```bash
    npm install -g wrangler
    ```
 
 2. Login to Cloudflare:
+
    ```bash
    wrangler login
    ```
 
 3. Create KV namespaces:
+
    ```bash
    # For temporary storage
    wrangler kv:namespace create "TEMP_STORAGE_KV"
    wrangler kv:namespace create "TEMP_STORAGE_KV" --preview
-   
+
    # For rate limiting
-   wrangler kv:namespace create "RATE_LIMIT_KV"  
+   wrangler kv:namespace create "RATE_LIMIT_KV"
    wrangler kv:namespace create "RATE_LIMIT_KV" --preview
    ```
 
 4. Update `wrangler.toml` with your namespace IDs:
+
    ```toml
    [[kv_namespaces]]
    binding = "TEMP_STORAGE_KV"
    id = "your-actual-namespace-id"
    preview_id = "your-actual-preview-id"
-   
+
    [[kv_namespaces]]
    binding = "RATE_LIMIT_KV"
    id = "your-actual-rate-limit-id"
@@ -59,6 +63,7 @@ OTP mode provides an easier way to connect devices using human-memorable codes i
    ```
 
 5. Deploy the worker:
+
    ```bash
    wrangler deploy
    ```
@@ -68,8 +73,9 @@ OTP mode provides an easier way to connect devices using human-memorable codes i
 ### 2. Update the Frontend
 
 1. Edit `script.js` and update the `otpServerUrl`:
+
    ```javascript
-   this.otpServerUrl = 'https://your-actual-worker-url.workers.dev';
+   this.otpServerUrl = "https://your-actual-worker-url.workers.dev";
    ```
 
 2. That's it! The OTP mode should now work.
@@ -94,25 +100,27 @@ OTP mode provides an easier way to connect devices using human-memorable codes i
 ```
 Device A                    Server                     Device B
 --------                    ------                     --------
-1. Generate offer      →    
-2. Encrypt with code   →    Store encrypted offer  →    
+1. Generate offer      →
+2. Encrypt with code   →    Store encrypted offer  →
 3. Show code to user   →                            →   Enter code
-                       ←    Retrieve offer         ←    
-                       ←    Generate answer        ←    
+                       ←    Retrieve offer         ←
+                       ←    Generate answer        ←
                        ←    Encrypt with new code  ←    Store encrypted answer
 Enter final code       →    Retrieve answer        ←    Show final code
-Complete connection    ←                           ←    
+Complete connection    ←                           ←
 ```
 
 ## Cost Estimates
 
 **Cloudflare Workers pricing:**
+
 - Free tier: 100,000 requests/day
 - Paid: $5/month for 10M requests
 
 **Usage estimates:**
+
 - Light use (100 connections/day): **FREE**
-- Moderate (1,000 connections/day): **FREE**  
+- Moderate (1,000 connections/day): **FREE**
 - Heavy (10,000 connections/day): ~**$5-10/month**
 
 Each connection uses ~4 requests (store offer, get offer, store answer, get answer).
@@ -120,16 +128,19 @@ Each connection uses ~4 requests (store offer, get offer, store answer, get answ
 ## Troubleshooting
 
 ### "Failed to store connection data"
+
 - Check that your worker URL is correct in `script.js`
 - Verify KV namespaces are properly configured
 - Check Cloudflare dashboard for worker errors
 
 ### "Connection code not found"
+
 - Codes expire after 15 minutes
 - Codes are one-time use only
 - Check for typos (codes are case-insensitive)
 
 ### Rate limiting errors
+
 - Wait a minute and try again
 - Default limits: 10 requests/minute, 50/hour per IP
 
@@ -144,12 +155,14 @@ If OTP mode isn't working, users can always switch back to "Direct Sharing" mode
 For easy local testing without setting up Cloudflare:
 
 1. **Start the mock server:**
+
    ```bash
-   cd /path/to/clipboard-transfer
+   cd /closed-loop
    node mock-server.js
    ```
 
 2. **Start your web server:**
+
    ```bash
    # From the project root directory
    python -m http.server 8000
@@ -159,13 +172,14 @@ For easy local testing without setting up Cloudflare:
    ```
 
 3. **Test the flow:**
-   - Open two browser tabs to `http://localhost:8000/clipboard-transfer/`
+   - Open two browser tabs to `http://localhost:8000/closed-loop/`
    - In both tabs, select "Simple Codes (human-memorable)" mode
    - Tab 1: Create Session → get first code (e.g., `happy-tiger-runs`)
    - Tab 2: Join Session → enter first code → get second code (e.g., `clever-bird-soars`)
    - Tab 1: Enter second code → connection established!
 
 The mock server will show logs like:
+
 ```
 🚀 Mock OTP server running on http://localhost:3001
 📦 Stored data for passcode: happy-tiger-runs
@@ -179,7 +193,7 @@ The mock server will show logs like:
 To test with the actual Cloudflare infrastructure:
 
 ```bash
-cd /path/to/clipboard-transfer
+cd /path/to/closed-loop
 wrangler dev
 ```
 

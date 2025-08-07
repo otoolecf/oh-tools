@@ -1,5 +1,5 @@
-// Clipboard Transfer Tool - WebRTC P2P Implementation
-class ClipboardTransfer {
+// Closed Loop Tool - WebRTC P2P Implementation
+class ClosedLoop {
     constructor() {
         this.pc = null;
         this.dataChannel = null;
@@ -529,7 +529,7 @@ class ClipboardTransfer {
         this.setupPeerConnection();
         
         // Create data channel
-        this.dataChannel = this.pc.createDataChannel('clipboard-transfer', {
+        this.dataChannel = this.pc.createDataChannel('closed-loop', {
             ordered: true
         });
         this.setupDataChannel(this.dataChannel);
@@ -560,7 +560,7 @@ class ClipboardTransfer {
         this.setupPeerConnection();
         
         // Create data channel
-        this.dataChannel = this.pc.createDataChannel('clipboard-transfer', {
+        this.dataChannel = this.pc.createDataChannel('closed-loop', {
             ordered: true
         });
         this.setupDataChannel(this.dataChannel);
@@ -1619,7 +1619,7 @@ class ClipboardTransfer {
         
         // Create download button if we have file data (for received files)
         const downloadButton = fileData ? 
-            `<button class="btn-copy" onclick="clipboardTransfer.downloadFile('${filename}', '${fileData}', '${displayMimeType}')">Download</button>` 
+            `<button class="btn-copy" onclick="closedLoop.downloadFile('${filename}', '${fileData}', '${displayMimeType}')">Download</button>` 
             : '';
         
         messageDiv.innerHTML = `
@@ -1738,7 +1738,7 @@ class ClipboardTransfer {
                 </div>
                 <div class="transfer-controls">
                     <span class="transfer-speed">0 KB/s</span>
-                    <button class="btn-secondary btn-small" onclick="clipboardTransfer.cancelTransfer('${transferId}')">Cancel</button>
+                    <button class="btn-secondary btn-small" onclick="closedLoop.cancelTransfer('${transferId}')">Cancel</button>
                 </div>
             `;
             
@@ -1971,17 +1971,17 @@ class ClipboardTransfer {
 
 // Initialize the application
 document.addEventListener('DOMContentLoaded', () => {
-    console.log('DOM Content Loaded - Initializing Clipboard Transfer');
+    console.log('DOM Content Loaded - Initializing Closed Loop');
     console.log('Current URL:', window.location.href);
     console.log('Current hash:', window.location.hash);
     
-    window.clipboardTransfer = new ClipboardTransfer();
+    window.closedLoop = new ClosedLoop();
     
     // Also check for hash changes (in case the page was loaded with a hash)
     window.addEventListener('hashchange', () => {
         console.log('Hash changed:', window.location.hash);
-        if (window.clipboardTransfer && window.clipboardTransfer.connectionState === 'disconnected') {
-            window.clipboardTransfer.checkForOfferInUrl();
+        if (window.closedLoop && window.closedLoop.connectionState === 'disconnected') {
+            window.closedLoop.checkForOfferInUrl();
         }
     });
 });
