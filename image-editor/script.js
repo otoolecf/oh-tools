@@ -56,17 +56,26 @@ class ImageEditor {
         this.cropY = document.getElementById('cropY');
         this.cropWidth = document.getElementById('cropWidth');
         this.cropHeight = document.getElementById('cropHeight');
+        this.smartCropWidth = document.getElementById('smartCropWidth');
+        this.smartCropHeight = document.getElementById('smartCropHeight');
+        this.smartCropMode = document.getElementById('smartCropMode');
+        this.smartCropStrategy = document.getElementById('smartCropStrategy');
+        this.thumbnailWidth = document.getElementById('thumbnailWidth');
+        this.thumbnailHeight = document.getElementById('thumbnailHeight');
+        this.thumbnailCrop = document.getElementById('thumbnailCrop');
+        this.thumbnailNoRotate = document.getElementById('thumbnailNoRotate');
+        this.thumbnailNoUpscale = document.getElementById('thumbnailNoUpscale');
         this.rotateAngle = document.getElementById('rotateAngle');
         this.customAngle = document.getElementById('customAngle');
         this.customAngleGroup = document.getElementById('customAngleGroup');
         this.grayscaleThreshold = document.getElementById('grayscaleThreshold');
-        this.thresholdValue = document.getElementById('thresholdValue');
         this.tintColor = document.getElementById('tintColor');
         this.tintOpacity = document.getElementById('tintOpacity');
-        this.opacityValue = document.getElementById('opacityValue');
+        this.blurRadius = document.getElementById('blurRadius');
+        this.sharpenSigma = document.getElementById('sharpenSigma');
+        this.cannySigma = document.getElementById('cannySigma');
         this.exportFormat = document.getElementById('exportFormat');
         this.exportQuality = document.getElementById('exportQuality');
-        this.qualityValue = document.getElementById('qualityValue');
         this.qualityGroup = document.getElementById('qualityGroup');
     }
 
@@ -98,15 +107,25 @@ class ImageEditor {
         // Operation buttons
         document.getElementById('resizeBtn').addEventListener('click', () => this.applyResize());
         document.getElementById('cropBtn').addEventListener('click', () => this.applyCrop());
+        document.getElementById('smartCropBtn').addEventListener('click', () => this.applySmartCrop());
+        document.getElementById('thumbnailBtn').addEventListener('click', () => this.applyThumbnail());
         document.getElementById('rotateBtn').addEventListener('click', () => this.applyRotation());
         document.getElementById('flipHBtn').addEventListener('click', () => this.applyFlip('horizontal'));
         document.getElementById('flipVBtn').addEventListener('click', () => this.applyFlip('vertical'));
         document.getElementById('grayscaleBtn').addEventListener('click', () => this.applyGrayscale());
         document.getElementById('negateBtn').addEventListener('click', () => this.applyNegate());
         document.getElementById('tintBtn').addEventListener('click', () => this.applyTint());
+        document.getElementById('sepiaBtn').addEventListener('click', () => this.applySepia());
+        document.getElementById('vintageBtn').addEventListener('click', () => this.applyVintage());
+        document.getElementById('warmBtn').addEventListener('click', () => this.applyWarm());
+        document.getElementById('coolBtn').addEventListener('click', () => this.applyCool());
+        document.getElementById('contrastBtn').addEventListener('click', () => this.applyHighContrast());
         document.getElementById('flattenBtn').addEventListener('click', () => this.applyFlatten());
         document.getElementById('unflattenBtn').addEventListener('click', () => this.applyUnflatten());
-        document.getElementById('metadataBtn').addEventListener('click', () => this.toggleMetadata());
+        document.getElementById('blurBtn').addEventListener('click', () => this.applyBlur());
+        document.getElementById('sharpenBtn').addEventListener('click', () => this.applySharpen());
+        document.getElementById('cannyBtn').addEventListener('click', () => this.applyCanny());
+        document.getElementById('sobelBtn').addEventListener('click', () => this.applySobel());
         document.getElementById('downloadBtn').addEventListener('click', () => this.downloadImage());
 
         // Reset button
@@ -117,15 +136,44 @@ class ImageEditor {
         this.copyExtendedBtn.addEventListener('click', () => this.copyExtendedMetadata());
         this.copyAllMetadataBtn.addEventListener('click', () => this.copyAllMetadata());
 
-        // Range inputs
+        // Range inputs and their number counterparts
         this.grayscaleThreshold.addEventListener('input', (e) => {
-            this.thresholdValue.textContent = e.target.value;
+            document.getElementById('grayscaleThresholdNum').value = e.target.value;
         });
         this.tintOpacity.addEventListener('input', (e) => {
-            this.opacityValue.textContent = e.target.value + '%';
+            document.getElementById('tintOpacityNum').value = e.target.value;
         });
         this.exportQuality.addEventListener('input', (e) => {
-            this.qualityValue.textContent = e.target.value + '%';
+            document.getElementById('exportQualityNum').value = e.target.value;
+        });
+        this.blurRadius.addEventListener('input', (e) => {
+            document.getElementById('blurRadiusNum').value = e.target.value;
+        });
+        this.sharpenSigma.addEventListener('input', (e) => {
+            document.getElementById('sharpenSigmaNum').value = e.target.value;
+        });
+        this.cannySigma.addEventListener('input', (e) => {
+            document.getElementById('cannySigmaNum').value = e.target.value;
+        });
+        
+        // Number inputs sync with sliders
+        document.getElementById('grayscaleThresholdNum').addEventListener('input', (e) => {
+            this.grayscaleThreshold.value = e.target.value;
+        });
+        document.getElementById('tintOpacityNum').addEventListener('input', (e) => {
+            this.tintOpacity.value = e.target.value;
+        });
+        document.getElementById('exportQualityNum').addEventListener('input', (e) => {
+            this.exportQuality.value = e.target.value;
+        });
+        document.getElementById('blurRadiusNum').addEventListener('input', (e) => {
+            this.blurRadius.value = e.target.value;
+        });
+        document.getElementById('sharpenSigmaNum').addEventListener('input', (e) => {
+            this.sharpenSigma.value = e.target.value;
+        });
+        document.getElementById('cannySigmaNum').addEventListener('input', (e) => {
+            this.cannySigma.value = e.target.value;
         });
 
         // Format change
@@ -288,7 +336,9 @@ class ImageEditor {
     }
 
     updateQualityVisibility() {
-        if (this.exportFormat.value === 'png') {
+        const format = this.exportFormat.value;
+        // PNG and TIFF don't typically use quality settings
+        if (format === 'png' || format === 'tiff') {
             this.qualityGroup.classList.add('hidden');
         } else {
             this.qualityGroup.classList.remove('hidden');
@@ -302,7 +352,9 @@ class ImageEditor {
             this.isProcessing = true;
             this.showStatus(`Applying ${operationName}...`, 'info');
             
+            
             const newImage = await operationFn(this.currentImage);
+            
             this.currentImage = newImage;
             this.operations.push(operationName);
             
@@ -341,9 +393,99 @@ class ImageEditor {
         const width = parseInt(this.cropWidth.value) || this.currentImage.width;
         const height = parseInt(this.cropHeight.value) || this.currentImage.height;
         
+        console.log('Crop values:', { x, y, width, height });
+        console.log('Image dimensions:', this.currentImage.width, 'x', this.currentImage.height);
+        
         await this.applyOperation(
-            (image) => image.extract_area(x, y, width, height),
+            (image) => {
+                console.log('Attempting crop with crop():', x, y, width, height);
+                return image.crop(x, y, width, height);
+            },
             `Crop ${width}x${height} at (${x},${y})`
+        );
+    }
+
+    async applySmartCrop() {
+        const width = parseInt(this.smartCropWidth.value) || 500;
+        const height = parseInt(this.smartCropHeight.value) || 500;
+        const mode = this.smartCropMode.value;
+        const strategy = this.smartCropStrategy.value;
+        
+        // Calculate description and target parameters outside the operation function
+        let description, targetWidth, targetHeight = null;
+        
+        switch (mode) {
+            case 'width':
+                targetWidth = width;
+                description = `Smart Crop ${width}px width (${strategy})`;
+                break;
+            case 'height':
+                targetWidth = height;
+                targetHeight = height;
+                description = `Smart Crop ${height}px height (${strategy})`;
+                break;
+            case 'both':
+            default:
+                targetWidth = width;
+                targetHeight = height;
+                description = `Smart Crop ${width}x${height} (${strategy})`;
+                break;
+        }
+        
+        await this.applyOperation(
+            (image) => {
+                // Create a buffer from the current image
+                const buffer = image.writeToBuffer('.jpg', { Q: 95 });
+                
+                // Build options based on constraint mode
+                const options = {
+                    no_rotate: true,
+                    crop: strategy
+                };
+                
+                // Add height if specified
+                if (targetHeight) {
+                    options.height = targetHeight;
+                }
+                
+                return this.vips.Image.thumbnailBuffer(buffer, targetWidth, options);
+            },
+            description
+        );
+    }
+
+    async applyThumbnail() {
+        const width = parseInt(this.thumbnailWidth.value) || 300;
+        const height = parseInt(this.thumbnailHeight.value) || null;
+        const cropStrategy = this.thumbnailCrop.value;
+        const noRotate = this.thumbnailNoRotate.checked;
+        const noUpscale = this.thumbnailNoUpscale.checked;
+        
+        await this.applyOperation(
+            (image) => {
+                // Create a buffer from the current image
+                const buffer = image.writeToBuffer('.jpg', { Q: 95 });
+                
+                // Build options object
+                const options = {
+                    no_rotate: noRotate,
+                    crop: cropStrategy
+                };
+                
+                // Add height if specified
+                if (height) {
+                    options.height = height;
+                }
+                
+                // Add no upscaling option if checked
+                if (noUpscale) {
+                    options.size = 'down';
+                }
+                
+                // Use thumbnailBuffer method (static method)
+                return this.vips.Image.thumbnailBuffer(buffer, width, options);
+            },
+            `Thumbnail ${width}${height ? `x${height}` : ''} (${cropStrategy}${noUpscale ? ', no upscale' : ''})`
         );
     }
 
@@ -362,8 +504,14 @@ class ImageEditor {
     }
 
     async applyFlip(direction) {
+        console.log('Attempting flip:', direction);
+        
         await this.applyOperation(
-            (image) => direction === 'horizontal' ? image.fliphor() : image.flipver(),
+            (image) => {
+                const flipDirection = direction === 'horizontal' ? 0 : 1; // 0 = horizontal, 1 = vertical
+                console.log('Calling flip() with direction:', flipDirection);
+                return image.flip(flipDirection);
+            },
             `Flip ${direction}`
         );
     }
@@ -391,17 +539,130 @@ class ImageEditor {
         const color = this.tintColor.value;
         const opacity = parseInt(this.tintOpacity.value) / 100;
         
-        // Convert hex to RGB
+        console.log('Tint values:', { color, opacity });
+        
+        // Convert hex to RGB then to LAB for proper tinting
         const r = parseInt(color.substr(1, 2), 16);
         const g = parseInt(color.substr(3, 2), 16);
         const b = parseInt(color.substr(5, 2), 16);
         
         await this.applyOperation(
             (image) => {
-                const tint = this.vips.Image.black(image.width, image.height).add([r, g, b]);
-                return image.composite2(tint, 'multiply', { compositing_space: 'srgb' });
+                console.log('Applying LAB-based tint with RGB:', r, g, b, 'opacity:', opacity);
+                
+                // Get original colorspace
+                const originalColorspace = image.interpretation;
+                console.log('Original colorspace:', originalColorspace);
+                
+                // Create a small RGB image to convert to LAB for the tint color
+                const tintRgb = this.vips.Image.black(1, 1, { bands: 3 }).add([r, g, b]);
+                const tintLab = tintRgb.colourspace('lab');
+                
+                // Extract LAB values from the tint color
+                const labPixel = tintLab.getpoint(0, 0);
+                const tintChroma = [labPixel[1], labPixel[2]]; // A and B channels
+                
+                console.log('Tint LAB chroma:', tintChroma);
+                
+                // Convert image to LAB and extract luminance
+                const imageLab = image.colourspace('lab');
+                const luminance = imageLab.extractBand(0);
+                
+                // Create tinted version by combining original L with tint chroma
+                const tinted = luminance.bandjoin(tintChroma)
+                    .copy({ interpretation: 'lab' })
+                    .colourspace(originalColorspace);
+                
+                // Handle alpha channel if present
+                let result = tinted;
+                if (image.hasAlpha()) {
+                    const alpha = image.extractBand(image.bands - 1);
+                    result = result.bandjoin(alpha);
+                }
+                
+                // Blend based on opacity
+                if (opacity < 1.0) {
+                    result = image.linear([1 - opacity], [0]).add(result.linear([opacity], [0]));
+                }
+                
+                return result;
             },
             `Tint ${color} (${Math.round(opacity * 100)}%)`
+        );
+    }
+
+    async applySepia() {
+        await this.applyOperation(
+            (image) => {
+                // Classic sepia matrix from the example
+                const matrix = [
+                    [0.3588, 0.7044, 0.1368],
+                    [0.2990, 0.5870, 0.1140],
+                    [0.2392, 0.4696, 0.0912]
+                ];
+                return image.recomb(matrix).cast('uchar');
+            },
+            'Sepia filter'
+        );
+    }
+
+    async applyVintage() {
+        await this.applyOperation(
+            (image) => {
+                // Vintage effect: slightly desaturated with warm tone
+                const matrix = [
+                    [0.6, 0.3, 0.1],
+                    [0.2, 0.7, 0.1],
+                    [0.1, 0.2, 0.7]
+                ];
+                return image.recomb(matrix).cast('uchar').linear([0.9], [10]);
+            },
+            'Vintage filter'
+        );
+    }
+
+    async applyWarm() {
+        await this.applyOperation(
+            (image) => {
+                // Warm filter: enhance reds and yellows
+                const matrix = [
+                    [1.1, 0.05, 0.0],
+                    [0.0, 1.0, 0.0],
+                    [0.0, 0.0, 0.8]
+                ];
+                return image.recomb(matrix).cast('uchar');
+            },
+            'Warm filter'
+        );
+    }
+
+    async applyCool() {
+        await this.applyOperation(
+            (image) => {
+                // Cool filter: enhance blues
+                const matrix = [
+                    [0.8, 0.0, 0.0],
+                    [0.0, 0.9, 0.1],
+                    [0.0, 0.05, 1.2]
+                ];
+                return image.recomb(matrix).cast('uchar');
+            },
+            'Cool filter'
+        );
+    }
+
+    async applyHighContrast() {
+        await this.applyOperation(
+            (image) => {
+                // High contrast: boost contrast and saturation
+                const matrix = [
+                    [1.4, -0.2, -0.2],
+                    [-0.1, 1.3, -0.2],
+                    [-0.1, -0.2, 1.4]
+                ];
+                return image.recomb(matrix).cast('uchar');
+            },
+            'High contrast filter'
         );
     }
 
@@ -418,6 +679,49 @@ class ImageEditor {
             'Add alpha channel'
         );
     }
+
+    async applyBlur() {
+        const radius = parseFloat(this.blurRadius.value);
+        
+        await this.applyOperation(
+            (image) => image.gaussblur(radius),
+            `Blur (radius: ${radius})`
+        );
+    }
+
+    async applySharpen() {
+        const sigma = parseFloat(this.sharpenSigma.value);
+        
+        await this.applyOperation(
+            (image) => image.sharpen({ sigma: sigma }),
+            `Sharpen (sigma: ${sigma})`
+        );
+    }
+
+    async applyCanny() {
+        const sigma = parseFloat(this.cannySigma.value);
+        
+        await this.applyOperation(
+            (image) => {
+                // Apply Canny edge detector
+                let result = image.canny({
+                    sigma: sigma,
+                    precision: 'integer'
+                });
+                // Scale the output up to make it visible (Canny makes a float image)
+                return result.multiply(64);
+            },
+            `Canny Edge Detection (sigma: ${sigma})`
+        );
+    }
+
+    async applySobel() {
+        await this.applyOperation(
+            (image) => image.sobel(),
+            'Sobel Edge Detection'
+        );
+    }
+
 
     toggleMetadata() {
         const isVisible = !this.originalMetadata.classList.contains('hidden');
@@ -650,6 +954,7 @@ class ImageEditor {
             const format = this.exportFormat.value;
             const quality = parseInt(this.exportQuality.value);
             
+            
             let buffer;
             let mimeType;
             let extension;
@@ -669,6 +974,11 @@ class ImageEditor {
                     buffer = this.currentImage.writeToBuffer('.webp', { Q: quality });
                     mimeType = 'image/webp';
                     extension = 'webp';
+                    break;
+                case 'tiff':
+                    buffer = this.currentImage.writeToBuffer('.tiff');
+                    mimeType = 'image/tiff';
+                    extension = 'tiff';
                     break;
             }
             
