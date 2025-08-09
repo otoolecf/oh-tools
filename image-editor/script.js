@@ -1,6 +1,7 @@
 class ImageEditor {
     constructor() {
         this.vips = null;
+        this.heif = null;
         this.originalImage = null;
         this.currentImage = null;
         this.operations = [];
@@ -8,7 +9,7 @@ class ImageEditor {
         
         this.initializeElements();
         this.bindEvents();
-        this.initializeVips();
+        this.initializeLibraries();
     }
 
     initializeElements() {
@@ -30,10 +31,12 @@ class ImageEditor {
 
         // Metadata elements
         this.metadataSection = document.getElementById('metadataSection');
-        this.metadataDisplay = document.getElementById('metadataDisplay');
+        this.basicMetadataDisplay = document.getElementById('basicMetadataDisplay');
         this.extendedMetadataDisplay = document.getElementById('extendedMetadataDisplay');
-        this.copyMetadataBtn = document.getElementById('copyMetadataBtn');
-        this.copyExtendedBtn = document.getElementById('copyExtendedBtn');
+        this.copyMetadataTextBtn = document.getElementById('copyMetadataTextBtn');
+        this.copyMetadataJsonBtn = document.getElementById('copyMetadataJsonBtn');
+        this.copyExtendedTextBtn = document.getElementById('copyExtendedTextBtn');
+        this.copyExtendedJsonBtn = document.getElementById('copyExtendedJsonBtn');
         this.copyAllMetadataBtn = document.getElementById('copyAllMetadataBtn');
 
         // Preview elements
@@ -77,6 +80,7 @@ class ImageEditor {
         this.exportFormat = document.getElementById('exportFormat');
         this.exportQuality = document.getElementById('exportQuality');
         this.qualityGroup = document.getElementById('qualityGroup');
+        
     }
 
     bindEvents() {
@@ -132,8 +136,10 @@ class ImageEditor {
         this.resetBtn.addEventListener('click', () => this.resetToOriginal());
 
         // Copy metadata buttons
-        this.copyMetadataBtn.addEventListener('click', () => this.copyMetadata());
-        this.copyExtendedBtn.addEventListener('click', () => this.copyExtendedMetadata());
+        this.copyMetadataTextBtn.addEventListener('click', () => this.copyMetadataText());
+        this.copyMetadataJsonBtn.addEventListener('click', () => this.copyMetadataJson());
+        this.copyExtendedTextBtn.addEventListener('click', () => this.copyExtendedText());
+        this.copyExtendedJsonBtn.addEventListener('click', () => this.copyExtendedJson());
         this.copyAllMetadataBtn.addEventListener('click', () => this.copyAllMetadata());
 
         // Range inputs and their number counterparts
@@ -185,18 +191,27 @@ class ImageEditor {
         this.resizeHeight.addEventListener('input', () => this.updateAspectRatio('height'));
     }
 
-    async initializeVips() {
+    async initializeLibraries() {
         try {
-            this.showStatus('Initializing image processing engine...', 'info');
+            this.showStatus('Initializing image processing engines...', 'info');
             
             // Debug info
             console.log('crossOriginIsolated:', window.crossOriginIsolated);
             console.log('SharedArrayBuffer available:', typeof SharedArrayBuffer !== 'undefined');
             console.log('Vips available:', typeof Vips !== 'undefined');
+            console.log('HeicTo available:', typeof HeicTo !== 'undefined');
             
             // Check if SharedArrayBuffer is available
             if (typeof SharedArrayBuffer === 'undefined') {
                 throw new Error('SharedArrayBuffer is not available. Please serve with Cross-Origin-Embedder-Policy: require-corp and Cross-Origin-Opener-Policy: same-origin headers.');
+            }
+            
+            // heic-to library doesn't need initialization, just check availability
+            if (typeof HeicTo !== 'undefined') {
+                this.heif = HeicTo;
+                console.log('heic-to library available');
+            } else {
+                console.warn('heic-to not available - HEIC support will be limited');
             }
             
             // Check if Vips is available
@@ -204,18 +219,27 @@ class ImageEditor {
                 throw new Error('wasm-vips library failed to load.');
             }
             
-            // Simple initialization as per wasm-vips docs
-            console.log('Attempting Vips initialization...');
-            this.vips = await Vips();
+            // Initialize VIPS with HEIF and SVG support
+            console.log('Attempting Vips initialization with HEIF and SVG support...');
+            this.vips = await Vips({
+                locateFile: (path) => `node_modules/wasm-vips/lib/${path}`,
+                dynamicLibraries: ['vips-heif.wasm', 'vips-resvg.wasm'],   // Load HEIF and SVG plugins
+            });
             console.log('Vips initialized successfully:', this.vips);
             
-            // Enable upload area now that wasm-vips is ready
+            // Sanity check: are the plugins registered?
+            const hasHeif = !!this.vips.Utils.typeFind('VipsOperation', 'heifload');
+            const hasSvg = !!this.vips.Utils.typeFind('VipsOperation', 'svgload');
+            console.log('vips-heif loaded?', hasHeif);
+            console.log('vips-resvg loaded?', hasSvg);
+            
+            // Enable upload area now that libraries are ready
             this.enableUpload();
             
             this.showStatus('Image editor ready!', 'success');
         } catch (error) {
             this.showStatus('Failed to initialize image processing: ' + error.message, 'error');
-            console.error('Vips initialization failed:', error);
+            console.error('Library initialization failed:', error);
             console.error('Full error object:', error);
         }
     }
@@ -235,6 +259,26 @@ class ImageEditor {
         }
     }
 
+    async convertHeicToPng(file) {
+        try {
+            console.log('Converting HEIC to PNG using heic-to...');
+            
+            // heic-to library has a very simple API - just pass the file directly
+            const pngBlob = await this.heif({
+                blob: file,
+                type: "image/png",
+                quality: 1.0  // Maximum quality
+            });
+            
+            console.log('HEIC successfully converted to PNG');
+            return pngBlob;
+            
+        } catch (error) {
+            console.error('HEIC conversion failed:', error);
+            throw new Error(`HEIC conversion failed: ${error.message}`);
+        }
+    }
+
     async handleFile(file) {
         if (!file || !file.type.startsWith('image/')) {
             this.showStatus('Please select a valid image file.', 'error');
@@ -249,12 +293,70 @@ class ImageEditor {
         try {
             this.showStatus('Loading image...', 'info');
             
-            const buffer = await file.arrayBuffer();
+            // Check for HEIC/HEIF files
+            const isHeic = file.name.toLowerCase().endsWith('.heic') || 
+                          file.name.toLowerCase().endsWith('.heif') ||
+                          file.type === 'image/heic' || 
+                          file.type === 'image/heif';
+            
+            let processedFile = file;
+            let originalMetadataImage = null;
+            
+            if (isHeic && this.heif) {
+                // First, extract metadata from original HEIC file using VIPS
+                try {
+                    this.showStatus('Extracting metadata from HEIC...', 'info');
+                    const originalBuffer = await file.arrayBuffer();
+                    const originalUint8Array = new Uint8Array(originalBuffer);
+                    
+                    // Load original HEIC with VIPS for metadata only (this should work with HEIF plugin)
+                    originalMetadataImage = this.vips.Image.newFromBuffer(originalUint8Array, '', {
+                        access: 'sequential'
+                    });
+                    console.log('Successfully extracted metadata from original HEIC file using VIPS HEIF plugin');
+                } catch (metadataError) {
+                    console.warn('Could not extract metadata from original HEIC:', metadataError.message);
+                    console.log('This might indicate the HEIF plugin is not working properly');
+                }
+                
+                // Convert HEIC to PNG for processing (for pixel data)
+                this.showStatus('Converting HEIC to PNG...', 'info');
+                const pngBlob = await this.convertHeicToPng(file);
+                this.showStatus('HEIC conversion completed, loading image...', 'info');
+                processedFile = new File([pngBlob], file.name.replace(/\.(heic|heif)$/i, '.png'), {
+                    type: 'image/png'
+                });
+                console.log('HEIC converted to PNG for image processing');
+            } else if (isHeic) {
+                throw new Error('HEIC file detected but heic-to library not available');
+            }
+            
+            const buffer = await processedFile.arrayBuffer();
             const uint8Array = new Uint8Array(buffer);
             
             // Load image using vips
+            console.log(`Loading ${file.type || 'unknown'} file into VIPS...`);
             this.originalImage = this.vips.Image.newFromBuffer(uint8Array);
             this.currentImage = this.originalImage.copy();
+            
+            // Debug: Check if we have metadata fields available
+            console.log('Checking for available metadata fields...');
+            try {
+                const fieldsResult = this.originalImage.getFields();
+                if (fieldsResult && typeof fieldsResult.size === 'function') {
+                    console.log(`Found ${fieldsResult.size()} metadata fields in loaded image`);
+                    if (fieldsResult.size() === 0) {
+                        console.warn('No metadata fields found - may have been lost during processing');
+                    }
+                } else {
+                    console.warn('Cannot access metadata fields');
+                }
+            } catch (e) {
+                console.warn('Error checking metadata fields:', e.message);
+            }
+            
+            // Store the metadata source image (original HEIC if available, otherwise processed)
+            this.metadataSourceImage = originalMetadataImage || this.originalImage;
             
             // Display images and metadata
             await this.updateImageDisplay();
@@ -268,20 +370,26 @@ class ImageEditor {
             this.showStatus('Image loaded successfully!', 'success');
             
         } catch (error) {
-            this.showStatus('Failed to load image: ' + error.message, 'error');
             console.error('Image loading failed:', error);
+            let errorMessage = 'Failed to load image: ' + error.message;
+            
+            if (error.message.includes('HEIC')) {
+                errorMessage = 'HEIC processing failed. The file may be corrupted or use an unsupported variant.';
+            }
+            
+            this.showStatus(errorMessage, 'error');
         }
     }
 
     async updateImageDisplay() {
         try {
-            // Convert images to display format
-            const originalBuffer = this.originalImage.writeToBuffer('.jpg', { Q: 90 });
-            const currentBuffer = this.currentImage.writeToBuffer('.jpg', { Q: 90 });
+            // Convert images to display format - use PNG for better compatibility with HEIC/complex formats
+            const originalBuffer = this.originalImage.writeToBuffer('.png');
+            const currentBuffer = this.currentImage.writeToBuffer('.png');
             
             // Create blob URLs
-            const originalBlob = new Blob([originalBuffer], { type: 'image/jpeg' });
-            const currentBlob = new Blob([currentBuffer], { type: 'image/jpeg' });
+            const originalBlob = new Blob([originalBuffer], { type: 'image/png' });
+            const currentBlob = new Blob([currentBuffer], { type: 'image/png' });
             
             this.originalImageEl.src = URL.createObjectURL(originalBlob);
             this.previewImageEl.src = URL.createObjectURL(currentBlob);
@@ -290,6 +398,7 @@ class ImageEditor {
             this.updateCropLimits();
             
         } catch (error) {
+            console.error('Display conversion error:', error);
             this.showStatus('Failed to display image: ' + error.message, 'error');
         }
     }
@@ -723,6 +832,17 @@ class ImageEditor {
     }
 
 
+
+    hexToRgb(hex) {
+        const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+        return result ? [
+            parseInt(result[1], 16),
+            parseInt(result[2], 16),
+            parseInt(result[3], 16)
+        ] : null;
+    }
+
+
     toggleMetadata() {
         const isVisible = !this.originalMetadata.classList.contains('hidden');
         
@@ -737,213 +857,502 @@ class ImageEditor {
     }
 
     showMetadata() {
-        const metadata = this.getImageMetadata(this.currentImage);
-        const extendedMetadata = this.getExtendedMetadata(this.currentImage);
+        // Use metadata source image (original HEIC) for metadata extraction when available
+        const metadataImage = this.metadataSourceImage || this.currentImage;
         
-        this.metadataDisplay.value = metadata;
-        this.extendedMetadataDisplay.value = extendedMetadata;
+        this.basicMetadataJson = this.getImageMetadata(metadataImage);
+        this.extendedMetadataJson = this.getExtendedMetadata(metadataImage);
+        
+        // Parse the JSON and create readable displays
+        try {
+            const basicData = JSON.parse(this.basicMetadataJson);
+            this.basicMetadataDisplay.innerHTML = this.createReadableDisplay(basicData);
+        } catch (e) {
+            this.basicMetadataDisplay.textContent = this.basicMetadataJson;
+        }
+        
+        try {
+            const extendedData = JSON.parse(this.extendedMetadataJson);
+            this.extendedMetadataDisplay.innerHTML = this.createReadableDisplay(extendedData);
+        } catch (e) {
+            this.extendedMetadataDisplay.textContent = this.extendedMetadataJson;
+        }
         
         // Also update the toggle metadata sections if they exist
         if (this.originalMetadata && this.previewMetadata) {
-            const originalMeta = this.getImageMetadata(this.originalImage, 'Original');
-            const currentMeta = this.getImageMetadata(this.currentImage, 'Current');
+            // Show original HEIC metadata vs current processed metadata
+            const originalMeta = this.getImageMetadata(metadataImage);
+            const currentMeta = this.getImageMetadata(this.currentImage);
             
             this.originalMetadata.textContent = originalMeta;
             this.previewMetadata.textContent = currentMeta;
         }
     }
 
-    getImageMetadata(image, label = '') {
-        const metadata = [];
+    createReadableDisplay(data) {
+        let html = '';
         
-        if (label) {
-            metadata.push(`${label} Image Metadata:`);
-        } else {
-            metadata.push('Image Metadata:');
+        function processValue(key, value, indent = 0) {
+            if (typeof value === 'object' && value !== null) {
+                // Section header with proper spacing
+                html += `<div style="margin: ${indent === 0 ? '0 0 0.5rem 0' : '0.75rem 0 0.25rem 0'}; padding-left: ${indent * 20}px"><strong>${key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}:</strong></div>`;
+                for (const [subKey, subValue] of Object.entries(value)) {
+                    processValue(subKey, subValue, indent + 1);
+                }
+                // Add spacing after each section
+                if (indent === 0) {
+                    html += `<div style="margin-bottom: 1rem"></div>`;
+                }
+            } else {
+                const displayKey = key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+                html += `<div style="margin: 0.1rem 0; padding-left: ${indent * 20}px"><span style="color: var(--text-secondary); font-weight: 500">${displayKey}:</span> <span>${value}</span></div>`;
+            }
         }
         
+        for (const [key, value] of Object.entries(data)) {
+            processValue(key, value);
+        }
+        
+        return html;
+    }
+
+    createTextDisplay(data) {
+        let text = '';
+        
+        function processValue(key, value, indent = 0) {
+            const spacing = '  '.repeat(indent);
+            
+            if (typeof value === 'object' && value !== null) {
+                text += `${spacing}${key.toUpperCase()}:\n`;
+                for (const [subKey, subValue] of Object.entries(value)) {
+                    processValue(subKey, subValue, indent + 1);
+                }
+                if (indent === 0) text += '\n';
+            } else {
+                const displayKey = key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+                text += `${spacing}${displayKey}: ${value}\n`;
+            }
+        }
+        
+        for (const [key, value] of Object.entries(data)) {
+            processValue(key, value);
+        }
+        
+        return text.trim();
+    }
+
+    getImageMetadata(image, label = '') {
+        const metadataObject = {};
+        
         // Basic image properties - using only properties we know work
-        metadata.push(
-            `Dimensions: ${image.width} x ${image.height} pixels`,
-            `Bands: ${image.bands}`,
-            `Format: ${image.format}`,
-            `Colorspace: ${image.interpretation}`,
-            `Size: ${Math.round((image.width * image.height * image.bands) / 1024)} KB (uncompressed)`
-        );
+        metadataObject.dimensions = {
+            width: image.width,
+            height: image.height,
+            megapixels: Math.round((image.width * image.height) / 1000000 * 100) / 100
+        };
+        
+        metadataObject.format = {
+            bands: image.bands,
+            format: image.format,
+            colorspace: image.interpretation,
+            uncompressed_size_kb: Math.round((image.width * image.height * image.bands) / 1024)
+        };
 
         // Try optional properties safely
         try {
-            metadata.push(`Resolution: ${image.xres()} x ${image.yres()} pixels/mm`);
+            metadataObject.resolution = {
+                x: image.xres(),
+                y: image.yres(),
+                unit: "pixels/mm"
+            };
         } catch (e) {
             // Resolution not available
         }
 
         try {
             const hasAlpha = image.bands === 4 || image.bands === 2; // estimate based on bands
-            metadata.push(`Has alpha channel: ${hasAlpha} (estimated)`);
+            metadataObject.format.has_alpha = hasAlpha;
         } catch (e) {
             // Alpha detection not available
         }
-
-        return metadata.join('\n');
+        
+        return JSON.stringify(metadataObject, null, 2);
     }
 
     getExtendedMetadata(image) {
         const metadata = [];
         
         try {
-            metadata.push('Extended Image Properties:');
-            
-            // First, inspect the main image object
-            const props = Object.getOwnPropertyNames(image);
-            const methods = props.filter(prop => typeof image[prop] === 'function');
-            
-            // Check if the 'l' property contains the actual libvips object
-            if (image.l) {
-                metadata.push('', 'Inspecting internal libvips object (image.l):');
-                
-                try {
-                    const internalProps = Object.getOwnPropertyNames(image.l);
-                    metadata.push(`Internal object has ${internalProps.length} properties`);
-                    
-                    // Show some key internal properties
-                    internalProps.slice(0, 30).forEach(prop => {
-                        try {
-                            const value = image.l[prop];
-                            if (value !== undefined && value !== null) {
-                                if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') {
-                                    metadata.push(`  ${prop}: ${value}`);
-                                } else if (typeof value === 'object' && value.constructor === Array) {
-                                    metadata.push(`  ${prop}: [Array length: ${value.length}]`);
-                                } else {
-                                    metadata.push(`  ${prop}: [${typeof value}]`);
-                                }
-                            }
-                        } catch (e) {
-                            metadata.push(`  ${prop}: [error accessing]`);
-                        }
-                    });
-                    
-                    if (internalProps.length > 30) {
-                        metadata.push(`  ... and ${internalProps.length - 30} more internal properties`);
-                    }
-                } catch (e) {
-                    metadata.push('  Error inspecting internal object:', e.message);
-                }
-            }
-            
-            // Show available methods on the main image object
-            if (methods.length > 0) {
-                metadata.push('', 'Available image methods:');
-                methods.slice(0, 20).forEach(method => {
-                    metadata.push(`  ${method}()`);
-                });
-                if (methods.length > 20) {
-                    metadata.push(`  ... and ${methods.length - 20} more methods`);
-                }
-            }
-            
-            // Try some common metadata access methods
-            metadata.push('', 'Extracting metadata fields:');
-            
+            // Get all available metadata fields
+            let allFields = [];
+            let fieldsResult = null;
             try {
+                console.log('Checking if getFields method exists:', typeof image.getFields);
                 if (typeof image.getFields === 'function') {
-                    const fieldsResult = image.getFields();
-                    metadata.push(`getFields() returned: ${typeof fieldsResult}`);
+                    fieldsResult = image.getFields();
+                    console.log('getFields() raw result:', fieldsResult);
                     
-                    if (fieldsResult && typeof fieldsResult === 'object') {
-                        // Try to extract the actual fields array
-                        const fieldProps = Object.getOwnPropertyNames(fieldsResult);
-                        metadata.push(`Fields object has properties: ${fieldProps.join(', ')}`);
+                    // Extract the actual field names array - it's a VectorString object
+                    if (fieldsResult && typeof fieldsResult.size === 'function') {
+                        console.log('fieldsResult is a VectorString with size:', fieldsResult.size());
+                        const size = fieldsResult.size();
                         
-                        // The fields might be in a specific property
-                        fieldProps.forEach(prop => {
+                        // Extract each field name from the VectorString
+                        for (let i = 0; i < size; i++) {
                             try {
-                                const value = fieldsResult[prop];
-                                if (Array.isArray(value)) {
-                                    metadata.push(`  ${prop}: [Array with ${value.length} metadata fields]`);
-                                    value.forEach((field, index) => {
-                                        if (index < 20) { // Limit display
-                                            metadata.push(`    - ${field}`);
-                                            
-                                            // Try to get the value for this field
-                                            try {
-                                                if (typeof image.get === 'function') {
-                                                    const fieldValue = image.get(field);
-                                                    if (typeof fieldValue === 'string' && fieldValue.length < 200) {
-                                                        metadata.push(`      = "${fieldValue}"`);
-                                                    } else if (typeof fieldValue === 'number') {
-                                                        metadata.push(`      = ${fieldValue}`);
-                                                    } else {
-                                                        metadata.push(`      = [${typeof fieldValue}]`);
-                                                    }
-                                                }
-                                            } catch (e) {
-                                                // Field value not accessible
-                                            }
-                                        }
-                                    });
-                                    if (value.length > 20) {
-                                        metadata.push(`    ... and ${value.length - 20} more fields`);
-                                    }
-                                } else if (typeof value === 'string' || typeof value === 'number') {
-                                    metadata.push(`  ${prop}: ${value}`);
-                                } else {
-                                    metadata.push(`  ${prop}: [${typeof value}]`);
+                                if (typeof fieldsResult.get === 'function') {
+                                    const fieldName = fieldsResult.get(i);
+                                    allFields.push(fieldName);
+                                    console.log(`Field ${i}:`, fieldName);
                                 }
                             } catch (e) {
-                                metadata.push(`  ${prop}: [error accessing]`);
+                                console.log(`Error getting field ${i}:`, e);
                             }
-                        });
+                        }
                     }
                 }
             } catch (e) {
-                metadata.push('Error extracting fields:', e.message);
+                console.error('Error retrieving field list:', e);
+                return 'Could not retrieve metadata fields.';
+            }
+
+            if (allFields.length === 0) {
+                return 'No metadata fields found in this image.';
             }
             
+            // Get the specific methods we need
+            const proto = Object.getPrototypeOf(image);
+            const getStringMethod = proto && proto.getString ? proto.getString.bind(image) : null;
+            const getBlobMethod = proto && proto.getBlob ? proto.getBlob.bind(image) : null;
+            
+            console.log('Available specific methods:', {
+                getString: !!getStringMethod,
+                getBlob: !!getBlobMethod
+            });
+            
+            // Group metadata by categories
+            const exifFields = [];
+            const cameraInfo = [];
+            const technicalInfo = [];
+            const otherFields = [];
+            
+            // Process each field and categorize
+            for (const fieldName of allFields) {
+                try {
+                    let value = null;
+                    let displayValue = null;
+                    
+                    // Try to get the value
+                    if (fieldName.includes('data') && getBlobMethod) {
+                        try {
+                            value = getBlobMethod(fieldName);
+                            console.log(`${fieldName} (blob):`, value);
+                            if (value) {
+                                if (fieldName === 'icc-profile-data') {
+                                    displayValue = this.parseIccProfile(value);
+                                } else if (fieldName === 'exif-data') {
+                                    displayValue = `EXIF data [${value.length} bytes] - Contains camera settings and image metadata`;
+                                } else if (fieldName === 'jpeg-thumbnail-data') {
+                                    displayValue = `JPEG thumbnail [${value.length} bytes] - Embedded preview image`;
+                                } else {
+                                    displayValue = `[${value.length} bytes]`;
+                                }
+                            }
+                        } catch (e) {
+                            // Blob access failed, try string
+                            if (getStringMethod) {
+                                try {
+                                    value = getStringMethod(fieldName);
+                                    displayValue = value;
+                                } catch (e2) {
+                                    // String access also failed
+                                }
+                            }
+                        }
+                    } else if (getStringMethod) {
+                        try {
+                            value = getStringMethod(fieldName);
+                            console.log(`${fieldName} (string):`, value);
+                            displayValue = value;
+                        } catch (e) {
+                            // String access failed
+                        }
+                    }
+                    
+                    if (value !== null && value !== undefined) {
+                        // Clean up the value - extract just the readable part before the parentheses
+                        let cleanValue = displayValue;
+                        if (typeof displayValue === 'string' && displayValue.includes(' (')) {
+                            cleanValue = displayValue.split(' (')[0];
+                        }
+                        
+                        const cleanFieldName = fieldName.replace(/^exif-ifd[0-9]-/, '').replace(/^exif-/, '');
+                        
+                        // Handle special cases where displayValue is an object (like ICC profile)
+                        let entry;
+                        if (typeof displayValue === 'object' && displayValue !== null) {
+                            entry = { field: fieldName, name: cleanFieldName, value: displayValue };
+                        } else {
+                            entry = { field: fieldName, name: cleanFieldName, value: cleanValue };
+                        }
+                        
+                        // Categorize the field
+                        if (fieldName.includes('exif-data') || fieldName === 'jpeg-thumbnail-data' || fieldName === 'icc-profile-data') {
+                            otherFields.push(entry);
+                        } else if (fieldName.includes('Make') || fieldName.includes('Model') || fieldName.includes('Software') || fieldName.includes('DateTime')) {
+                            cameraInfo.push(entry);
+                        } else if (fieldName.includes('Exposure') || fieldName.includes('FNumber') || fieldName.includes('ISO') || fieldName.includes('Flash') || fieldName.includes('FocalLength') || fieldName.includes('Shutter') || fieldName.includes('Aperture') || fieldName.includes('Metering')) {
+                            exifFields.push(entry);
+                        } else if (fieldName.includes('Resolution') || fieldName.includes('Orientation') || fieldName.includes('ColorSpace') || fieldName.includes('Pixel') || fieldName.includes('WhiteBalance')) {
+                            technicalInfo.push(entry);
+                        } else {
+                            otherFields.push(entry);
+                        }
+                    }
+                } catch (e) {
+                    console.log(`Error accessing field ${fieldName}:`, e);
+                }
+            }
+            
+            // Build the JSON-like formatted output
+            const metadataObject = {};
+            
+            if (cameraInfo.length > 0) {
+                metadataObject.camera = {};
+                cameraInfo.forEach(entry => {
+                    metadataObject.camera[entry.name] = entry.value;
+                });
+            }
+            
+            if (exifFields.length > 0) {
+                metadataObject.exposure = {};
+                exifFields.forEach(entry => {
+                    metadataObject.exposure[entry.name] = entry.value;
+                });
+            }
+            
+            if (technicalInfo.length > 0) {
+                metadataObject.technical = {};
+                technicalInfo.forEach(entry => {
+                    metadataObject.technical[entry.name] = entry.value;
+                });
+            }
+            
+            if (otherFields.length > 0) {
+                metadataObject.other = {};
+                otherFields.forEach(entry => {
+                    metadataObject.other[entry.name] = entry.value;
+                });
+            }
+            
+            // Convert to pretty JSON string
+            const jsonString = JSON.stringify(metadataObject, null, 2);
+            metadata.push(jsonString);
+            
+            
         } catch (e) {
-            metadata.push('Extended metadata inspection failed');
+            metadata.push('Extended metadata extraction failed');
             metadata.push('Error:', e.message);
         }
 
         return metadata.join('\n');
     }
 
-    copyMetadata() {
-        navigator.clipboard.writeText(this.metadataDisplay.value).then(() => {
-            this.showStatus('Basic metadata copied to clipboard!', 'success');
-        }).catch(() => {
-            // Fallback for older browsers
-            this.metadataDisplay.select();
-            document.execCommand('copy');
-            this.showStatus('Basic metadata copied to clipboard!', 'success');
+    parseExifPreview(exifData) {
+        // Simple EXIF preview parser - looks for common ASCII strings
+        const fields = [];
+        try {
+            // Look for common EXIF strings (this is a simplified preview)
+            const commonTags = [
+                'Make', 'Model', 'DateTime', 'Software', 'Artist', 'Copyright',
+                'ImageDescription', 'Orientation', 'XResolution', 'YResolution',
+                'ResolutionUnit', 'ExposureTime', 'FNumber', 'ISO', 'Flash'
+            ];
+            
+            // Very basic string extraction for preview purposes
+            // In a real implementation, you'd want a proper EXIF parser
+            for (let i = 0; i < exifData.length - 10; i++) {
+                const slice = exifData.slice(i, i + 50);
+                commonTags.forEach(tag => {
+                    if (slice.includes(tag)) {
+                        // Try to extract value after tag
+                        const tagStart = slice.indexOf(tag);
+                        if (tagStart >= 0) {
+                            const afterTag = slice.slice(tagStart + tag.length);
+                            const match = afterTag.match(/[\x20-\x7E]+/); // ASCII printable chars
+                            if (match && match[0].trim().length > 0) {
+                                const value = match[0].trim().replace(/\0/g, '');
+                                if (value && !fields.some(f => f.startsWith(tag))) {
+                                    fields.push(`${tag}: ${value}`);
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+        } catch (e) {
+            fields.push('EXIF preview parsing failed');
+        }
+        return fields;
+    }
+
+    parseIccProfile(profileData) {
+        try {
+            if (!profileData || profileData.length < 128) {
+                return {
+                    size_bytes: profileData?.length || 0,
+                    status: "Invalid or too small"
+                };
+            }
+
+            // Convert to Uint8Array if needed
+            let bytes;
+            if (profileData.buffer) {
+                bytes = new Uint8Array(profileData.buffer);
+            } else if (typeof profileData === 'string') {
+                // If it's a string, convert to bytes
+                bytes = new Uint8Array(profileData.length);
+                for (let i = 0; i < profileData.length; i++) {
+                    bytes[i] = profileData.charCodeAt(i);
+                }
+            } else {
+                bytes = new Uint8Array(profileData);
+            }
+            
+            console.log('ICC profile bytes length:', bytes.length);
+            console.log('First 16 bytes:', Array.from(bytes.slice(0, 16)).map(b => b.toString(16).padStart(2, '0')).join(' '));
+
+            // ICC profiles are binary data, we can read the header
+            const dataView = new DataView(bytes.buffer);
+            
+            // Profile size (bytes 0-3, big endian)
+            const profileSize = dataView.getUint32(0, false);
+            
+            // Preferred CMM type (bytes 4-7)
+            const cmmType = String.fromCharCode(
+                bytes[4], bytes[5], bytes[6], bytes[7]
+            ).replace(/\0/g, '');
+            
+            // Profile version (bytes 8-11)
+            const majorVersion = bytes[8];
+            const minorVersion = bytes[9];
+            
+            // Device class (bytes 12-15)
+            const deviceClass = String.fromCharCode(
+                bytes[12], bytes[13], bytes[14], bytes[15]
+            ).replace(/\0/g, '');
+            
+            // Data color space (bytes 16-19)
+            const colorSpace = String.fromCharCode(
+                bytes[16], bytes[17], bytes[18], bytes[19]
+            ).replace(/\0/g, '');
+            
+            // Profile connection space (bytes 20-23)
+            const pcs = String.fromCharCode(
+                bytes[20], bytes[21], bytes[22], bytes[23]
+            ).replace(/\0/g, '');
+            
+            // Primary platform (bytes 40-43)
+            const platform = String.fromCharCode(
+                bytes[40], bytes[41], bytes[42], bytes[43]
+            ).replace(/\0/g, '');
+
+            const deviceClassNames = {
+                'scnr': 'Input device (scanner/camera)',
+                'mntr': 'Display device (monitor)', 
+                'prtr': 'Output device (printer)',
+                'link': 'Device link profile',
+                'spac': 'Color space profile',
+                'abst': 'Abstract profile',
+                'nmcl': 'Named color profile'
+            };
+
+            const colorSpaceNames = {
+                'RGB ': 'RGB',
+                'CMYK': 'CMYK', 
+                'GRAY': 'Grayscale',
+                'LAB ': 'CIELAB',
+                'XYZ ': 'CIEXYZ'
+            };
+
+            return {
+                size_bytes: profileData.length,
+                profile_size: profileSize,
+                cmm_type: cmmType || 'Unknown',
+                version: `${majorVersion}.${minorVersion}`,
+                device_class: deviceClassNames[deviceClass] || deviceClass || 'Unknown',
+                color_space: colorSpaceNames[colorSpace] || colorSpace || 'Unknown', 
+                connection_space: pcs || 'Unknown',
+                platform: platform || 'Unknown'
+            };
+            
+        } catch (e) {
+            console.log('Error parsing ICC profile:', e);
+            return {
+                size_bytes: profileData?.length || 0,
+                status: "Could not parse header",
+                error: e.message
+            };
+        }
+    }
+
+    copyMetadataText() {
+        try {
+            const basicData = JSON.parse(this.basicMetadataJson);
+            const text = this.createTextDisplay(basicData);
+            navigator.clipboard.writeText(text).then(() => {
+                this.showStatus('Basic metadata copied as text!', 'success');
+            });
+        } catch (e) {
+            navigator.clipboard.writeText(this.basicMetadataJson).then(() => {
+                this.showStatus('Basic metadata copied!', 'success');
+            });
+        }
+    }
+
+    copyMetadataJson() {
+        navigator.clipboard.writeText(this.basicMetadataJson).then(() => {
+            this.showStatus('Basic metadata JSON copied to clipboard!', 'success');
         });
     }
 
-    copyExtendedMetadata() {
-        navigator.clipboard.writeText(this.extendedMetadataDisplay.value).then(() => {
-            this.showStatus('Extended metadata copied to clipboard!', 'success');
-        }).catch(() => {
-            // Fallback for older browsers
-            this.extendedMetadataDisplay.select();
-            document.execCommand('copy');
-            this.showStatus('Extended metadata copied to clipboard!', 'success');
+    copyExtendedText() {
+        try {
+            const extendedData = JSON.parse(this.extendedMetadataJson);
+            const text = this.createTextDisplay(extendedData);
+            navigator.clipboard.writeText(text).then(() => {
+                this.showStatus('Extended metadata copied as text!', 'success');
+            });
+        } catch (e) {
+            navigator.clipboard.writeText(this.extendedMetadataJson).then(() => {
+                this.showStatus('Extended metadata copied!', 'success');
+            });
+        }
+    }
+
+    copyExtendedJson() {
+        navigator.clipboard.writeText(this.extendedMetadataJson).then(() => {
+            this.showStatus('Extended metadata JSON copied to clipboard!', 'success');
         });
     }
 
     copyAllMetadata() {
-        const allMetadata = `${this.metadataDisplay.value}\n\n${this.extendedMetadataDisplay.value}`;
-        navigator.clipboard.writeText(allMetadata).then(() => {
-            this.showStatus('All metadata copied to clipboard!', 'success');
+        const basicData = JSON.parse(this.basicMetadataJson);
+        const extendedData = JSON.parse(this.extendedMetadataJson);
+        const combined = { basic: basicData, extended: extendedData };
+        const allJson = JSON.stringify(combined, null, 2);
+        
+        navigator.clipboard.writeText(allJson).then(() => {
+            this.showStatus('All metadata copied as JSON!', 'success');
         }).catch(() => {
             // Fallback - create a temporary textarea
             const temp = document.createElement('textarea');
-            temp.value = allMetadata;
+            temp.value = allJson;
             document.body.appendChild(temp);
             temp.select();
             document.execCommand('copy');
             document.body.removeChild(temp);
-            this.showStatus('All metadata copied to clipboard!', 'success');
+            this.showStatus('All metadata copied as JSON!', 'success');
         });
     }
 

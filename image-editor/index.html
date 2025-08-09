@@ -54,7 +54,7 @@
               class="text-sm"
               style="margin-top: 0.5rem; color: var(--text-secondary)"
             >
-              Supported formats: JPEG, PNG, WebP, GIF, TIFF, SVG
+              Supported formats: JPEG, PNG, WebP, GIF, TIFF, SVG, HEIC
             </p>
           </div>
           <div id="uploadStatus"></div>
@@ -65,45 +65,89 @@
           <h2>Image Metadata</h2>
           <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem">
             <div>
-              <h3 style="margin-bottom: 0.5rem">Basic Properties</h3>
-              <div style="display: flex; align-items: flex-start; gap: 0.5rem">
-                <textarea
-                  id="metadataDisplay"
-                  class="metadata-display"
-                  readonly
-                  style="
-                    flex: 1;
-                    min-height: 120px;
-                    font-family: 'Courier New', monospace;
-                    font-size: 0.9rem;
-                    resize: vertical;
-                  "
-                ></textarea>
-                <button id="copyMetadataBtn" class="btn-copy">Copy</button>
+              <div
+                style="
+                  display: flex;
+                  justify-content: space-between;
+                  align-items: center;
+                  margin-bottom: 0.5rem;
+                "
+              >
+                <h3>Basic Properties</h3>
+                <div style="display: flex; gap: 0.5rem">
+                  <button
+                    id="copyMetadataTextBtn"
+                    class="btn-copy"
+                    title="Copy readable text"
+                  >
+                    Copy Text
+                  </button>
+                  <button
+                    id="copyMetadataJsonBtn"
+                    class="btn-copy"
+                    title="Copy JSON format"
+                  >
+                    Copy JSON
+                  </button>
+                </div>
               </div>
+              <div
+                id="basicMetadataDisplay"
+                style="
+                  background: var(--surface-light);
+                  border-radius: 8px;
+                  padding: 1rem;
+                  font-size: 0.9rem;
+                  line-height: 1.4;
+                  max-height: 300px;
+                  overflow-y: auto;
+                "
+              ></div>
             </div>
             <div>
-              <h3 style="margin-bottom: 0.5rem">Extended Metadata</h3>
-              <div style="display: flex; align-items: flex-start; gap: 0.5rem">
-                <textarea
-                  id="extendedMetadataDisplay"
-                  class="metadata-display"
-                  readonly
-                  style="
-                    flex: 1;
-                    min-height: 120px;
-                    font-family: 'Courier New', monospace;
-                    font-size: 0.9rem;
-                    resize: vertical;
-                  "
-                ></textarea>
-                <button id="copyExtendedBtn" class="btn-copy">Copy</button>
+              <div
+                style="
+                  display: flex;
+                  justify-content: space-between;
+                  align-items: center;
+                  margin-bottom: 0.5rem;
+                "
+              >
+                <h3>Extended Metadata</h3>
+                <div style="display: flex; gap: 0.5rem">
+                  <button
+                    id="copyExtendedTextBtn"
+                    class="btn-copy"
+                    title="Copy readable text"
+                  >
+                    Copy Text
+                  </button>
+                  <button
+                    id="copyExtendedJsonBtn"
+                    class="btn-copy"
+                    title="Copy JSON format"
+                  >
+                    Copy JSON
+                  </button>
+                </div>
               </div>
+              <div
+                id="extendedMetadataDisplay"
+                style="
+                  background: var(--surface-light);
+                  border-radius: 8px;
+                  padding: 1rem;
+                  font-size: 0.9rem;
+                  line-height: 1.4;
+                  max-height: 300px;
+                  overflow-y: auto;
+                "
+              ></div>
             </div>
           </div>
           <div style="margin-top: 1rem">
             <button id="copyAllMetadataBtn" class="btn-enhanced">
-              Copy All Metadata
+              Copy All as JSON
             </button>
           </div>
         </div>
@@ -628,7 +672,9 @@
 
     <!-- wasm-vips 0.0.14 from local node_modules -->
     <script src="node_modules/wasm-vips/lib/vips.js"></script>
-    <script src="script.js?v=26"></script>
+    <!-- heic-to for HEIC conversion -->
+    <script src="node_modules/heic-to/dist/iife/heic-to.js"></script>
+    <script src="script.js?v=50"></script>
 
     <script>
       // Theme toggle functionality
