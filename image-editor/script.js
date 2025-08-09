@@ -6,6 +6,7 @@ class ImageEditor {
         this.currentImage = null;
         this.operations = [];
         this.isProcessing = false;
+        this.tabsEnabled = false;
         
         this.initializeElements();
         this.bindEvents();
@@ -47,7 +48,7 @@ class ImageEditor {
         this.previewMetadata = document.getElementById('previewMetadata');
 
         // Operation elements
-        this.operationsPanel = document.getElementById('operationsPanel');
+        this.operationsSection = document.getElementById('operationsSection');
         this.operationList = document.getElementById('operationList');
         this.resetBtn = document.getElementById('resetBtn');
 
@@ -141,6 +142,27 @@ class ImageEditor {
         this.copyExtendedTextBtn.addEventListener('click', () => this.copyExtendedText());
         this.copyExtendedJsonBtn.addEventListener('click', () => this.copyExtendedJson());
         this.copyAllMetadataBtn.addEventListener('click', () => this.copyAllMetadata());
+
+        // Tab switching
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                if (!btn.classList.contains('disabled')) {
+                    this.switchTab(btn.dataset.tab);
+                }
+            });
+        });
+
+        // Toggle buttons
+        const toggleOriginalBtn = document.getElementById('toggleOriginalBtn');
+        const toggleMetadataBtn = document.getElementById('toggleMetadataBtn');
+        
+        if (toggleOriginalBtn) {
+            toggleOriginalBtn.addEventListener('click', () => this.toggleOriginalImage());
+        }
+        
+        if (toggleMetadataBtn) {
+            toggleMetadataBtn.addEventListener('click', () => this.toggleMetadata());
+        }
 
         // Range inputs and their number counterparts
         this.grayscaleThreshold.addEventListener('input', (e) => {
@@ -261,7 +283,7 @@ class ImageEditor {
 
     async convertHeicToPng(file) {
         try {
-            console.log('Converting HEIC to PNG using heic-to...');
+            console.log('Converting HEIC to PNG using heic-to library...');
             
             // heic-to library has a very simple API - just pass the file directly
             const pngBlob = await this.heif({
@@ -305,7 +327,7 @@ class ImageEditor {
             if (isHeic && this.heif) {
                 // First, extract metadata from original HEIC file using VIPS
                 try {
-                    this.showStatus('Extracting metadata from HEIC...', 'info');
+                    this.showStatus('Processing HEIC file and extracting metadata...', 'info');
                     const originalBuffer = await file.arrayBuffer();
                     const originalUint8Array = new Uint8Array(originalBuffer);
                     
@@ -320,9 +342,9 @@ class ImageEditor {
                 }
                 
                 // Convert HEIC to PNG for processing (for pixel data)
-                this.showStatus('Converting HEIC to PNG...', 'info');
+                this.showStatus('Converting HEIC image to PNG format... This may take a moment.', 'info');
                 const pngBlob = await this.convertHeicToPng(file);
-                this.showStatus('HEIC conversion completed, loading image...', 'info');
+                this.showStatus('HEIC conversion completed successfully, loading image...', 'info');
                 processedFile = new File([pngBlob], file.name.replace(/\.(heic|heif)$/i, '.png'), {
                     type: 'image/png'
                 });
@@ -419,7 +441,30 @@ class ImageEditor {
     showImageControls() {
         this.metadataSection.classList.remove('hidden');
         this.previewSection.classList.remove('hidden');
-        this.operationsPanel.classList.remove('hidden');
+        this.operationsSection.classList.remove('hidden');
+        this.enableTabs();
+    }
+
+    enableTabs() {
+        this.tabsEnabled = true;
+        const tabs = document.querySelectorAll('.tab-btn');
+        tabs.forEach(tab => {
+            tab.classList.remove('disabled');
+        });
+        // Set first tab as active
+        if (tabs.length > 0) {
+            tabs[0].classList.add('active');
+            this.switchTab(tabs[0].dataset.tab);
+        }
+    }
+
+    disableTabs() {
+        this.tabsEnabled = false;
+        const tabs = document.querySelectorAll('.tab-btn');
+        tabs.forEach(tab => {
+            tab.classList.add('disabled');
+            tab.classList.remove('active');
+        });
     }
 
     updateAspectRatio(changedField) {
@@ -812,8 +857,19 @@ class ImageEditor {
         
         await this.applyOperation(
             (image) => {
+                // Ensure the image is in RGB format for edge detection
+                let workingImage = image;
+                if (image.interpretation !== 'srgb') {
+                    workingImage = image.colourspace('srgb');
+                }
+                
+                // Convert to grayscale if it's not already
+                if (workingImage.bands > 1) {
+                    workingImage = workingImage.colourspace('b-w');
+                }
+                
                 // Apply Canny edge detector
-                let result = image.canny({
+                let result = workingImage.canny({
                     sigma: sigma,
                     precision: 'integer'
                 });
@@ -1487,6 +1543,50 @@ class ImageEditor {
         const uploadText = this.uploadArea.querySelector('p');
         if (uploadText) {
             uploadText.textContent = 'Click to select an image or drag and drop here';
+        }
+    }
+
+    // Tab switching functionality
+    switchTab(tabId) {
+        if (!this.tabsEnabled) return;
+        
+        // Remove active class from all tabs and content
+        document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+        
+        // Add active class to clicked tab and corresponding content
+        document.querySelector(`[data-tab="${tabId}"]`).classList.add('active');
+        document.getElementById(`${tabId}-tab`).classList.add('active');
+    }
+
+    // Toggle original image visibility
+    toggleOriginalImage() {
+        const container = document.getElementById('originalImageContainer');
+        const previewContainer = document.querySelector('.image-preview-container');
+        const btn = document.getElementById('toggleOriginalBtn');
+        
+        if (container.classList.contains('collapsed')) {
+            container.classList.remove('collapsed');
+            previewContainer.classList.remove('original-collapsed');
+            btn.textContent = 'Hide Original';
+        } else {
+            container.classList.add('collapsed');
+            previewContainer.classList.add('original-collapsed');
+            btn.textContent = 'Show Original';
+        }
+    }
+
+    // Toggle metadata visibility
+    toggleMetadata() {
+        const content = document.getElementById('metadataContent');
+        const btn = document.getElementById('toggleMetadataBtn');
+        
+        if (content.classList.contains('collapsed')) {
+            content.classList.remove('collapsed');
+            btn.textContent = 'Hide Metadata';
+        } else {
+            content.classList.add('collapsed');
+            btn.textContent = 'Show Metadata';
         }
     }
 }

@@ -3,9 +3,12 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="0" />
     <title>Image Editor</title>
     <link rel="stylesheet" href="../global.css" />
-    <link rel="stylesheet" href="styles.css" />
+    <link rel="stylesheet" href="styles.css?v=8" />
   </head>
   <body>
     <header class="main-header">
@@ -39,618 +42,757 @@
       </div>
 
       <main class="tool-container">
-        <!-- Upload Area -->
-        <div class="section-card">
-          <h2>Upload Image</h2>
-          <div id="uploadArea" class="upload-area">
-            <input
-              type="file"
-              id="fileInput"
-              accept="image/*"
-              style="display: none"
-            />
-            <p>Click to select an image or drag and drop here</p>
-            <p
-              class="text-sm"
-              style="margin-top: 0.5rem; color: var(--text-secondary)"
-            >
-              Supported formats: JPEG, PNG, WebP, GIF, TIFF, SVG, HEIC
-            </p>
-          </div>
-          <div id="uploadStatus"></div>
-        </div>
-
-        <!-- Metadata Display -->
-        <div id="metadataSection" class="section-card hidden">
-          <h2>Image Metadata</h2>
-          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem">
-            <div>
-              <div
-                style="
-                  display: flex;
-                  justify-content: space-between;
-                  align-items: center;
-                  margin-bottom: 0.5rem;
-                "
-              >
-                <h3>Basic Properties</h3>
-                <div style="display: flex; gap: 0.5rem">
-                  <button
-                    id="copyMetadataTextBtn"
-                    class="btn-copy"
-                    title="Copy readable text"
-                  >
-                    Copy Text
-                  </button>
-                  <button
-                    id="copyMetadataJsonBtn"
-                    class="btn-copy"
-                    title="Copy JSON format"
-                  >
-                    Copy JSON
-                  </button>
-                </div>
+        <!-- New Layout Structure -->
+        <div class="editor-layout">
+          <div class="editor-flex-container">
+            <!-- Sticky Sidebar (left side) -->
+            <div class="sidebar-container">
+              <!-- Operation Tabs -->
+              <div class="tabs-sidebar">
+                <button class="tab-btn disabled" data-tab="transform">
+                  Transform & Resize
+                </button>
+                <button class="tab-btn disabled" data-tab="thumbnail">Thumbnail</button>
+                <button class="tab-btn disabled" data-tab="effects">
+                  Effects & Color
+                </button>
+                <button class="tab-btn disabled" data-tab="enhancement">
+                  Enhancement
+                </button>
+                <button class="tab-btn disabled" data-tab="edge">Edge Detection</button>
+                <button class="tab-btn disabled" data-tab="filters">
+                  Classic Filters
+                </button>
+                <button class="tab-btn disabled" data-tab="structure">
+                  Image Structure
+                </button>
+                <button class="tab-btn disabled" data-tab="export">
+                  Export & Download
+                </button>
               </div>
-              <div
-                id="basicMetadataDisplay"
-                style="
-                  background: var(--surface-light);
-                  border-radius: 8px;
-                  padding: 1rem;
-                  font-size: 0.9rem;
-                  line-height: 1.4;
-                  max-height: 300px;
-                  overflow-y: auto;
-                "
-              ></div>
             </div>
-            <div>
-              <div
-                style="
-                  display: flex;
-                  justify-content: space-between;
-                  align-items: center;
-                  margin-bottom: 0.5rem;
-                "
-              >
-                <h3>Extended Metadata</h3>
-                <div style="display: flex; gap: 0.5rem">
-                  <button
-                    id="copyExtendedTextBtn"
-                    class="btn-copy"
-                    title="Copy readable text"
-                  >
-                    Copy Text
-                  </button>
-                  <button
-                    id="copyExtendedJsonBtn"
-                    class="btn-copy"
-                    title="Copy JSON format"
-                  >
-                    Copy JSON
+
+            <!-- Main Content Area -->
+            <div class="main-content">
+            <!-- Instructions Section -->
+            <div class="instructions-section">
+              <p>
+                <strong>How it works:</strong> Operations are applied sequentially and build on each other. 
+                You can apply multiple effects in any order, and use the "Reset to Original" button 
+                to start over at any time. All processing happens locally in your browser.
+              </p>
+            </div>
+
+            <!-- File Picker Section -->
+            <div class="file-picker-section">
+              <h2>Upload Image</h2>
+              <div id="uploadArea" class="upload-area">
+                <input
+                  type="file"
+                  id="fileInput"
+                  accept="image/*"
+                  style="display: none"
+                />
+                <p>Click to select an image or drag and drop here</p>
+                <p
+                  class="text-sm"
+                  style="margin-top: 0.5rem; color: var(--text-secondary)"
+                >
+                  Supported formats: JPEG, PNG, WebP, GIF, TIFF, SVG, HEIC
+                </p>
+              </div>
+              <div id="uploadStatus"></div>
+            </div>
+
+            <!-- Image Preview Section (Hidden until image loaded) -->
+            <div id="previewSection" class="hidden">
+              <!-- Image Preview Container -->
+              <div class="image-preview-container">
+                <!-- Toggle button outside collapsible area -->
+                <div class="image-toggle-controls">
+                  <button id="toggleOriginalBtn" class="btn-toggle">
+                    Hide Original
                   </button>
                 </div>
-              </div>
-              <div
-                id="extendedMetadataDisplay"
-                style="
-                  background: var(--surface-light);
-                  border-radius: 8px;
-                  padding: 1rem;
-                  font-size: 0.9rem;
-                  line-height: 1.4;
-                  max-height: 300px;
-                  overflow-y: auto;
-                "
-              ></div>
-            </div>
-          </div>
-          <div style="margin-top: 1rem">
-            <button id="copyAllMetadataBtn" class="btn-enhanced">
-              Copy All as JSON
-            </button>
-          </div>
-        </div>
-
-        <!-- Image Preview -->
-        <div id="previewSection" class="hidden">
-          <div class="image-preview-container">
-            <div class="image-preview">
-              <h3>Original</h3>
-              <img id="originalImage" alt="Original image" />
-              <div id="originalMetadata" class="metadata-display hidden"></div>
-            </div>
-            <div class="image-preview">
-              <h3>Preview</h3>
-              <img id="previewImage" alt="Preview image" />
-              <div id="previewMetadata" class="metadata-display hidden"></div>
-            </div>
-          </div>
-
-          <!-- Operation Queue -->
-          <div class="operation-queue">
-            <h4>Applied Operations</h4>
-            <div id="operationList">
-              <span class="text-sm" style="color: var(--text-secondary)"
-                >No operations applied</span
-              >
-            </div>
-            <button
-              id="resetBtn"
-              class="btn-enhanced"
-              style="margin-top: 1rem"
-              disabled
-            >
-              Reset to Original
-            </button>
-          </div>
-        </div>
-
-        <!-- Operations Panel -->
-        <div id="operationsPanel" class="operations-panel hidden">
-          <!-- Transform Operations -->
-          <div class="operation-section">
-            <h3>Transform & Resize</h3>
-            <div class="operation-controls">
-              <div class="control-group">
-                <label for="resizeWidth">Width (px)</label>
-                <input
-                  type="number"
-                  id="resizeWidth"
-                  min="1"
-                  max="10000"
-                  placeholder="Auto"
-                />
-              </div>
-              <div class="control-group">
-                <label for="resizeHeight">Height (px)</label>
-                <input
-                  type="number"
-                  id="resizeHeight"
-                  min="1"
-                  max="10000"
-                  placeholder="Auto"
-                />
-              </div>
-              <div class="control-group">
-                <label>
-                  <input type="checkbox" id="maintainAspect" checked /> Maintain
-                  aspect ratio
-                </label>
-              </div>
-              <div class="control-group">
-                <button id="resizeBtn" class="btn-enhanced">
-                  Apply Resize
-                </button>
-              </div>
-            </div>
-
-            <div class="operation-controls" style="margin-top: 1rem">
-              <div class="control-group">
-                <label for="cropX">Crop X</label>
-                <input type="number" id="cropX" min="0" placeholder="0" />
-              </div>
-              <div class="control-group">
-                <label for="cropY">Crop Y</label>
-                <input type="number" id="cropY" min="0" placeholder="0" />
-              </div>
-              <div class="control-group">
-                <label for="cropWidth">Crop Width</label>
-                <input
-                  type="number"
-                  id="cropWidth"
-                  min="1"
-                  placeholder="Full width"
-                />
-              </div>
-              <div class="control-group">
-                <label for="cropHeight">Crop Height</label>
-                <input
-                  type="number"
-                  id="cropHeight"
-                  min="1"
-                  placeholder="Full height"
-                />
-              </div>
-              <div class="control-group">
-                <button id="cropBtn" class="btn-enhanced">Apply Crop</button>
-              </div>
-
-              <div class="control-group">
-                <label for="smartCropWidth">Smart Crop Width</label>
-                <input
-                  type="number"
-                  id="smartCropWidth"
-                  min="50"
-                  max="5000"
-                  placeholder="500"
-                />
-              </div>
-              <div class="control-group">
-                <label for="smartCropHeight">Smart Crop Height</label>
-                <input
-                  type="number"
-                  id="smartCropHeight"
-                  min="50"
-                  max="5000"
-                  placeholder="500"
-                />
-              </div>
-              <div class="control-group">
-                <label for="smartCropMode">Constraint Mode</label>
-                <select id="smartCropMode">
-                  <option value="both">Width & Height</option>
-                  <option value="width">Width Only</option>
-                  <option value="height">Height Only</option>
-                </select>
-              </div>
-              <div class="control-group">
-                <label for="smartCropStrategy">Crop Strategy</label>
-                <select id="smartCropStrategy">
-                  <option value="attention">Attention (Smart)</option>
-                  <option value="entropy">Entropy</option>
-                  <option value="centre">Centre</option>
-                  <option value="high">High</option>
-                  <option value="low">Low</option>
-                  <option value="all">All</option>
-                  <option value="none">None</option>
-                </select>
-              </div>
-              <div class="control-group">
-                <button id="smartCropBtn" class="btn-enhanced">
-                  Apply Smart Crop
-                </button>
-              </div>
-            </div>
-
-            <div class="operation-controls" style="margin-top: 1rem">
-              <div class="control-group">
-                <label for="rotateAngle">Rotation Angle</label>
-                <select id="rotateAngle">
-                  <option value="90">90° Clockwise</option>
-                  <option value="180">180°</option>
-                  <option value="270">270° Clockwise</option>
-                  <option value="custom">Custom Angle</option>
-                </select>
-              </div>
-              <div class="control-group hidden" id="customAngleGroup">
-                <label for="customAngle">Custom Angle (degrees)</label>
-                <input
-                  type="number"
-                  id="customAngle"
-                  min="-360"
-                  max="360"
-                  step="0.1"
-                  placeholder="0"
-                />
-              </div>
-              <div class="control-group">
-                <button id="rotateBtn" class="btn-enhanced">
-                  Apply Rotation
-                </button>
-              </div>
-              <div class="control-group">
-                <button id="flipHBtn" class="btn-enhanced">
-                  Flip Horizontal
-                </button>
-              </div>
-              <div class="control-group">
-                <button id="flipVBtn" class="btn-enhanced">
-                  Flip Vertical
-                </button>
-              </div>
-            </div>
-          </div>
-
-          <!-- Thumbnail Generation -->
-          <div class="operation-section">
-            <h3>Thumbnail Generation</h3>
-            <div class="operation-controls">
-              <div class="control-group">
-                <label for="thumbnailWidth">Thumbnail Width</label>
-                <input
-                  type="number"
-                  id="thumbnailWidth"
-                  min="50"
-                  max="2000"
-                  value="300"
-                  placeholder="300"
-                />
-              </div>
-              <div class="control-group">
-                <label for="thumbnailHeight">Thumbnail Height (optional)</label>
-                <input
-                  type="number"
-                  id="thumbnailHeight"
-                  min="50"
-                  max="2000"
-                  placeholder="Auto"
-                />
-              </div>
-              <div class="control-group">
-                <label for="thumbnailCrop">Crop Strategy</label>
-                <select id="thumbnailCrop">
-                  <option value="centre">Centre</option>
-                  <option value="attention">Attention (Smart)</option>
-                  <option value="entropy">Entropy</option>
-                  <option value="high">High</option>
-                  <option value="low">Low</option>
-                  <option value="all">All</option>
-                  <option value="none">None</option>
-                </select>
-              </div>
-              <div class="control-group">
-                <label>
-                  <input type="checkbox" id="thumbnailNoRotate" checked />
-                  No auto-rotate
-                </label>
-              </div>
-              <div class="control-group">
-                <label>
-                  <input type="checkbox" id="thumbnailNoUpscale" />
-                  No upscaling (don't enlarge small images)
-                </label>
-              </div>
-              <div class="control-group">
-                <button id="thumbnailBtn" class="btn-enhanced">
-                  Generate Thumbnail
-                </button>
-              </div>
-            </div>
-          </div>
-
-          <!-- Effects Operations -->
-          <div class="operation-section">
-            <h3>Effects & Color</h3>
-            <div class="operation-controls">
-              <div class="control-group">
-                <label for="grayscaleThreshold">Grayscale Threshold</label>
-                <div style="display: flex; align-items: center; gap: 0.5rem">
-                  <input
-                    type="range"
-                    id="grayscaleThreshold"
-                    min="0"
-                    max="255"
-                    value="128"
-                    style="flex: 1"
-                  />
-                  <input
-                    type="number"
-                    id="grayscaleThresholdNum"
-                    min="0"
-                    max="255"
-                    value="128"
-                    style="width: 70px"
-                  />
+                <div
+                  id="originalImageContainer"
+                  class="image-preview"
+                >
+                  <div class="image-header">
+                    <h3>Original</h3>
+                  </div>
+                  <div class="image-content">
+                    <img id="originalImage" alt="Original image" />
+                    <div
+                      id="originalMetadata"
+                      class="metadata-display hidden"
+                    ></div>
+                  </div>
+                </div>
+                <div class="image-preview">
+                  <h3>Preview</h3>
+                  <img id="previewImage" alt="Preview image" />
+                  <div
+                    id="previewMetadata"
+                    class="metadata-display hidden"
+                  ></div>
                 </div>
               </div>
-              <div class="control-group">
-                <button id="grayscaleBtn" class="btn-enhanced">
-                  Apply Grayscale
-                </button>
-              </div>
-              <div class="control-group">
-                <button id="negateBtn" class="btn-enhanced">
-                  Negate Colors
-                </button>
-              </div>
-              <div class="control-group">
-                <label for="tintColor">Tint Color</label>
-                <input type="color" id="tintColor" value="#ff0000" />
-              </div>
-              <div class="control-group">
-                <label for="tintOpacity">Tint Opacity</label>
-                <div style="display: flex; align-items: center; gap: 0.5rem">
-                  <input
-                    type="range"
-                    id="tintOpacity"
-                    min="0"
-                    max="100"
-                    value="50"
-                    style="flex: 1"
-                  />
-                  <input
-                    type="number"
-                    id="tintOpacityNum"
-                    min="0"
-                    max="100"
-                    value="50"
-                    style="width: 70px"
-                  />
-                  <span>%</span>
+            </div>
+
+            <!-- Extended Content Area for metadata and operations -->
+            <div class="extended-content">
+              <!-- Metadata Section (Collapsed by default) -->
+              <div id="metadataSection" class="metadata-section hidden">
+                <div class="metadata-header">
+                  <h2>Image Metadata</h2>
+                  <button id="toggleMetadataBtn" class="btn-toggle">
+                    Show Metadata
+                  </button>
+                </div>
+                <div id="metadataContent" class="metadata-content collapsed">
+                  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem">
+                    <div>
+                      <div
+                        style="
+                          display: flex;
+                          justify-content: space-between;
+                          align-items: center;
+                          margin-bottom: 0.5rem;
+                        "
+                      >
+                        <h3>Basic Properties</h3>
+                        <div style="display: flex; gap: 0.5rem">
+                          <button
+                            id="copyMetadataTextBtn"
+                            class="btn-copy"
+                            title="Copy readable text"
+                          >
+                            Copy Text
+                          </button>
+                          <button
+                            id="copyMetadataJsonBtn"
+                            class="btn-copy"
+                            title="Copy JSON format"
+                          >
+                            Copy JSON
+                          </button>
+                        </div>
+                      </div>
+                      <div
+                        id="basicMetadataDisplay"
+                        style="
+                          background: var(--surface-light);
+                          border-radius: 8px;
+                          padding: 1rem;
+                          font-size: 0.9rem;
+                          line-height: 1.4;
+                          max-height: 200px;
+                          overflow-y: auto;
+                        "
+                      ></div>
+                    </div>
+                    <div>
+                      <div
+                        style="
+                          display: flex;
+                          justify-content: space-between;
+                          align-items: center;
+                          margin-bottom: 0.5rem;
+                        "
+                      >
+                        <h3>Extended Metadata</h3>
+                        <div style="display: flex; gap: 0.5rem">
+                          <button
+                            id="copyExtendedTextBtn"
+                            class="btn-copy"
+                            title="Copy readable text"
+                          >
+                            Copy Text
+                          </button>
+                          <button
+                            id="copyExtendedJsonBtn"
+                            class="btn-copy"
+                            title="Copy JSON format"
+                          >
+                            Copy JSON
+                          </button>
+                        </div>
+                      </div>
+                      <div
+                        id="extendedMetadataDisplay"
+                        style="
+                          background: var(--surface-light);
+                          border-radius: 8px;
+                          padding: 1rem;
+                          font-size: 0.9rem;
+                          line-height: 1.4;
+                          max-height: 200px;
+                          overflow-y: auto;
+                        "
+                      ></div>
+                    </div>
+                  </div>
+                  <div style="margin-top: 1rem">
+                    <button id="copyAllMetadataBtn" class="btn-enhanced">
+                      Copy All as JSON
+                    </button>
+                  </div>
                 </div>
               </div>
-              <div class="control-group">
-                <button id="tintBtn" class="btn-enhanced">Apply Tint</button>
-              </div>
-            </div>
-          </div>
 
-          <!-- Image Enhancement -->
-          <div class="operation-section">
-            <h3>Image Enhancement</h3>
-            <div class="operation-controls">
-              <div class="control-group">
-                <label for="blurRadius">Blur Radius</label>
-                <div style="display: flex; align-items: center; gap: 0.5rem">
-                  <input
-                    type="range"
-                    id="blurRadius"
-                    min="0.1"
-                    max="10.0"
-                    value="2.0"
-                    step="0.1"
-                    style="flex: 1"
-                  />
-                  <input
-                    type="number"
-                    id="blurRadiusNum"
-                    min="0.1"
-                    max="10.0"
-                    value="2.0"
-                    step="0.1"
-                    style="width: 70px"
-                  />
+              <!-- Operation Queue -->
+              <div class="operation-queue">
+                <h4>Applied Operations</h4>
+                <div id="operationList">
+                  <span class="text-sm" style="color: var(--text-secondary)"
+                    >No operations applied</span
+                  >
+                </div>
+                <button
+                  id="resetBtn"
+                  class="btn-enhanced"
+                  style="margin-top: 1rem"
+                  disabled
+                >
+                  Reset to Original
+                </button>
+              </div>
+
+              <!-- Operations Panel -->
+            <div id="operationsSection" class="operations-content hidden">
+              <div class="tabs-content">
+                  <!-- Transform Operations -->
+                  <div id="transform-tab" class="tab-content active">
+                    <h3>Transform & Resize</h3>
+                    <div class="operation-controls">
+                      <div class="control-group">
+                        <label for="resizeWidth">Width (px)</label>
+                        <input
+                          type="number"
+                          id="resizeWidth"
+                          min="1"
+                          max="10000"
+                          placeholder="Auto"
+                        />
+                      </div>
+                      <div class="control-group">
+                        <label for="resizeHeight">Height (px)</label>
+                        <input
+                          type="number"
+                          id="resizeHeight"
+                          min="1"
+                          max="10000"
+                          placeholder="Auto"
+                        />
+                      </div>
+                      <div class="control-group">
+                        <label>
+                          <input type="checkbox" id="maintainAspect" checked />
+                          Maintain aspect ratio
+                        </label>
+                      </div>
+                      <div class="control-group">
+                        <button id="resizeBtn" class="btn-enhanced">
+                          Apply Resize
+                        </button>
+                      </div>
+                    </div>
+
+                    <div class="operation-controls" style="margin-top: 1rem">
+                      <div class="control-group">
+                        <label for="cropX">Crop X</label>
+                        <input
+                          type="number"
+                          id="cropX"
+                          min="0"
+                          placeholder="0"
+                        />
+                      </div>
+                      <div class="control-group">
+                        <label for="cropY">Crop Y</label>
+                        <input
+                          type="number"
+                          id="cropY"
+                          min="0"
+                          placeholder="0"
+                        />
+                      </div>
+                      <div class="control-group">
+                        <label for="cropWidth">Crop Width</label>
+                        <input
+                          type="number"
+                          id="cropWidth"
+                          min="1"
+                          placeholder="Full width"
+                        />
+                      </div>
+                      <div class="control-group">
+                        <label for="cropHeight">Crop Height</label>
+                        <input
+                          type="number"
+                          id="cropHeight"
+                          min="1"
+                          placeholder="Full height"
+                        />
+                      </div>
+                      <div class="control-group">
+                        <button id="cropBtn" class="btn-enhanced">
+                          Apply Crop
+                        </button>
+                      </div>
+
+                      <div class="control-group">
+                        <label for="smartCropWidth">Smart Crop Width</label>
+                        <input
+                          type="number"
+                          id="smartCropWidth"
+                          min="50"
+                          max="5000"
+                          placeholder="500"
+                        />
+                      </div>
+                      <div class="control-group">
+                        <label for="smartCropHeight">Smart Crop Height</label>
+                        <input
+                          type="number"
+                          id="smartCropHeight"
+                          min="50"
+                          max="5000"
+                          placeholder="500"
+                        />
+                      </div>
+                      <div class="control-group">
+                        <label for="smartCropMode">Constraint Mode</label>
+                        <select id="smartCropMode">
+                          <option value="both">Width & Height</option>
+                          <option value="width">Width Only</option>
+                          <option value="height">Height Only</option>
+                        </select>
+                      </div>
+                      <div class="control-group">
+                        <label for="smartCropStrategy">Crop Strategy</label>
+                        <select id="smartCropStrategy">
+                          <option value="attention">Attention (Smart)</option>
+                          <option value="entropy">Entropy</option>
+                          <option value="centre">Centre</option>
+                          <option value="high">High</option>
+                          <option value="low">Low</option>
+                          <option value="all">All</option>
+                          <option value="none">None</option>
+                        </select>
+                      </div>
+                      <div class="control-group">
+                        <button id="smartCropBtn" class="btn-enhanced">
+                          Apply Smart Crop
+                        </button>
+                      </div>
+                    </div>
+
+                    <div class="operation-controls" style="margin-top: 1rem">
+                      <div class="control-group">
+                        <label for="rotateAngle">Rotation Angle</label>
+                        <select id="rotateAngle">
+                          <option value="90">90° Clockwise</option>
+                          <option value="180">180°</option>
+                          <option value="270">270° Clockwise</option>
+                          <option value="custom">Custom Angle</option>
+                        </select>
+                      </div>
+                      <div class="control-group hidden" id="customAngleGroup">
+                        <label for="customAngle">Custom Angle (degrees)</label>
+                        <input
+                          type="number"
+                          id="customAngle"
+                          min="-360"
+                          max="360"
+                          step="0.1"
+                          placeholder="0"
+                        />
+                      </div>
+                      <div class="control-group">
+                        <button id="rotateBtn" class="btn-enhanced">
+                          Apply Rotation
+                        </button>
+                      </div>
+                      <div class="control-group">
+                        <button id="flipHBtn" class="btn-enhanced">
+                          Flip Horizontal
+                        </button>
+                      </div>
+                      <div class="control-group">
+                        <button id="flipVBtn" class="btn-enhanced">
+                          Flip Vertical
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Thumbnail Generation -->
+                  <div id="thumbnail-tab" class="tab-content">
+                    <h3>Thumbnail Generation</h3>
+                    <div class="operation-controls">
+                      <div class="control-group">
+                        <label for="thumbnailWidth">Thumbnail Width</label>
+                        <input
+                          type="number"
+                          id="thumbnailWidth"
+                          min="50"
+                          max="2000"
+                          value="300"
+                          placeholder="300"
+                        />
+                      </div>
+                      <div class="control-group">
+                        <label for="thumbnailHeight"
+                          >Thumbnail Height (optional)</label
+                        >
+                        <input
+                          type="number"
+                          id="thumbnailHeight"
+                          min="50"
+                          max="2000"
+                          placeholder="Auto"
+                        />
+                      </div>
+                      <div class="control-group">
+                        <label for="thumbnailCrop">Crop Strategy</label>
+                        <select id="thumbnailCrop">
+                          <option value="centre">Centre</option>
+                          <option value="attention">Attention (Smart)</option>
+                          <option value="entropy">Entropy</option>
+                          <option value="high">High</option>
+                          <option value="low">Low</option>
+                          <option value="all">All</option>
+                          <option value="none">None</option>
+                        </select>
+                      </div>
+                      <div class="control-group">
+                        <label>
+                          <input
+                            type="checkbox"
+                            id="thumbnailNoRotate"
+                            checked
+                          />
+                          No auto-rotate
+                        </label>
+                      </div>
+                      <div class="control-group">
+                        <label>
+                          <input type="checkbox" id="thumbnailNoUpscale" />
+                          No upscaling (don't enlarge small images)
+                        </label>
+                      </div>
+                      <div class="control-group">
+                        <button id="thumbnailBtn" class="btn-enhanced">
+                          Generate Thumbnail
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Effects Operations -->
+                  <div id="effects-tab" class="tab-content">
+                    <h3>Effects & Color</h3>
+                    <div class="operation-controls">
+                      <div class="control-group">
+                        <label for="grayscaleThreshold"
+                          >Grayscale Threshold</label
+                        >
+                        <div
+                          style="
+                            display: flex;
+                            align-items: center;
+                            gap: 0.5rem;
+                          "
+                        >
+                          <input
+                            type="range"
+                            id="grayscaleThreshold"
+                            min="0"
+                            max="255"
+                            value="128"
+                            style="flex: 1"
+                          />
+                          <input
+                            type="number"
+                            id="grayscaleThresholdNum"
+                            min="0"
+                            max="255"
+                            value="128"
+                            style="width: 70px"
+                          />
+                        </div>
+                      </div>
+                      <div class="control-group">
+                        <button id="grayscaleBtn" class="btn-enhanced">
+                          Apply Grayscale
+                        </button>
+                      </div>
+                      <div class="control-group">
+                        <button id="negateBtn" class="btn-enhanced">
+                          Negate Colors
+                        </button>
+                      </div>
+                      <div class="control-group">
+                        <label for="tintOpacity">Tint Color & Opacity</label>
+                        <div
+                          style="
+                            display: flex;
+                            align-items: center;
+                            gap: 0.5rem;
+                          "
+                        >
+                          <input type="color" id="tintColor" value="#ff0000" />
+                          <input
+                            type="range"
+                            id="tintOpacity"
+                            min="0"
+                            max="100"
+                            value="50"
+                            style="flex: 1"
+                          />
+                          <input
+                            type="number"
+                            id="tintOpacityNum"
+                            min="0"
+                            max="100"
+                            value="50"
+                            style="width: 70px"
+                          />
+                          <span>%</span>
+                        </div>
+                      </div>
+                      <div class="control-group">
+                        <button id="tintBtn" class="btn-enhanced">
+                          Apply Tint
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Image Enhancement -->
+                  <div id="enhancement-tab" class="tab-content">
+                    <h3>Image Enhancement</h3>
+                    <div class="operation-controls">
+                      <div class="control-group">
+                        <label for="blurRadius">Blur Radius</label>
+                        <div
+                          style="
+                            display: flex;
+                            align-items: center;
+                            gap: 0.5rem;
+                          "
+                        >
+                          <input
+                            type="range"
+                            id="blurRadius"
+                            min="0.1"
+                            max="10.0"
+                            value="2.0"
+                            step="0.1"
+                            style="flex: 1"
+                          />
+                          <input
+                            type="number"
+                            id="blurRadiusNum"
+                            min="0.1"
+                            max="10.0"
+                            value="2.0"
+                            step="0.1"
+                            style="width: 70px"
+                          />
+                        </div>
+                      </div>
+                      <div class="control-group">
+                        <button id="blurBtn" class="btn-enhanced">
+                          Apply Blur
+                        </button>
+                      </div>
+
+                      <div class="control-group">
+                        <label for="sharpenSigma">Sharpen Intensity</label>
+                        <div
+                          style="
+                            display: flex;
+                            align-items: center;
+                            gap: 0.5rem;
+                          "
+                        >
+                          <input
+                            type="range"
+                            id="sharpenSigma"
+                            min="1.0"
+                            max="10.0"
+                            value="3.0"
+                            step="0.1"
+                            style="flex: 1"
+                          />
+                          <input
+                            type="number"
+                            id="sharpenSigmaNum"
+                            min="1.0"
+                            max="10.0"
+                            value="3.0"
+                            step="0.1"
+                            style="width: 70px"
+                          />
+                        </div>
+                      </div>
+                      <div class="control-group">
+                        <button id="sharpenBtn" class="btn-enhanced">
+                          Apply Sharpen
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Edge Detection -->
+                  <div id="edge-tab" class="tab-content">
+                    <h3>Edge Detection</h3>
+                    <div class="operation-controls">
+                      <div class="control-group">
+                        <label for="cannySigma">Canny Sigma</label>
+                        <div
+                          style="
+                            display: flex;
+                            align-items: center;
+                            gap: 0.5rem;
+                          "
+                        >
+                          <input
+                            type="range"
+                            id="cannySigma"
+                            min="0.5"
+                            max="3.0"
+                            value="1.4"
+                            step="0.1"
+                            style="flex: 1"
+                          />
+                          <input
+                            type="number"
+                            id="cannySigmaNum"
+                            min="0.5"
+                            max="3.0"
+                            value="1.4"
+                            step="0.1"
+                            style="width: 70px"
+                          />
+                        </div>
+                      </div>
+                      <div class="control-group">
+                        <button id="cannyBtn" class="btn-enhanced">
+                          Apply Canny Edge Detection
+                        </button>
+                      </div>
+
+                      <div class="control-group">
+                        <button id="sobelBtn" class="btn-enhanced">
+                          Apply Sobel Edge Detection
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Classic Filters -->
+                  <div id="filters-tab" class="tab-content">
+                    <h3>Classic Filters</h3>
+                    <div class="operation-controls">
+                      <div class="control-group">
+                        <button id="sepiaBtn" class="btn-enhanced">
+                          Sepia
+                        </button>
+                      </div>
+                      <div class="control-group">
+                        <button id="vintageBtn" class="btn-enhanced">
+                          Vintage
+                        </button>
+                      </div>
+                      <div class="control-group">
+                        <button id="warmBtn" class="btn-enhanced">Warm</button>
+                      </div>
+                      <div class="control-group">
+                        <button id="coolBtn" class="btn-enhanced">Cool</button>
+                      </div>
+                      <div class="control-group">
+                        <button id="contrastBtn" class="btn-enhanced">
+                          High Contrast
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Structure Operations -->
+                  <div id="structure-tab" class="tab-content">
+                    <h3>Image Structure</h3>
+                    <div class="operation-controls">
+                      <div class="control-group">
+                        <button id="flattenBtn" class="btn-enhanced">
+                          Flatten (Remove Alpha)
+                        </button>
+                      </div>
+                      <div class="control-group">
+                        <button id="unflattenBtn" class="btn-enhanced">
+                          Add Alpha Channel
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Export Operations -->
+                  <div id="export-tab" class="tab-content">
+                    <h3>Export & Download</h3>
+                    <div class="operation-controls">
+                      <div class="control-group">
+                        <label for="exportFormat">Export Format</label>
+                        <select id="exportFormat">
+                          <option value="jpeg">JPEG</option>
+                          <option value="png">PNG</option>
+                          <option value="webp">WebP</option>
+                          <option value="tiff">TIFF</option>
+                        </select>
+                      </div>
+                      <div class="control-group" id="qualityGroup">
+                        <label for="exportQuality">Quality (%)</label>
+                        <div
+                          style="
+                            display: flex;
+                            align-items: center;
+                            gap: 0.5rem;
+                          "
+                        >
+                          <input
+                            type="range"
+                            id="exportQuality"
+                            min="10"
+                            max="100"
+                            value="85"
+                            style="flex: 1"
+                          />
+                          <input
+                            type="number"
+                            id="exportQualityNum"
+                            min="10"
+                            max="100"
+                            value="85"
+                            style="width: 70px"
+                          />
+                          <span>%</span>
+                        </div>
+                      </div>
+                      <div class="control-group">
+                        <button id="downloadBtn" class="btn-enhanced">
+                          Download Image
+                        </button>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
-              <div class="control-group">
-                <button id="blurBtn" class="btn-enhanced">Apply Blur</button>
-              </div>
-
-              <div class="control-group">
-                <label for="sharpenSigma">Sharpen Intensity</label>
-                <div style="display: flex; align-items: center; gap: 0.5rem">
-                  <input
-                    type="range"
-                    id="sharpenSigma"
-                    min="1.0"
-                    max="10.0"
-                    value="3.0"
-                    step="0.1"
-                    style="flex: 1"
-                  />
-                  <input
-                    type="number"
-                    id="sharpenSigmaNum"
-                    min="1.0"
-                    max="10.0"
-                    value="3.0"
-                    step="0.1"
-                    style="width: 70px"
-                  />
-                </div>
-              </div>
-              <div class="control-group">
-                <button id="sharpenBtn" class="btn-enhanced">
-                  Apply Sharpen
-                </button>
-              </div>
             </div>
+
           </div>
-
-          <!-- Edge Detection -->
-          <div class="operation-section">
-            <h3>Edge Detection</h3>
-            <div class="operation-controls">
-              <div class="control-group">
-                <label for="cannySigma">Canny Sigma</label>
-                <div style="display: flex; align-items: center; gap: 0.5rem">
-                  <input
-                    type="range"
-                    id="cannySigma"
-                    min="0.5"
-                    max="3.0"
-                    value="1.4"
-                    step="0.1"
-                    style="flex: 1"
-                  />
-                  <input
-                    type="number"
-                    id="cannySigmaNum"
-                    min="0.5"
-                    max="3.0"
-                    value="1.4"
-                    step="0.1"
-                    style="width: 70px"
-                  />
-                </div>
-              </div>
-              <div class="control-group">
-                <button id="cannyBtn" class="btn-enhanced">
-                  Apply Canny Edge Detection
-                </button>
-              </div>
-
-              <div class="control-group">
-                <button id="sobelBtn" class="btn-enhanced">
-                  Apply Sobel Edge Detection
-                </button>
-              </div>
-            </div>
           </div>
-
-          <!-- Classic Filters -->
-          <div class="operation-section">
-            <h3>Classic Filters</h3>
-            <div class="operation-controls">
-              <div class="control-group">
-                <button id="sepiaBtn" class="btn-enhanced">Sepia</button>
-              </div>
-              <div class="control-group">
-                <button id="vintageBtn" class="btn-enhanced">Vintage</button>
-              </div>
-              <div class="control-group">
-                <button id="warmBtn" class="btn-enhanced">Warm</button>
-              </div>
-              <div class="control-group">
-                <button id="coolBtn" class="btn-enhanced">Cool</button>
-              </div>
-              <div class="control-group">
-                <button id="contrastBtn" class="btn-enhanced">
-                  High Contrast
-                </button>
-              </div>
-            </div>
-          </div>
-
-          <!-- Structure Operations -->
-          <div class="operation-section">
-            <h3>Image Structure</h3>
-            <div class="operation-controls">
-              <div class="control-group">
-                <button id="flattenBtn" class="btn-enhanced">
-                  Flatten (Remove Alpha)
-                </button>
-              </div>
-              <div class="control-group">
-                <button id="unflattenBtn" class="btn-enhanced">
-                  Add Alpha Channel
-                </button>
-              </div>
-            </div>
-          </div>
-
-          <!-- Export Operations -->
-          <div class="operation-section">
-            <h3>Export & Download</h3>
-            <div class="operation-controls">
-              <div class="control-group">
-                <label for="exportFormat">Export Format</label>
-                <select id="exportFormat">
-                  <option value="jpeg">JPEG</option>
-                  <option value="png">PNG</option>
-                  <option value="webp">WebP</option>
-                  <option value="tiff">TIFF</option>
-                </select>
-              </div>
-              <div class="control-group" id="qualityGroup">
-                <label for="exportQuality">Quality (%)</label>
-                <div style="display: flex; align-items: center; gap: 0.5rem">
-                  <input
-                    type="range"
-                    id="exportQuality"
-                    min="10"
-                    max="100"
-                    value="85"
-                    style="flex: 1"
-                  />
-                  <input
-                    type="number"
-                    id="exportQualityNum"
-                    min="10"
-                    max="100"
-                    value="85"
-                    style="width: 70px"
-                  />
-                  <span>%</span>
-                </div>
-              </div>
-              <div class="control-group">
-                <button id="downloadBtn" class="btn-enhanced">
-                  Download Image
-                </button>
-              </div>
-            </div>
           </div>
         </div>
       </main>
@@ -674,7 +816,7 @@
     <script src="node_modules/wasm-vips/lib/vips.js"></script>
     <!-- heic-to for HEIC conversion -->
     <script src="node_modules/heic-to/dist/iife/heic-to.js"></script>
-    <script src="script.js?v=50"></script>
+    <script src="script.js?v=58"></script>
 
     <script>
       // Theme toggle functionality

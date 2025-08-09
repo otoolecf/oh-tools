@@ -1,5 +1,19 @@
 /* Image Editor specific styles */
 
+/* Override global constraints for sidebar layout */
+body main.tool-container {
+    max-width: none;
+    width: 100%;
+    position: relative; /* Create positioning context for sticky sidebar */
+}
+
+/* Ensure the parent container can expand */
+body div.container:has(main.tool-container) {
+    max-width: none;
+    width: 100%;
+    padding: 0 2rem;
+}
+
 .upload-area {
     border: 2px dashed var(--border-color);
     border-radius: 8px;
@@ -21,11 +35,21 @@
     border-color: var(--primary-color);
 }
 
+.image-toggle-controls {
+    grid-column: 1 / -1;
+    margin-bottom: 1rem;
+    text-align: left;
+}
+
 .image-preview-container {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 2rem;
-    margin-top: 2rem;
+    transition: grid-template-columns 0.3s ease;
+}
+
+.image-preview-container.original-collapsed {
+    grid-template-columns: 0fr 1fr !important;
 }
 
 .image-preview {
@@ -34,6 +58,17 @@
     border-radius: 8px;
     padding: 1rem;
     text-align: center;
+    overflow: hidden;
+    transition: all 0.3s ease;
+}
+
+.image-preview.collapsed {
+    width: 0 !important;
+    min-width: 0 !important;
+    padding: 0 !important;
+    border: none !important;
+    opacity: 0 !important;
+    overflow: hidden !important;
 }
 
 .image-preview h3 {
@@ -48,10 +83,141 @@
     box-shadow: var(--shadow-md);
 }
 
-.operations-panel {
-    display: grid;
-    gap: 2rem;
+/* New Editor Layout */
+.editor-layout {
     margin-top: 2rem;
+    width: 100%;
+}
+
+.editor-flex-container {
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: flex-start !important;
+    gap: 2rem !important;
+    min-height: 500px !important;
+    width: 100% !important;
+}
+
+.extended-content {
+    flex: 1 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 2rem !important;
+}
+
+.sidebar-container {
+    flex: 0 0 180px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    background: var(--bg-secondary) !important;
+    padding: 1rem !important;
+    border-radius: 8px !important;
+    border: 1px solid var(--border-color) !important;
+    position: sticky !important;
+    top: 2rem !important;
+    align-self: flex-start !important;
+    max-height: calc(100vh - 4rem) !important;
+    overflow-y: auto !important;
+}
+
+.tabs-sidebar {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.main-content {
+    flex: 1 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 2rem !important;
+    min-width: 0 !important; /* Prevent flex item from overflowing */
+    background: var(--bg-primary) !important;
+}
+
+.instructions-section {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 1rem;
+    font-size: 0.95rem;
+    color: var(--text-secondary);
+    line-height: 1.5;
+}
+
+.file-picker-section {
+    background: var(--bg-primary);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 1.5rem;
+}
+
+.file-picker-section h2 {
+    margin-bottom: 1rem;
+    color: var(--text-primary);
+}
+
+.metadata-section {
+    background: var(--bg-primary);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-top: 1rem;
+}
+
+.tab-btn {
+    padding: 0.75rem 1rem;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-align: left;
+    font-size: 0.9rem;
+    color: var(--text-primary);
+}
+
+.tab-btn:hover {
+    background: var(--bg-primary);
+    border-color: var(--primary-color);
+}
+
+.tab-btn.active {
+    background: var(--primary-color);
+    color: white;
+    border-color: var(--primary-color);
+}
+
+.tab-btn.disabled {
+    background: var(--bg-secondary);
+    color: var(--text-secondary);
+    border-color: var(--border-color);
+    cursor: not-allowed;
+    opacity: 0.5;
+}
+
+.tab-btn.disabled:hover {
+    background: var(--bg-secondary);
+    border-color: var(--border-color);
+}
+
+.operations-content {
+    margin-top: 1rem;
+}
+
+.tabs-content {
+    background: var(--bg-primary);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 1.5rem;
+}
+
+.tab-content {
+    display: none;
+}
+
+.tab-content.active {
+    display: block;
 }
 
 .operation-section {
@@ -79,7 +245,6 @@
     border: 1px solid var(--border-color);
     border-radius: 8px;
     padding: 1.5rem;
-    margin-top: 1rem;
 }
 
 .operation-queue h4 {
@@ -111,6 +276,43 @@
     display: none;
 }
 
+/* Toggle Buttons */
+.btn-toggle {
+    padding: 0.25rem 0.75rem;
+    background: var(--button-bg);
+    color: var(--button-text);
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.8rem;
+    transition: background-color 0.2s;
+}
+
+.btn-toggle:hover {
+    background: var(--button-hover);
+}
+
+/* Metadata Header */
+.metadata-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.metadata-content.collapsed {
+    display: none;
+}
+
+/* Image Header */
+.image-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+    white-space: nowrap;
+}
+
 .loading {
     opacity: 0.6;
     pointer-events: none;
@@ -128,12 +330,53 @@
     margin-top: 0.5rem;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 1024px) {
+    .editor-layout {
+        flex-direction: column;
+        gap: 1rem;
+    }
+    
+    .tabs-sidebar {
+        flex: none;
+        flex-direction: row;
+        overflow-x: auto;
+        padding-bottom: 0.5rem;
+        gap: 0.5rem;
+    }
+    
+    .tabs-sidebar::-webkit-scrollbar {
+        height: 4px;
+    }
+    
+    .tabs-sidebar::-webkit-scrollbar-track {
+        background: var(--bg-secondary);
+    }
+    
+    .tabs-sidebar::-webkit-scrollbar-thumb {
+        background: var(--border-color);
+        border-radius: 2px;
+    }
+    
+    .tab-btn {
+        flex: 0 0 auto;
+        white-space: nowrap;
+    }
+    
     .image-preview-container {
         grid-template-columns: 1fr;
         gap: 1rem;
     }
     
+    .image-preview-container.original-collapsed {
+        grid-template-columns: 1fr;
+    }
+    
+    .image-preview.collapsed {
+        display: none;
+    }
+}
+
+@media (max-width: 768px) {
     .operation-controls {
         grid-template-columns: 1fr;
     }
