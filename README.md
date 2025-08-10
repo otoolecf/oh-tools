@@ -181,33 +181,58 @@ The site supports light and dark themes using `data-theme` attribute:
 
 ## Donation Button
 
-### Implementation Requirements
+### Implementation Strategy
 
-The Ko-fi donation button must be manually added to each tool page. **Do not** use dynamic/JavaScript initialization as it can break page loading.
+The Ko-fi donation button uses a **custom HTML implementation** instead of external widgets to avoid CSP (Content Security Policy) conflicts and ensure consistent loading across all pages.
 
-### Correct Implementation
+### Current Implementation
 
 ```html
 <div style="margin-top: 1rem;">
-    <script type='text/javascript' src='https://storage.ko-fi.com/cdn/widget/Widget_2.js'></script>
-    <script type='text/javascript'>kofiwidget2.init('Buy Me a Coffee or Beer', '#64748b', 'F1F41J70Y8');kofiwidget2.draw();</script>
+    <a 
+        href="https://ko-fi.com/otoolecf" 
+        target="_blank" 
+        class="custom-kofi-btn"
+        style="
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            background: #64748b;
+            color: white;
+            text-decoration: none;
+            border-radius: 4px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: background-color 0.2s, transform 0.2s;
+        "
+    >
+        <img src="../kofi_symbol.svg" width="16" height="16" alt="Ko-fi icon" />
+        Buy Me a Coffee or Beer
+    </a>
 </div>
 ```
 
-### Color Considerations
+### Button Components
 
-- **Current color**: `#64748b` (matches `--primary-color` in light theme)
-- **Alternative colors**: Use `#94a3b8` for dark theme compatibility
-- **Avoid**: Dynamic color reading via JavaScript (causes loading issues)
-- **Consistency**: Use the same color across all pages
+- **Icon**: Uses `kofi_symbol.svg` located in the root directory
+- **Styling**: Matches the site's design system with `#64748b` background
+- **Hover Effects**: Defined in `global.css` with `.custom-kofi-btn:hover`
+- **Accessibility**: Includes proper alt text and target="_blank"
+
+### Path Considerations
+
+- **Root level pages** (index.html): Use `kofi_symbol.svg`
+- **Tool pages** (subdirectories): Use `../kofi_symbol.svg`
 
 ### Update Instructions
 
 When adding the donation button to new pages:
 1. Copy the exact HTML structure above
-2. Place inside the footer after the copyright text
-3. Ensure the color code matches existing pages
-4. Test that the page loads completely
+2. Adjust the image src path based on directory level
+3. Place inside the footer after the copyright text
+4. Ensure the button inherits hover styles from `global.css`
+5. Test that the icon displays correctly
 
 ## Development Notes
 

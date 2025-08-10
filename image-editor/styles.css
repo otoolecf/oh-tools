@@ -1,5 +1,11 @@
 /* Image Editor specific styles */
 
+/* Custom Ko-fi button styling */
+.custom-kofi-btn:hover {
+    background: #475569 !important;
+    transform: translateY(-1px);
+}
+
 /* Override global constraints for sidebar layout */
 body main.tool-container {
     max-width: none;

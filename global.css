@@ -186,6 +186,12 @@ body {
   background: var(--button-hover);
 }
 
+/* Custom Ko-fi button styling */
+.custom-kofi-btn:hover {
+  background: #475569 !important;
+  transform: translateY(-1px);
+}
+
 /* Container styles */
 .tool-container {
   background: var(--bg-primary);
