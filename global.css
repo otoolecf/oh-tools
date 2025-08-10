@@ -455,35 +455,63 @@ a:visited {
 }
 
 .theme-toggle {
-  background: none;
-  border: 1px solid var(--border-color);
-  border-radius: 6px;
-  padding: 0.5rem 0.75rem;
+  background: var(--border-color);
+  border: none;
+  border-radius: 20px;
+  width: 60px;
+  height: 30px;
   cursor: pointer;
-  font-size: 0.875rem;
-  font-weight: 500;
-  color: var(--text-secondary);
-  transition: all 0.2s ease;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 100px;
+  transition: all 0.3s ease;
+  position: relative;
   margin-right: 1.5rem;
+  flex-shrink: 0;
 }
 
 .theme-toggle:hover {
-  background: var(--bg-secondary);
-  border-color: var(--primary-color);
-  color: var(--text-primary);
+  background: var(--primary-color);
+}
+
+.theme-toggle::before {
+  content: '';
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 24px;
+  height: 24px;
+  background: white;
+  border-radius: 50%;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+[data-theme="dark"] .theme-toggle::before {
+  transform: translateX(30px);
+  background: var(--bg-primary);
+}
+
+[data-theme="dark"] .theme-toggle {
+  background: var(--primary-color);
+}
+
+.theme-toggle::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 12px;
+  font-weight: 500;
+  pointer-events: none;
+  transition: all 0.3s ease;
+}
+
+[data-theme="light"] .theme-toggle::after {
+  content: '☀️';
+  right: 8px;
 }
 
 [data-theme="dark"] .theme-toggle::after {
-  content: "Theme: Light";
-}
-
-[data-theme="light"] .theme-toggle::after,
-.theme-toggle::after {
-  content: "Theme: Dark";
+  content: '🌙';
+  left: 8px;
 }
 
 @media (max-width: 768px) {

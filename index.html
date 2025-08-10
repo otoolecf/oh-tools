@@ -1,185 +1,199 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>OToolebox - Client-Side Tools Collection</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="global.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="global.css?v=2" />
     <style>
-        .tools-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 2rem;
-            margin-top: 2rem;
-            justify-content: center;
-            max-width: 1000px;
-            margin-left: auto;
-            margin-right: auto;
-        }
-        
-        .tool-card {
-            background: var(--card-bg);
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-            padding: 1.5rem;
-            transition: transform 0.2s, box-shadow 0.2s;
-        }
-        
-        .tool-card:hover {
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-        }
-        
-        .tool-card h3 {
-            margin: 0 0 0.5rem 0;
-            color: var(--primary-color);
-        }
-        
-        .tool-card p {
-            color: var(--text-secondary);
-            margin: 0 0 1rem 0;
-            line-height: 1.6;
-        }
-        
-        .tool-link {
-            display: inline-block;
-            padding: 0.5rem 1rem;
-            background: var(--button-bg);
-            color: var(--button-text);
-            text-decoration: none;
-            border-radius: 4px;
-            transition: background-color 0.2s;
-            font-weight: 500;
-        }
-        
-        .tool-link:hover {
-            background: var(--button-hover);
-        }
-        
-        .tool-link:visited {
-            color: var(--button-text);
-        }
-        
-        .hero {
-            text-align: center;
-            padding: 3rem 0;
-        }
-        
-        .hero h1 {
-            margin: 0 0 1rem 0;
-            font-size: 2.5rem;
-            color: var(--primary-color);
-        }
-        
-        .hero p {
-            font-size: 1.2rem;
-            color: var(--text-secondary);
-            max-width: 600px;
-            margin: 0 auto;
-        }
+      .tools-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 2rem;
+        margin-top: 2rem;
+        justify-content: center;
+        max-width: 1000px;
+        margin-left: auto;
+        margin-right: auto;
+      }
+
+      .tool-card {
+        background: var(--card-bg);
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        padding: 1.5rem;
+        transition: transform 0.2s, box-shadow 0.2s;
+      }
+
+      .tool-card:hover {
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+      }
+
+      .tool-card h3 {
+        margin: 0 0 0.5rem 0;
+        color: var(--primary-color);
+      }
+
+      .tool-card p {
+        color: var(--text-secondary);
+        margin: 0 0 1rem 0;
+        line-height: 1.6;
+      }
+
+      .tool-link {
+        display: inline-block;
+        padding: 0.5rem 1rem;
+        background: var(--button-bg);
+        color: var(--button-text);
+        text-decoration: none;
+        border-radius: 4px;
+        transition: background-color 0.2s;
+        font-weight: 500;
+      }
+
+      .tool-link:hover {
+        background: var(--button-hover);
+      }
+
+      .tool-link:visited {
+        color: var(--button-text);
+      }
+
+      .hero {
+        text-align: center;
+        padding: 3rem 0;
+      }
+
+      .hero h1 {
+        margin: 0 0 1rem 0;
+        font-size: 2.5rem;
+        color: var(--primary-color);
+      }
+
+      .hero p {
+        font-size: 1.2rem;
+        color: var(--text-secondary);
+        max-width: 600px;
+        margin: 0 auto;
+      }
     </style>
-</head>
-<body>
+  </head>
+  <body>
     <header class="main-header">
-        <div class="container">
-            <nav class="nav">
-                <a href="/" class="nav-brand">OToolebox</a>
-                <div class="nav-links">
-                    <button id="themeToggle" class="theme-toggle" title="Toggle theme"></button>
-                    <a href="/" class="nav-link active">Tools</a>
-                </div>
-            </nav>
-        </div>
+      <div class="container">
+        <nav class="nav">
+          <a href="/" class="nav-brand">OToolebox</a>
+          <div class="nav-links">
+            <button
+              id="themeToggle"
+              class="theme-toggle"
+              title="Toggle theme"
+            ></button>
+            <a href="/" class="nav-link active">Tools</a>
+          </div>
+        </nav>
+      </div>
     </header>
-    
+
     <div class="container">
-        
-        <div class="hero">
-            <h1>OToolebox</h1>
-            <p>A collection of useful client-side tools that run entirely in your browser. No data leaves your device.</p>
+      <div class="hero">
+        <h1>OToolebox</h1>
+        <p>
+          A collection of useful client-side tools that run entirely in your
+          browser. No data leaves your device.
+        </p>
+      </div>
+
+      <main>
+        <div class="tools-grid" id="toolsGrid">
+          <!-- Tools will be loaded dynamically from tools.json -->
         </div>
-        
-        <main>
-            <div class="tools-grid" id="toolsGrid">
-                <!-- Tools will be loaded dynamically from tools.json -->
-            </div>
-        </main>
-        
-        <footer class="main-footer">
-            <p>&copy; 2025 OToolebox. All tools run locally in your browser.</p>
-            <div style="margin-top: 1rem;">
-                <a 
-                    href="https://ko-fi.com/otoolecf" 
-                    target="_blank" 
-                    class="custom-kofi-btn"
-                    style="
-                        display: inline-flex;
-                        align-items: center;
-                        gap: 0.5rem;
-                        padding: 0.5rem 1rem;
-                        background: #64748b;
-                        color: white;
-                        text-decoration: none;
-                        border-radius: 4px;
-                        font-size: 0.9rem;
-                        font-weight: 500;
-                        transition: background-color 0.2s, transform 0.2s;
-                    "
-                >
-                    <img src="kofi_symbol.svg" width="16" height="16" alt="Ko-fi icon" />
-                    Buy Me a Coffee or Beer
-                </a>
-            </div>
-        </footer>
+      </main>
+
+      <footer class="main-footer">
+        <p>&copy; 2025 OToolebox. All tools run locally in your browser.</p>
+        <div style="margin-top: 1rem">
+          <a
+            href="https://ko-fi.com/otoolecf"
+            target="_blank"
+            class="custom-kofi-btn"
+            style="
+              display: inline-flex;
+              align-items: center;
+              gap: 0.5rem;
+              padding: 0.5rem 1rem;
+              background: #64748b;
+              color: white;
+              text-decoration: none;
+              border-radius: 4px;
+              font-size: 0.9rem;
+              font-weight: 500;
+              transition: background-color 0.2s, transform 0.2s;
+            "
+          >
+            <img
+              src="kofi_symbol.svg"
+              width="16"
+              height="16"
+              alt="Ko-fi icon"
+            />
+            Buy Me a Coffee or Beer
+          </a>
+        </div>
+      </footer>
     </div>
-    
+
     <script>
-        async function loadTools() {
-            try {
-                const response = await fetch('tools.json');
-                const data = await response.json();
-                const toolsGrid = document.getElementById('toolsGrid');
-                
-                data.tools.forEach(tool => {
-                    if (tool.status === 'active') {
-                        const toolCard = document.createElement('div');
-                        toolCard.className = 'tool-card';
-                        toolCard.innerHTML = `
+      async function loadTools() {
+        try {
+          const response = await fetch("tools.json");
+          const data = await response.json();
+          const toolsGrid = document.getElementById("toolsGrid");
+
+          data.tools.forEach((tool) => {
+            if (tool.status === "active") {
+              const toolCard = document.createElement("div");
+              toolCard.className = "tool-card";
+              toolCard.innerHTML = `
                             <h3>${tool.name}</h3>
                             <p>${tool.description}</p>
                             <a href="${tool.path}" class="tool-link">Open Tool</a>
                         `;
-                        toolsGrid.appendChild(toolCard);
-                    }
-                });
-            } catch (error) {
-                console.error('Failed to load tools:', error);
-                document.getElementById('toolsGrid').innerHTML = `
+              toolsGrid.appendChild(toolCard);
+            }
+          });
+        } catch (error) {
+          console.error("Failed to load tools:", error);
+          document.getElementById("toolsGrid").innerHTML = `
                     <div class="error-message">
                         Failed to load tools. Please check the console for details.
                     </div>
                 `;
-            }
         }
-        
-        // Load tools when page loads
-        document.addEventListener('DOMContentLoaded', loadTools);
-        
-        // Theme toggle functionality
-        const themeToggle = document.getElementById('themeToggle');
-        const currentTheme = localStorage.getItem('theme') || 'light';
-        
-        document.documentElement.setAttribute('data-theme', currentTheme);
-        
-        themeToggle.addEventListener('click', () => {
-            const theme = document.documentElement.getAttribute('data-theme');
-            const newTheme = theme === 'dark' ? 'light' : 'dark';
-            
-            document.documentElement.setAttribute('data-theme', newTheme);
-            localStorage.setItem('theme', newTheme);
-        });
+      }
+
+      // Load tools when page loads
+      document.addEventListener("DOMContentLoaded", loadTools);
+
+      // Theme toggle functionality
+      const themeToggle = document.getElementById("themeToggle");
+      const currentTheme = localStorage.getItem("theme") || "light";
+
+      document.documentElement.setAttribute("data-theme", currentTheme);
+
+      themeToggle.addEventListener("click", () => {
+        const theme = document.documentElement.getAttribute("data-theme");
+        const newTheme = theme === "dark" ? "light" : "dark";
+
+        document.documentElement.setAttribute("data-theme", newTheme);
+        localStorage.setItem("theme", newTheme);
+      });
     </script>
-</body>
+  </body>
 </html>

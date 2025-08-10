@@ -175,9 +175,10 @@ The project uses CSS custom properties for consistent theming:
 ### Theme Support
 
 The site supports light and dark themes using `data-theme` attribute:
-- Light theme: Default color scheme
-- Dark theme: Automatically applied dark color variants
+- Light theme: Default color scheme with sun icon (☀️) 
+- Dark theme: Automatically applied dark color variants with moon icon (🌙)
 - Theme preference persists in localStorage
+- Visual slider-style toggle shows current theme state clearly
 
 ## Donation Button
 
