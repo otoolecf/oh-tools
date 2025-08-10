@@ -19,7 +19,6 @@ class ClosedLoop {
         this.setupEventListeners();
         this.setupThemeChangeListener();
         this.checkForOfferInUrl();
-        this.checkHumanIdLibrary();
     }
 
     initializeElements() {
@@ -77,10 +76,6 @@ class ClosedLoop {
         this.methodDescriptionText = document.getElementById('method-description-text');
         this.connectionTypeGroup = document.getElementById('connection-type-group');
         
-        // OTP type elements
-        this.otpTypeGroup = document.getElementById('otp-type-group');
-        this.numbersModeRadio = document.getElementById('numbers-mode');
-        this.wordsModeRadio = document.getElementById('words-mode');
         
         // OTP connection elements
         this.otpConnectionSection = document.getElementById('otp-connection-section');
@@ -440,40 +435,17 @@ class ClosedLoop {
         // Update UI based on selected method
         if (this.connectionMethod === 'otp') {
             document.body.classList.add('otp-mode');
-            this.otpTypeGroup.style.display = 'block';
-            this.methodDescriptionText.textContent = 'Use simple codes to connect. Requires temporary signaling server.';
+            this.methodDescriptionText.textContent = 'Use simple 6-digit codes to connect. Requires temporary signaling server.';
         } else {
             document.body.classList.remove('otp-mode');
-            this.otpTypeGroup.style.display = 'none';
             this.methodDescriptionText.textContent = 'Share QR codes or URLs directly between devices. Maximum privacy - no servers involved.';
         }
     }
 
-    checkHumanIdLibrary() {
-        // Wait for humanId library to be available
-        if (typeof window.humanId !== 'undefined') {
-            console.log('human-id library is available');
-            return;
-        }
-        
-        // Listen for library ready event
-        window.addEventListener('humanIdReady', () => {
-            console.log('human-id library loaded');
-        });
-        
-        window.addEventListener('humanIdFailed', () => {
-            console.warn('human-id library failed to load, OTP mode may not work properly');
-        });
-    }
 
     generateOtpCode() {
-        const useNumbers = this.numbersModeRadio?.checked !== false; // Default to numbers if radio not found
-        
-        if (useNumbers) {
-            return this.generateSixDigitCode();
-        } else {
-            return this.generateHumanId();
-        }
+        // Always generate numeric codes only
+        return this.generateSixDigitCode();
     }
 
     generateSixDigitCode() {
@@ -485,25 +457,6 @@ class ClosedLoop {
         return code.toString();
     }
 
-    generateHumanId() {
-        if (typeof window.humanId !== 'undefined') {
-            return window.humanId({
-                separator: '-',
-                capitalize: false
-            });
-        } else {
-            // Fallback to simple random code if library not available
-            const words = ['happy', 'clever', 'bright', 'swift', 'gentle', 'brave', 'calm', 'wise'];
-            const animals = ['tiger', 'eagle', 'dolphin', 'fox', 'owl', 'bear', 'wolf', 'deer'];
-            const actions = ['runs', 'flies', 'jumps', 'swims', 'sings', 'dances', 'climbs', 'soars'];
-            
-            const word = words[Math.floor(Math.random() * words.length)];
-            const animal = animals[Math.floor(Math.random() * animals.length)];
-            const action = actions[Math.floor(Math.random() * actions.length)];
-            
-            return `${word}-${animal}-${action}`;
-        }
-    }
 
     async createSession() {
         try {

@@ -8,27 +8,7 @@ class PassphraseGenerator {
     }
 
     initializeWordLists() {
-        // Word lists for generating human-memorable passphrases
-        this.adjectives = [
-            'amazing', 'brave', 'calm', 'delighted', 'eager', 'friendly', 'gentle', 'happy',
-            'kind', 'lively', 'noble', 'peaceful', 'quiet', 'radiant', 'serene', 'thoughtful',
-            'upbeat', 'vibrant', 'wise', 'zealous', 'bright', 'clever', 'swift', 'strong',
-            'graceful', 'joyful', 'mighty', 'brilliant', 'charming', 'elegant', 'fierce', 'golden'
-        ];
-        
-        this.nouns = [
-            'tiger', 'eagle', 'dolphin', 'lion', 'butterfly', 'elephant', 'wolf', 'falcon',
-            'bear', 'deer', 'fox', 'hawk', 'owl', 'rabbit', 'swan', 'turtle', 'whale', 'zebra',
-            'mountain', 'ocean', 'forest', 'river', 'garden', 'meadow', 'valley', 'peak',
-            'storm', 'rainbow', 'sunset', 'dawn', 'star', 'moon', 'cloud', 'breeze'
-        ];
-        
-        this.verbs = [
-            'runs', 'flies', 'sings', 'dances', 'jumps', 'swims', 'climbs', 'soars',
-            'glides', 'shines', 'sparkles', 'whispers', 'laughs', 'dreams', 'explores',
-            'discovers', 'creates', 'builds', 'grows', 'blooms', 'flows', 'glows',
-            'races', 'leaps', 'bounces', 'travels', 'wanders', 'roams', 'celebrates', 'triumphs'
-        ];
+        // No longer needed - passhelp handles word generation internally
     }
 
     initializeElements() {
@@ -116,14 +96,9 @@ class PassphraseGenerator {
     checkLibrarySupport() {
         let missingLibraries = [];
         
-        // Check human-id library
-        if (typeof window.humanId === 'undefined') {
-            missingLibraries.push('human-id');
-        }
-        
-        // Check secure-random-password library
-        if (typeof secureRandomPassword === 'undefined' && typeof window.secureRandomPassword === 'undefined') {
-            missingLibraries.push('secure-random-password');
+        // Check passhelp library
+        if (typeof passhelp === 'undefined') {
+            missingLibraries.push('passhelp');
         }
         
         if (missingLibraries.length > 0) {
@@ -187,22 +162,12 @@ class PassphraseGenerator {
     }
     
     createHumanReadablePhrase(separator, caseOption) {
-        // Always use a separator for easy word boundary detection
-        // If user wants no separator, we'll use a temporary one and remove it later
-        const tempSeparator = separator || '-';
+        // Use passhelp to generate a 3-word passphrase
+        const wordCount = this.includeAdverb.checked ? 4 : 3;
+        const useEnhancements = false; // We'll add enhancements separately
+        const sep = separator || '';
         
-        const options = {
-            separator: tempSeparator,
-            capitalize: caseOption === 'capitalize',
-            addAdverb: this.includeAdverb.checked
-        };
-        
-        let phrase = window.humanId(options);
-        
-        // If user wanted no separator, remove our temporary ones
-        if (!separator) {
-            phrase = phrase.replace(new RegExp(tempSeparator, 'g'), '');
-        }
+        let phrase = passhelp.phrase(wordCount, useEnhancements, sep);
         
         // Apply case transformation if needed
         switch (caseOption) {
@@ -213,8 +178,17 @@ class PassphraseGenerator {
                 phrase = phrase.toLowerCase();
                 break;
             case 'capitalize':
+                // Capitalize first letter of each word
+                if (separator) {
+                    phrase = phrase.split(separator).map(word => 
+                        word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
+                    ).join(separator);
+                } else {
+                    // For no separator case, just capitalize the first letter
+                    phrase = phrase.charAt(0).toUpperCase() + phrase.slice(1).toLowerCase();
+                }
+                break;
             default:
-                // Already handled by library
                 break;
         }
         
@@ -634,51 +608,47 @@ class PassphraseGenerator {
         const count = Math.max(1, Math.min(20, parseInt(this.secureCount.value) || 1));
         const length = parseInt(this.passwordLength.value);
         
-        // Get the secure random password library from either global scope or window
-        const srp = typeof secureRandomPassword !== 'undefined' ? secureRandomPassword : window.secureRandomPassword;
+        // Determine which alphabet to use based on user selections
+        let alphabet;
         
-        // Build character sets
-        const characterSets = [];
+        const hasUppercase = this.includeUppercase.checked;
+        const hasLowercase = this.includeLowercase.checked;
+        const hasNumbers = this.includeNumbers.checked;
+        const hasSymbols = this.includeSymbols.checked;
+        const avoidAmbiguous = this.avoidAmbiguous.checked;
         
-        if (this.includeUppercase.checked) {
-            characterSets.push(srp.upper);
-        }
-        if (this.includeLowercase.checked) {
-            characterSets.push(srp.lower);
-        }
-        if (this.includeNumbers.checked) {
-            characterSets.push(srp.digits);
-        }
-        if (this.includeSymbols.checked) {
-            characterSets.push(srp.symbols);
-        }
-        
-        if (characterSets.length === 0) {
+        // Check if at least one character set is selected
+        if (!hasUppercase && !hasLowercase && !hasNumbers && !hasSymbols) {
             throw new Error('Please select at least one character set');
+        }
+        
+        // Choose the appropriate alphabet based on selections
+        if (hasUppercase && hasLowercase && hasNumbers && hasSymbols) {
+            alphabet = avoidAmbiguous ? passhelp.alphabets.full_friendly : passhelp.alphabets.full;
+        } else if (hasUppercase && hasLowercase && hasNumbers && !hasSymbols) {
+            alphabet = avoidAmbiguous ? passhelp.alphabets.alphanumeric_friendly : passhelp.alphabets.alphanumeric;
+        } else if (!hasUppercase && !hasLowercase && hasNumbers && !hasSymbols) {
+            alphabet = passhelp.alphabets.numeric;
+        } else if (!hasUppercase && !hasLowercase && hasNumbers && !hasSymbols) {
+            alphabet = passhelp.alphabets.hex;
+        } else {
+            // Custom alphabet for other combinations
+            alphabet = '';
+            if (hasUppercase) alphabet += 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+            if (hasLowercase) alphabet += 'abcdefghijklmnopqrstuvwxyz';
+            if (hasNumbers) alphabet += '0123456789';
+            if (hasSymbols) alphabet += '!@#$%^&*()_+-=[]{}|;:,.<>?';
+            
+            if (avoidAmbiguous) {
+                const ambiguous = '0Ol1Il|';
+                alphabet = alphabet.split('').filter(char => !ambiguous.includes(char)).join('');
+            }
         }
         
         this.generatedPassphrases = [];
         
         for (let i = 0; i < count; i++) {
-            let password;
-            
-            if (this.avoidAmbiguous.checked) {
-                // Custom implementation to avoid ambiguous characters
-                const allChars = characterSets.join('');
-                const ambiguous = '0Ol1';
-                const cleanChars = allChars.split('').filter(char => !ambiguous.includes(char)).join('');
-                
-                password = srp.randomString({
-                    characters: cleanChars,
-                    length: length
-                });
-            } else {
-                password = srp.randomPassword({
-                    length: length,
-                    characters: characterSets
-                });
-            }
-            
+            const password = passhelp.character(length, alphabet, true); // true for diversity
             this.generatedPassphrases.push(password);
         }
     }
@@ -863,12 +833,12 @@ function initializeGenerator() {
     passphraseGenerator = new PassphraseGenerator();
 }
 
-// Wait for both DOM and humanId library to be ready
+// Wait for both DOM and passhelp library to be ready
 let domReady = false;
-let humanIdReady = false;
+let passhelpReady = false;
 
 function checkAndInitialize() {
-    if (domReady && (humanIdReady || typeof window.humanId !== 'undefined')) {
+    if (domReady && (passhelpReady || typeof passhelp !== 'undefined')) {
         initializeGenerator();
     }
 }
@@ -879,14 +849,14 @@ document.addEventListener('DOMContentLoaded', () => {
     checkAndInitialize();
 });
 
-window.addEventListener('humanIdReady', () => {
-    console.log('humanId ready');
-    humanIdReady = true;
+window.addEventListener('passhelpReady', () => {
+    console.log('passhelp ready');
+    passhelpReady = true;
     checkAndInitialize();
 });
 
-window.addEventListener('humanIdFailed', () => {
-    console.log('humanId failed to load, initializing anyway');
-    humanIdReady = true; // Initialize anyway, will fall back to custom implementation
+window.addEventListener('passhelpFailed', () => {
+    console.log('passhelp failed to load, initializing anyway');
+    passhelpReady = true;
     checkAndInitialize();
 });

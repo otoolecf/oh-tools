@@ -6,31 +6,7 @@
     <title>Closed Loop</title>
     <link rel="stylesheet" href="../global.css" />
     <link rel="stylesheet" href="styles.css" />
-    <script src="https://cdn.jsdelivr.net/npm/bwip-js@4.5.1/dist/bwip-js-min.js"></script>
-    <script type="module">
-        console.log('Attempting to load human-id from Skypack...');
-        try {
-            const module = await import('https://cdn.skypack.dev/human-id');
-            console.log('Module loaded:', module);
-            window.humanId = module.humanId || module.default;
-            console.log('window.humanId set to:', window.humanId);
-            
-            // Dispatch event to let other scripts know the library is ready
-            window.dispatchEvent(new CustomEvent('humanIdReady'));
-        } catch (error) {
-            console.error('Skypack failed:', error);
-            console.log('Trying esm.sh...');
-            try {
-                const module2 = await import('https://esm.sh/human-id@4.0.0');
-                console.log('esm.sh module loaded:', module2);
-                window.humanId = module2.humanId || module2.default;
-                window.dispatchEvent(new CustomEvent('humanIdReady'));
-            } catch (error2) {
-                console.error('esm.sh also failed:', error2);
-                window.dispatchEvent(new CustomEvent('humanIdFailed'));
-            }
-        }
-    </script>
+    <script src="node_modules/bwip-js/dist/bwip-js-min.js"></script>
   </head>
   <body>
     <header class="main-header">
@@ -122,27 +98,6 @@
             </div>
           </div>
 
-          <!-- OTP Code Type Toggle (shown only in OTP mode) -->
-          <div id="otp-type-group" class="control-group" style="display: none">
-            <label>Code Type:</label>
-            <div class="flex-group">
-              <input
-                type="radio"
-                id="numbers-mode"
-                name="otp-type"
-                value="numbers"
-                checked
-              />
-              <label for="numbers-mode">6 digits (fast)</label>
-              <input
-                type="radio"
-                id="words-mode"
-                name="otp-type"
-                value="words"
-              />
-              <label for="words-mode">Words (memorable)</label>
-            </div>
-          </div>
 
           <!-- Connection Type Toggle (for direct mode) -->
           <div id="connection-type-group" class="control-group">
