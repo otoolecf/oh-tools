@@ -53,7 +53,7 @@ class ImageEditor {
         // Operation elements
         this.operationsSection = document.getElementById('operationsSection');
         this.operationList = document.getElementById('operationList');
-        this.operationListInline = document.getElementById('operationListInline');
+        this.operationTagsContainer = document.getElementById('operationTagsContainer');
         this.resetBtn = document.getElementById('resetBtn');
         this.uploadNewBtn = document.getElementById('uploadNewBtn');
         
@@ -65,7 +65,6 @@ class ImageEditor {
         // Operations control elements
         this.toggleOperationsBtn = document.getElementById('toggleOperationsBtn');
         this.operationsContent = document.getElementById('operationsContent');
-        this.commonApplyBtn = document.getElementById('commonApplyBtn');
 
         // Control elements
         this.resizeWidth = document.getElementById('resizeWidth');
@@ -158,7 +157,6 @@ class ImageEditor {
         this.initialUploadBtn?.addEventListener('click', () => this.openUploadModal());
         
         // Common apply button
-        this.commonApplyBtn?.addEventListener('click', () => this.handleCommonApply());
         
         // Modal events
         this.closeModalBtn?.addEventListener('click', () => this.closeUploadModal());
@@ -180,6 +178,25 @@ class ImageEditor {
         this.copyExtendedTextBtn.addEventListener('click', () => this.copyExtendedText());
         this.copyExtendedJsonBtn.addEventListener('click', () => this.copyExtendedJson());
         this.copyAllMetadataBtn.addEventListener('click', () => this.copyAllMetadata());
+
+        // Individual apply buttons
+        document.getElementById('applyCropBtn')?.addEventListener('click', () => this.applyCrop());
+        document.getElementById('applySmartCropBtn')?.addEventListener('click', () => this.applySmartCrop());
+        document.getElementById('applyResizeBtn')?.addEventListener('click', () => this.applyResize());
+        document.getElementById('applyRotateBtn')?.addEventListener('click', () => this.applyRotation());
+        document.getElementById('applyBlurBtn')?.addEventListener('click', () => this.applyBlur());
+        document.getElementById('applySharpenBtn')?.addEventListener('click', () => this.applySharpen());
+        document.getElementById('applyTintBtn')?.addEventListener('click', () => this.applyTint());
+        document.getElementById('applyGrayscaleBtn')?.addEventListener('click', () => this.applyGrayscale());
+        document.getElementById('applyEdgeDetectionBtn')?.addEventListener('click', () => this.handleEdgeDetectionApply());
+
+        // Individual operation buttons (filters, etc.) - flip buttons are handled via bindIfExists
+        document.getElementById('sepiaBtn')?.addEventListener('click', () => this.applySepia());
+        document.getElementById('vintageBtn')?.addEventListener('click', () => this.applyVintage());
+        document.getElementById('warmBtn')?.addEventListener('click', () => this.applyWarm());
+        document.getElementById('coolBtn')?.addEventListener('click', () => this.applyCool());
+        document.getElementById('contrastBtn')?.addEventListener('click', () => this.applyContrast());
+        document.getElementById('downloadBtn')?.addEventListener('click', () => this.downloadImage());
 
         // Tab switching
         document.querySelectorAll('.tab-btn').forEach(btn => {
@@ -392,26 +409,22 @@ class ImageEditor {
                           file.type === 'image/heic' || 
                           file.type === 'image/heif';
             
+            // Check for TIFF files
+            const isTiff = file.name.toLowerCase().endsWith('.tiff') || 
+                          file.name.toLowerCase().endsWith('.tif') ||
+                          file.type === 'image/tiff';
+            
             let processedFile = file;
-            let originalMetadataImage = null;
+            let originalFileBuffer = null;
+            
+            // For HEIC and TIFF files, store the original buffer for proper metadata extraction
+            if (isHeic || isTiff) {
+                this.showStatus('Processing file and extracting metadata...', 'info');
+                originalFileBuffer = await file.arrayBuffer();
+                console.log(`Stored original ${isHeic ? 'HEIC' : 'TIFF'} buffer for metadata extraction`);
+            }
             
             if (isHeic && this.heif) {
-                // First, extract metadata from original HEIC file using VIPS
-                try {
-                    this.showStatus('Processing HEIC file and extracting metadata...', 'info');
-                    const originalBuffer = await file.arrayBuffer();
-                    const originalUint8Array = new Uint8Array(originalBuffer);
-                    
-                    // Load original HEIC with VIPS for metadata only (this should work with HEIF plugin)
-                    originalMetadataImage = this.vips.Image.newFromBuffer(originalUint8Array, '', {
-                        access: 'sequential'
-                    });
-                    console.log('Successfully extracted metadata from original HEIC file using VIPS HEIF plugin');
-                } catch (metadataError) {
-                    console.warn('Could not extract metadata from original HEIC:', metadataError.message);
-                    console.log('This might indicate the HEIF plugin is not working properly');
-                }
-                
                 // Convert HEIC to PNG for processing (for pixel data)
                 this.showStatus('Converting HEIC image to PNG format... This may take a moment.', 'info');
                 const pngBlob = await this.convertHeicToPng(file);
@@ -448,8 +461,8 @@ class ImageEditor {
                 console.warn('Error checking metadata fields:', e.message);
             }
             
-            // Store the metadata source image (original HEIC if available, otherwise processed)
-            this.metadataSourceImage = originalMetadataImage || this.originalImage;
+            // Store the original file buffer for metadata extraction (for HEIC/TIFF files)
+            this.originalFileBuffer = originalFileBuffer;
             
             // Display images and metadata
             await this.updateImageDisplay();
@@ -565,11 +578,43 @@ class ImageEditor {
         }
     }
 
+    disableAllOperationButtons() {
+        // Get all buttons that trigger operations
+        const operationButtons = document.querySelectorAll(
+            '.btn-enhanced, .tab-btn:not(.disabled), #flipHBtn, #flipVBtn, #resetBtn, #uploadNewBtn'
+        );
+        
+        operationButtons.forEach(btn => {
+            btn.disabled = true;
+            btn.style.opacity = '0.6';
+            btn.style.cursor = 'not-allowed';
+        });
+    }
+
+    enableAllOperationButtons() {
+        // Re-enable all operation buttons
+        const operationButtons = document.querySelectorAll(
+            '.btn-enhanced, .tab-btn:not(.disabled), #flipHBtn, #flipVBtn, #uploadNewBtn'
+        );
+        
+        operationButtons.forEach(btn => {
+            btn.disabled = false;
+            btn.style.opacity = '1';
+            btn.style.cursor = 'pointer';
+        });
+        
+        // Reset button stays enabled only if there are operations
+        if (this.resetBtn) {
+            this.resetBtn.disabled = this.operations.length === 0;
+        }
+    }
+
     async applyOperation(operationFn, operationName) {
         if (this.isProcessing) return;
         
         try {
             this.isProcessing = true;
+            this.disableAllOperationButtons();
             this.showStatus(`Applying ${operationName}...`, 'info');
             
             
@@ -589,6 +634,7 @@ class ImageEditor {
             this.showStatus(`Failed to apply ${operationName}: ${error.message}`, 'error');
         } finally {
             this.isProcessing = false;
+            this.enableAllOperationButtons();
         }
     }
 
@@ -979,11 +1025,11 @@ class ImageEditor {
     }
 
     async showMetadata() {
-        // Use metadata source image (original HEIC) for metadata extraction when available
-        const metadataImage = this.metadataSourceImage || this.currentImage;
+        // Use original image for basic metadata (VIPS-based)
+        this.basicMetadataJson = this.getImageMetadata(this.originalImage);
         
-        this.basicMetadataJson = this.getImageMetadata(metadataImage);
-        this.extendedMetadataJson = await this.getExtendedMetadata(metadataImage);
+        // Use original file buffer for extended metadata when available, otherwise use current image
+        this.extendedMetadataJson = await this.getExtendedMetadata(this.originalFileBuffer || this.currentImage);
         
         // Parse the JSON and create readable displays
         try {
@@ -1002,8 +1048,8 @@ class ImageEditor {
         
         // Also update the toggle metadata sections if they exist
         if (this.originalMetadata && this.previewMetadata) {
-            // Show original HEIC metadata vs current processed metadata
-            const originalMeta = this.getImageMetadata(metadataImage);
+            // Show original vs current processed metadata
+            const originalMeta = this.getImageMetadata(this.originalImage);
             const currentMeta = this.getImageMetadata(this.currentImage);
             
             this.originalMetadata.textContent = originalMeta;
@@ -1111,22 +1157,24 @@ class ImageEditor {
                 return 'ExifReader library not loaded';
             }
 
-            // Get the original image buffer to parse with ExifReader
-            // We need to get the original image data, not the processed VIPS image
-            let imageBuffer = null;
+            let arrayBuffer = null;
             
-            // Try to get the buffer from the stored file or convert current image
-            try {
-                // Convert current VIPS image to buffer for metadata extraction
-                imageBuffer = image.writeToBuffer('.jpg', { Q: 95 });
-                console.log('Got image buffer for ExifReader, size:', imageBuffer.length);
-            } catch (e) {
-                console.error('Failed to get image buffer:', e);
-                return 'Failed to get image data for metadata parsing';
+            // Check if source is already an ArrayBuffer (original file)
+            if (image instanceof ArrayBuffer) {
+                console.log('Using original file buffer for metadata extraction');
+                arrayBuffer = image;
+            } else {
+                // Source is a VIPS Image, convert to buffer
+                console.log('Converting VIPS image to buffer for metadata extraction');
+                try {
+                    const imageBuffer = image.writeToBuffer('.jpg', { Q: 95 });
+                    arrayBuffer = imageBuffer.buffer.slice(imageBuffer.byteOffset, imageBuffer.byteOffset + imageBuffer.byteLength);
+                    console.log('Got image buffer for ExifReader, size:', arrayBuffer.byteLength);
+                } catch (e) {
+                    console.error('Failed to get image buffer:', e);
+                    return 'Failed to get image data for metadata parsing';
+                }
             }
-
-            // Convert to ArrayBuffer
-            const arrayBuffer = imageBuffer.buffer.slice(imageBuffer.byteOffset, imageBuffer.byteOffset + imageBuffer.byteLength);
 
             // Parse all metadata with ExifReader
             const tags = ExifReader.load(arrayBuffer, {
@@ -1496,13 +1544,60 @@ class ImageEditor {
         this.showStatus('Reset to original image', 'success');
     }
 
+    getOperationTag(operation) {
+        const opLower = operation.toLowerCase();
+        
+        // Transform detailed operation names into concise tags
+        if (opLower.includes('flip horizontal')) return 'flip horizontal';
+        if (opLower.includes('flip vertical')) return 'flip vertical';
+        if (opLower.includes('rotate') && opLower.includes('90')) return 'rotate 90°';
+        if (opLower.includes('rotate') && opLower.includes('180')) return 'rotate 180°';
+        if (opLower.includes('rotate') && opLower.includes('270')) return 'rotate 270°';
+        if (opLower.includes('rotate')) return 'rotate';
+        
+        if (opLower.includes('smart crop')) {
+            // Extract dimensions if present: "Smart Crop 500x300 (attention)" -> "smart crop 500×300"
+            const match = operation.match(/(\d+)x(\d+)/i);
+            if (match) return `smart crop ${match[1]}×${match[2]}`;
+            return 'smart crop';
+        }
+        if (opLower.includes('manual crop') || opLower.includes('crop')) {
+            // Extract dimensions if present
+            const match = operation.match(/(\d+)x(\d+)/i);
+            if (match) return `crop ${match[1]}×${match[2]}`;
+            return 'crop';
+        }
+        
+        if (opLower.includes('resize')) {
+            // Extract dimensions: "Resize 800x600" -> "resize 800×600"
+            const match = operation.match(/(\d+)x(\d+)/i);
+            if (match) return `resize ${match[1]}×${match[2]}`;
+            return 'resize';
+        }
+        
+        if (opLower.includes('blur')) return 'blur';
+        if (opLower.includes('sharpen')) return 'sharpen';
+        if (opLower.includes('tint')) return 'tint';
+        if (opLower.includes('grayscale')) return 'grayscale';
+        if (opLower.includes('sepia')) return 'sepia';
+        if (opLower.includes('vintage')) return 'vintage';
+        if (opLower.includes('warm')) return 'warm';
+        if (opLower.includes('cool')) return 'cool';
+        if (opLower.includes('contrast')) return 'contrast';
+        if (opLower.includes('canny')) return 'canny';
+        if (opLower.includes('sobel')) return 'sobel';
+        
+        // Fallback: return the operation as-is but truncated
+        return operation.length > 20 ? operation.substring(0, 17) + '...' : operation;
+    }
+
     updateOperationList() {
         if (this.operations.length === 0) {
             if (this.operationList) {
                 this.operationList.innerHTML = '<span class="text-sm" style="color: var(--text-secondary);">No operations applied</span>';
             }
-            if (this.operationListInline) {
-                this.operationListInline.textContent = 'None';
+            if (this.operationTagsContainer) {
+                this.operationTagsContainer.innerHTML = '<span class="operation-tag-placeholder">None</span>';
             }
         } else {
             if (this.operationList) {
@@ -1510,9 +1605,23 @@ class ImageEditor {
                     .map(op => `<span class="queue-item">${op}</span>`)
                     .join('');
             }
-            if (this.operationListInline) {
-                this.operationListInline.textContent = this.operations.join(', ');
+            if (this.operationTagsContainer) {
+                // Create individual tags for each operation (no deduplication)
+                this.operationTagsContainer.innerHTML = this.operations
+                    .map(op => `<span class="operation-tag">${this.getOperationTag(op)}</span>`)
+                    .join('');
             }
+        }
+    }
+
+    async handleEdgeDetectionApply() {
+        const edgeType = document.querySelector('input[name="edgeDetection"]:checked')?.value;
+        if (edgeType === 'canny') {
+            await this.applyCanny();
+        } else if (edgeType === 'sobel') {
+            await this.applySobel();
+        } else {
+            this.showStatus('Please select an edge detection method', 'error');
         }
     }
 
@@ -1549,6 +1658,14 @@ class ImageEditor {
         if (uploadText) {
             uploadText.textContent = 'Loading image processing engine...';
         }
+        
+        // Disable initial upload button
+        if (this.initialUploadBtn) {
+            this.initialUploadBtn.disabled = true;
+            this.initialUploadBtn.style.opacity = '0.5';
+            this.initialUploadBtn.style.cursor = 'not-allowed';
+            this.initialUploadBtn.textContent = 'Loading...';
+        }
     }
 
     enableUpload() {
@@ -1560,6 +1677,14 @@ class ImageEditor {
         const uploadText = this.uploadArea.querySelector('p');
         if (uploadText) {
             uploadText.textContent = 'Click to select an image or drag and drop here';
+        }
+        
+        // Enable initial upload button
+        if (this.initialUploadBtn) {
+            this.initialUploadBtn.disabled = false;
+            this.initialUploadBtn.style.opacity = '1';
+            this.initialUploadBtn.style.cursor = 'pointer';
+            this.initialUploadBtn.textContent = 'Choose Image';
         }
     }
 
@@ -1580,7 +1705,6 @@ class ImageEditor {
         
         // Track current active tab and update apply button
         this.currentActiveTab = tabId;
-        this.updateApplyButton();
     }
 
     switchSubTab(subtabId, parentTab) {
@@ -1690,15 +1814,10 @@ class ImageEditor {
 
     getApplyButtonText(tabId) {
         const buttonTexts = {
-            'crop': 'Apply Crop',
-            'resize': 'Apply Resize',
-            'rotate-flip': 'Apply Transform',
-            'blur-sharpen': 'Apply Effect',
-            'tint-grayscale': 'Apply Color Effect',
-            'filters': 'Apply Filter',
-            'edge-detection': 'Apply Edge Detection'
+            'metadata': 'Copy All as JSON',
+            'export': 'Export'
         };
-        return buttonTexts[tabId] || 'Apply Operation';
+        return buttonTexts[tabId] || 'Apply';
     }
 
     async handleCommonApply() {

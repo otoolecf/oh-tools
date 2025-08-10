@@ -292,28 +292,60 @@ body div.container:has(main.tool-container) {
     background: var(--button-hover);
 }
 
-/* Inline operation controls */
-.operation-controls-inline {
+/* Applied Operations Section */
+.applied-operations-section {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.applied-operations-header {
     display: flex;
+    justify-content: space-between;
     align-items: center;
-    gap: 0.75rem;
-    margin-left: 1rem;
-    font-size: 0.9rem;
+    margin-bottom: 0.75rem;
 }
 
 .applied-operations-label {
     color: var(--text-secondary);
     font-weight: 500;
+    font-size: 0.9rem;
 }
 
-.operation-list-inline {
-    color: var(--text-primary);
-    font-family: var(--font-mono, 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Code', monospace);
+/* Inline operation controls */
+.operation-controls-inline {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-size: 0.9rem;
+}
+
+/* Operation Tags */
+.operation-tags-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    min-height: 2rem;
+    align-items: center;
+}
+
+.operation-tag {
+    display: inline-block;
+    background: var(--primary-color);
+    color: white;
+    padding: 0.25rem 0.75rem;
+    border-radius: 16px;
+    font-size: 0.8rem;
+    font-weight: 500;
+    text-transform: capitalize;
+}
+
+.operation-tag-placeholder {
+    color: var(--text-secondary);
+    font-style: italic;
     font-size: 0.85rem;
-    max-width: 200px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
 }
 
 .btn-compact {
@@ -369,6 +401,50 @@ body div.container:has(main.tool-container) {
     cursor: not-allowed;
     transform: none;
     box-shadow: none;
+}
+
+/* Enhanced buttons (used throughout operations) */
+.btn-enhanced {
+    padding: 0.5rem 1rem;
+    background: var(--primary-color);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    box-shadow: var(--shadow-sm);
+}
+
+.btn-enhanced:hover:not(:disabled) {
+    background: var(--primary-hover, var(--primary-color));
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-md);
+}
+
+.btn-enhanced:disabled {
+    background: var(--surface-light);
+    color: var(--text-secondary);
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
+/* Copy buttons */
+.btn-copy {
+    padding: 0.25rem 0.5rem;
+    background: var(--button-bg);
+    color: var(--button-text);
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.75rem;
+    transition: all 0.2s ease;
+}
+
+.btn-copy:hover {
+    background: var(--button-hover);
 }
 
 /* Initial Upload Section */
