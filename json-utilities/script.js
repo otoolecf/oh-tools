@@ -3,6 +3,10 @@
 // Get textarea element
 const jsonEditor = document.getElementById("jsonEditor");
 
+// Store original JSON for undo functionality
+let originalJsonBeforeClean = null;
+let originalJsonBeforeFormat = null;
+
 // Show message
 function showMessage(message, type = "info", autoHide = true) {
   const container = document.getElementById("messageContainer");
@@ -154,11 +158,23 @@ function cleanJSON() {
   }
 
   try {
+    // Store original content for undo functionality
+    originalJsonBeforeClean = content;
+    
     const { jsonrepair } = JSONRepair;
     const repaired = jsonrepair(content);
     jsonEditor.value = repaired;
+    
+    // Show and enable undo button
+    const undoBtn = document.getElementById("undoBtn");
+    undoBtn.style.display = "inline-block";
+    undoBtn.disabled = false;
+    
     showMessage("JSON cleaned successfully!", "success", false); // Don't auto-hide success
   } catch (error) {
+    // Reset undo state on error
+    originalJsonBeforeClean = null;
+    
     // Try to extract position from error message
     const posMatch = error.message.match(/at position (\d+)/);
     if (posMatch) {
@@ -187,6 +203,10 @@ function formatJSON() {
   }
 
   try {
+    // Store original content for undo functionality
+    originalJsonBeforeFormat = content;
+    originalJsonBeforeClean = null; // Clear clean undo state
+    
     // First try to parse the JSON
     let jsonObject;
     let wasRepaired = false;
@@ -200,6 +220,8 @@ function formatJSON() {
         jsonObject = JSON.parse(repaired);
         wasRepaired = true;
       } catch (repairError) {
+        // Reset undo state on error
+        originalJsonBeforeFormat = null;
         showMessage(`Invalid JSON: ${parseError.message}`, "error", false);
         return;
       }
@@ -208,6 +230,12 @@ function formatJSON() {
     // Format with 2-space indentation
     const formatted = JSON.stringify(jsonObject, null, 2);
     jsonEditor.value = formatted;
+    
+    // Show and enable undo button
+    const undoBtn = document.getElementById("undoBtn");
+    undoBtn.style.display = "inline-block";
+    undoBtn.disabled = false;
+    
     showMessage(
       wasRepaired
         ? "JSON repaired and formatted!"
@@ -216,6 +244,8 @@ function formatJSON() {
       false // Don't auto-hide success
     );
   } catch (error) {
+    // Reset undo state on error
+    originalJsonBeforeFormat = null;
     showMessage(`Error formatting JSON: ${error.message}`, "error", false);
   }
 }
@@ -236,6 +266,31 @@ async function copyToClipboard() {
   }
 }
 
+// Undo operation
+function undoOperation() {
+  if (originalJsonBeforeClean !== null) {
+    jsonEditor.value = originalJsonBeforeClean;
+    originalJsonBeforeClean = null;
+    originalJsonBeforeFormat = null;
+    const undoBtn = document.getElementById("undoBtn");
+    undoBtn.style.display = "none";
+    undoBtn.disabled = true;
+    hideMessage();
+    clearErrorHighlight();
+    showMessage("Undo successful! Original content restored.", "success", false);
+  } else if (originalJsonBeforeFormat !== null) {
+    jsonEditor.value = originalJsonBeforeFormat;
+    originalJsonBeforeFormat = null;
+    originalJsonBeforeClean = null;
+    const undoBtn = document.getElementById("undoBtn");
+    undoBtn.style.display = "none";
+    undoBtn.disabled = true;
+    hideMessage();
+    clearErrorHighlight();
+    showMessage("Undo successful! Original content restored.", "success", false);
+  }
+}
+
 // Initialize when DOM is loaded
 document.addEventListener("DOMContentLoaded", () => {
   // Event listeners
@@ -245,6 +300,7 @@ document.addEventListener("DOMContentLoaded", () => {
   document.getElementById("cleanBtn").addEventListener("click", cleanJSON);
   document.getElementById("formatBtn").addEventListener("click", formatJSON);
   document.getElementById("copyBtn").addEventListener("click", copyToClipboard);
+  document.getElementById("undoBtn").addEventListener("click", undoOperation);
 
   // Hide message and clear error highlighting when user starts typing
   jsonEditor.addEventListener("input", () => {

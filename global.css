@@ -192,6 +192,18 @@ body {
   transform: translateY(-1px);
 }
 
+/* Hero section styles - consistent styling for tool descriptions */
+.hero h1 {
+  text-align: center;
+  margin: 1.5rem 0;
+}
+
+.hero-content {
+  max-width: 600px;
+  margin: 0 auto;
+  text-align: center;
+}
+
 /* Container styles */
 .tool-container {
   background: var(--bg-primary);

@@ -105,10 +105,10 @@ const server = http.createServer((req, res) => {
             const mimeType = getMimeType(filePath);
             res.setHeader('Content-Type', mimeType);
             
-            // Cache control for static assets
-            if (mimeType.startsWith('image/') || mimeType === 'application/javascript' || mimeType === 'text/css' || mimeType === 'application/wasm') {
-                res.setHeader('Cache-Control', 'public, max-age=3600');
-            }
+            // Disable caching completely for development
+            res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+            res.setHeader('Pragma', 'no-cache');
+            res.setHeader('Expires', '0');
 
             res.writeHead(200);
             res.end(data);

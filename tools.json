@@ -1,75 +1,51 @@
 {
   "tools": [
     {
-      "id": "barcode-generator",
-      "name": "Barcode Generator",
-      "description": "Generate various types of barcodes including QR codes, Code128, EAN, and more. Customize colors, sizes, transparencies, and export as PNG, JPEG, or SVG.",
-      "path": "/barcode-generator/",
-      "icon": "barcode",
-      "tags": ["barcode", "qr code", "generator", "export"],
-      "status": "active"
-    },
-    {
-      "id": "json-utilities",
       "name": "JSON Utilities",
-      "description": "Clean, format, validate, and compare JSON data with a powerful editor. Features JSON repair, beautification, minification, and diff comparison.",
+      "description": "Clean, format, validate, and diff JSON data. Removes comments, fixes quotes, handles MongoDB syntax.",
       "path": "/json-utilities/",
-      "icon": "json",
-      "tags": ["json", "format", "validate", "clean", "diff", "compare"],
       "status": "active"
     },
     {
-      "id": "uuid-generator",
-      "name": "UUID Generator",
-      "description": "Generate unique identifiers (UUIDs) instantly with customizable formats. Create single or multiple UUIDs with options for uppercase, lowercase, and dash formatting.",
-      "path": "/uuid-generator/",
-      "icon": "key",
-      "tags": ["uuid", "generator", "unique", "identifier", "guid"],
-      "status": "active"
-    },
-    {
-      "id": "hash-generator",
-      "name": "Hash Generator",
-      "description": "Generate cryptographic hashes, checksums, and HMAC signatures using MD5, SHA, SHA-3, and HMAC algorithms. Features hash verification for data integrity and API authentication.",
-      "path": "/hash-generator/",
-      "icon": "shield",
-      "tags": ["hash", "checksum", "md5", "sha256", "sha512", "hmac", "crypto", "security", "verification"],
-      "status": "active"
-    },
-    {
-      "id": "passphrase-generator",
-      "name": "Passphrase Generator",
-      "description": "Generate human memorable natural language or secure random passphrases with customizable options. Choose between memorable word combinations or cryptographically secure random strings.",
-      "path": "/passphrase-generator/",
-      "icon": "key",
-      "tags": ["passphrase", "password", "security", "generator", "random", "human-readable"],
-      "status": "active"
-    },
-    {
-      "id": "diff-utilities",
-      "name": "Diff Utilities",
-      "description": "Compare text, JSON, CSS, and arrays with visual side-by-side diff highlighting. Features proper JSON object comparison, CSS syntax awareness, array-specific diffing, and text comparison with whitespace/case options.",
-      "path": "/diff-utilities/",
-      "icon": "compare",
-      "tags": ["diff", "compare", "text", "json", "css", "array", "visual", "highlight", "merge"],
-      "status": "active"
-    },
-    {
-      "id": "closed-loop",
-      "name": "Closed Loop",
-      "description": "Secure private connection for sharing files and text between devices using WebRTC. Create a temporary closed loop between two devices with no servers involved.",
-      "path": "/closed-loop/",
-      "icon": "link",
-      "tags": ["webrtc", "file transfer", "secure", "p2p", "private", "sharing"],
-      "status": "active"
-    },
-    {
-      "id": "image-editor",
       "name": "Image Editor",
-      "description": "Powerful image manipulation tool with resize, crop, rotate, flip, effects, and format conversion. Features before/after comparison, operation chaining, and metadata inspection powered by wasm-vips.",
+      "description": "Powerful image manipulation with resize, crop, rotate, effects, and format conversion. Supports HEIC, JPEG, PNG, WebP, TIFF.",
       "path": "/image-editor/",
-      "icon": "image",
-      "tags": ["image", "photo", "edit", "resize", "crop", "rotate", "effects", "convert", "exif", "metadata"],
+      "status": "active"
+    },
+    {
+      "name": "Hash Generator",
+      "description": "Generate cryptographic hashes and checksums using SHA-256, MD5, SHA-3, HMAC, and more algorithms.",
+      "path": "/hash-generator/",
+      "status": "active"
+    },
+    {
+      "name": "UUID Generator",
+      "description": "Generate unique identifiers (UUIDs) instantly with various formats and options.",
+      "path": "/uuid-generator/",
+      "status": "active"
+    },
+    {
+      "name": "Barcode Generator",
+      "description": "Generate various types of barcodes and QR codes for different use cases.",
+      "path": "/barcode-generator/",
+      "status": "active"
+    },
+    {
+      "name": "Passphrase Generator",
+      "description": "Generate human memorable natural language or secure random passphrases.",
+      "path": "/passphrase-generator/",
+      "status": "active"
+    },
+    {
+      "name": "Diff Utilities",
+      "description": "Compare text, JSON, CSS, and array data with visual diff highlighting.",
+      "path": "/diff-utilities/",
+      "status": "active"
+    },
+    {
+      "name": "Closed Loop",
+      "description": "Secure private connection for sharing files and text between devices using WebRTC.",
+      "path": "/closed-loop/",
       "status": "active"
     }
   ]
