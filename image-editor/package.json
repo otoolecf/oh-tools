@@ -13,6 +13,7 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
+    "exifreader": "^4.23.7",
     "heic-to": "^1.2.1",
     "wasm-vips": "^0.0.14"
   }

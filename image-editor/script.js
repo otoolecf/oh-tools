@@ -7,6 +7,7 @@ class ImageEditor {
         this.operations = [];
         this.isProcessing = false;
         this.tabsEnabled = false;
+        this.currentActiveTab = null;
         
         this.initializeElements();
         this.bindEvents();
@@ -18,6 +19,8 @@ class ImageEditor {
         this.uploadArea = document.getElementById('uploadArea');
         this.fileInput = document.getElementById('fileInput');
         this.uploadStatus = document.getElementById('uploadStatus');
+        this.initialUploadSection = document.getElementById('initialUploadSection');
+        this.initialUploadBtn = document.getElementById('initialUploadBtn');
         
         // Debug: Check if elements are found
         console.log('initializeElements - uploadArea:', this.uploadArea);
@@ -50,7 +53,19 @@ class ImageEditor {
         // Operation elements
         this.operationsSection = document.getElementById('operationsSection');
         this.operationList = document.getElementById('operationList');
+        this.operationListInline = document.getElementById('operationListInline');
         this.resetBtn = document.getElementById('resetBtn');
+        this.uploadNewBtn = document.getElementById('uploadNewBtn');
+        
+        // Modal elements
+        this.uploadModal = document.getElementById('uploadModal');
+        this.modalOverlay = this.uploadModal?.querySelector('.modal-overlay');
+        this.closeModalBtn = document.getElementById('closeModalBtn');
+        
+        // Operations control elements
+        this.toggleOperationsBtn = document.getElementById('toggleOperationsBtn');
+        this.operationsContent = document.getElementById('operationsContent');
+        this.commonApplyBtn = document.getElementById('commonApplyBtn');
 
         // Control elements
         this.resizeWidth = document.getElementById('resizeWidth');
@@ -109,32 +124,55 @@ class ImageEditor {
         this.uploadArea.addEventListener('dragover', this.handleDragOver.bind(this));
         this.uploadArea.addEventListener('drop', this.handleDrop.bind(this));
 
-        // Operation buttons
-        document.getElementById('resizeBtn').addEventListener('click', () => this.applyResize());
-        document.getElementById('cropBtn').addEventListener('click', () => this.applyCrop());
-        document.getElementById('smartCropBtn').addEventListener('click', () => this.applySmartCrop());
-        document.getElementById('thumbnailBtn').addEventListener('click', () => this.applyThumbnail());
-        document.getElementById('rotateBtn').addEventListener('click', () => this.applyRotation());
-        document.getElementById('flipHBtn').addEventListener('click', () => this.applyFlip('horizontal'));
-        document.getElementById('flipVBtn').addEventListener('click', () => this.applyFlip('vertical'));
-        document.getElementById('grayscaleBtn').addEventListener('click', () => this.applyGrayscale());
-        document.getElementById('negateBtn').addEventListener('click', () => this.applyNegate());
-        document.getElementById('tintBtn').addEventListener('click', () => this.applyTint());
-        document.getElementById('sepiaBtn').addEventListener('click', () => this.applySepia());
-        document.getElementById('vintageBtn').addEventListener('click', () => this.applyVintage());
-        document.getElementById('warmBtn').addEventListener('click', () => this.applyWarm());
-        document.getElementById('coolBtn').addEventListener('click', () => this.applyCool());
-        document.getElementById('contrastBtn').addEventListener('click', () => this.applyHighContrast());
-        document.getElementById('flattenBtn').addEventListener('click', () => this.applyFlatten());
-        document.getElementById('unflattenBtn').addEventListener('click', () => this.applyUnflatten());
-        document.getElementById('blurBtn').addEventListener('click', () => this.applyBlur());
-        document.getElementById('sharpenBtn').addEventListener('click', () => this.applySharpen());
-        document.getElementById('cannyBtn').addEventListener('click', () => this.applyCanny());
-        document.getElementById('sobelBtn').addEventListener('click', () => this.applySobel());
-        document.getElementById('downloadBtn').addEventListener('click', () => this.downloadImage());
+        // Operation buttons (safely bind if they exist)
+        this.bindIfExists('resizeBtn', 'click', () => this.applyResize());
+        this.bindIfExists('cropBtn', 'click', () => this.applyCrop());
+        this.bindIfExists('smartCropBtn', 'click', () => this.applySmartCrop());
+        this.bindIfExists('thumbnailBtn', 'click', () => this.applyThumbnail());
+        this.bindIfExists('rotateBtn', 'click', () => this.applyRotation());
+        this.bindIfExists('flipHBtn', 'click', () => this.applyFlip('horizontal'));
+        this.bindIfExists('flipVBtn', 'click', () => this.applyFlip('vertical'));
+        this.bindIfExists('grayscaleBtn', 'click', () => this.applyGrayscale());
+        this.bindIfExists('negateBtn', 'click', () => this.applyNegate());
+        this.bindIfExists('tintBtn', 'click', () => this.applyTint());
+        this.bindIfExists('sepiaBtn', 'click', () => this.applySepia());
+        this.bindIfExists('vintageBtn', 'click', () => this.applyVintage());
+        this.bindIfExists('warmBtn', 'click', () => this.applyWarm());
+        this.bindIfExists('coolBtn', 'click', () => this.applyCool());
+        this.bindIfExists('contrastBtn', 'click', () => this.applyHighContrast());
+        this.bindIfExists('flattenBtn', 'click', () => this.applyFlatten());
+        this.bindIfExists('unflattenBtn', 'click', () => this.applyUnflatten());
+        this.bindIfExists('blurBtn', 'click', () => this.applyBlur());
+        this.bindIfExists('sharpenBtn', 'click', () => this.applySharpen());
+        this.bindIfExists('cannyBtn', 'click', () => this.applyCanny());
+        this.bindIfExists('sobelBtn', 'click', () => this.applySobel());
+        this.bindIfExists('downloadBtn', 'click', () => this.downloadImage());
 
         // Reset button
         this.resetBtn.addEventListener('click', () => this.resetToOriginal());
+        
+        // Upload new button - opens modal
+        this.uploadNewBtn?.addEventListener('click', () => this.openUploadModal());
+        
+        // Initial upload button - opens modal
+        this.initialUploadBtn?.addEventListener('click', () => this.openUploadModal());
+        
+        // Common apply button
+        this.commonApplyBtn?.addEventListener('click', () => this.handleCommonApply());
+        
+        // Modal events
+        this.closeModalBtn?.addEventListener('click', () => this.closeUploadModal());
+        this.modalOverlay?.addEventListener('click', () => this.closeUploadModal());
+        
+        // Operations toggle
+        this.toggleOperationsBtn?.addEventListener('click', () => this.toggleOperations());
+        
+        // ESC key to close modal
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && this.uploadModal && !this.uploadModal.classList.contains('hidden')) {
+                this.closeUploadModal();
+            }
+        });
 
         // Copy metadata buttons
         this.copyMetadataTextBtn.addEventListener('click', () => this.copyMetadataText());
@@ -152,6 +190,13 @@ class ImageEditor {
             });
         });
 
+        // Sub-tab switching
+        document.querySelectorAll('.sub-tab-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                this.switchSubTab(btn.dataset.subtab, btn.closest('.tab-content'));
+            });
+        });
+
         // Toggle buttons
         const toggleOriginalBtn = document.getElementById('toggleOriginalBtn');
         const toggleMetadataBtn = document.getElementById('toggleMetadataBtn');
@@ -164,53 +209,79 @@ class ImageEditor {
             toggleMetadataBtn.addEventListener('click', () => this.toggleMetadata());
         }
 
-        // Range inputs and their number counterparts
-        this.grayscaleThreshold.addEventListener('input', (e) => {
-            document.getElementById('grayscaleThresholdNum').value = e.target.value;
-        });
-        this.tintOpacity.addEventListener('input', (e) => {
-            document.getElementById('tintOpacityNum').value = e.target.value;
-        });
-        this.exportQuality.addEventListener('input', (e) => {
-            document.getElementById('exportQualityNum').value = e.target.value;
-        });
-        this.blurRadius.addEventListener('input', (e) => {
-            document.getElementById('blurRadiusNum').value = e.target.value;
-        });
-        this.sharpenSigma.addEventListener('input', (e) => {
-            document.getElementById('sharpenSigmaNum').value = e.target.value;
-        });
-        this.cannySigma.addEventListener('input', (e) => {
-            document.getElementById('cannySigmaNum').value = e.target.value;
-        });
+        // Range inputs and their number counterparts (bind conditionally)
+        if (this.grayscaleThreshold) {
+            this.grayscaleThreshold.addEventListener('input', (e) => {
+                const numInput = document.getElementById('grayscaleThresholdNum');
+                if (numInput) numInput.value = e.target.value;
+            });
+        }
+        if (this.tintOpacity) {
+            this.tintOpacity.addEventListener('input', (e) => {
+                const numInput = document.getElementById('tintOpacityNum');
+                if (numInput) numInput.value = e.target.value;
+            });
+        }
+        if (this.exportQuality) {
+            this.exportQuality.addEventListener('input', (e) => {
+                const numInput = document.getElementById('exportQualityNum');
+                if (numInput) numInput.value = e.target.value;
+            });
+        }
+        if (this.blurRadius) {
+            this.blurRadius.addEventListener('input', (e) => {
+                const numInput = document.getElementById('blurRadiusNum');
+                if (numInput) numInput.value = e.target.value;
+            });
+        }
+        if (this.sharpenSigma) {
+            this.sharpenSigma.addEventListener('input', (e) => {
+                const numInput = document.getElementById('sharpenSigmaNum');
+                if (numInput) numInput.value = e.target.value;
+            });
+        }
+        if (this.cannySigma) {
+            this.cannySigma.addEventListener('input', (e) => {
+                const numInput = document.getElementById('cannySigmaNum');
+                if (numInput) numInput.value = e.target.value;
+            });
+        }
         
-        // Number inputs sync with sliders
-        document.getElementById('grayscaleThresholdNum').addEventListener('input', (e) => {
-            this.grayscaleThreshold.value = e.target.value;
+        // Number inputs sync with sliders (bind conditionally)
+        this.bindIfExists('grayscaleThresholdNum', 'input', (e) => {
+            if (this.grayscaleThreshold) this.grayscaleThreshold.value = e.target.value;
         });
-        document.getElementById('tintOpacityNum').addEventListener('input', (e) => {
-            this.tintOpacity.value = e.target.value;
+        this.bindIfExists('tintOpacityNum', 'input', (e) => {
+            if (this.tintOpacity) this.tintOpacity.value = e.target.value;
         });
-        document.getElementById('exportQualityNum').addEventListener('input', (e) => {
-            this.exportQuality.value = e.target.value;
+        this.bindIfExists('exportQualityNum', 'input', (e) => {
+            if (this.exportQuality) this.exportQuality.value = e.target.value;
         });
-        document.getElementById('blurRadiusNum').addEventListener('input', (e) => {
-            this.blurRadius.value = e.target.value;
+        this.bindIfExists('blurRadiusNum', 'input', (e) => {
+            if (this.blurRadius) this.blurRadius.value = e.target.value;
         });
-        document.getElementById('sharpenSigmaNum').addEventListener('input', (e) => {
-            this.sharpenSigma.value = e.target.value;
+        this.bindIfExists('sharpenSigmaNum', 'input', (e) => {
+            if (this.sharpenSigma) this.sharpenSigma.value = e.target.value;
         });
-        document.getElementById('cannySigmaNum').addEventListener('input', (e) => {
-            this.cannySigma.value = e.target.value;
+        this.bindIfExists('cannySigmaNum', 'input', (e) => {
+            if (this.cannySigma) this.cannySigma.value = e.target.value;
         });
 
-        // Format change
-        this.exportFormat.addEventListener('change', () => this.updateQualityVisibility());
-        this.rotateAngle.addEventListener('change', () => this.updateCustomAngleVisibility());
+        // Format change (bind conditionally)
+        if (this.exportFormat) {
+            this.exportFormat.addEventListener('change', () => this.updateQualityVisibility());
+        }
+        if (this.rotateAngle) {
+            this.rotateAngle.addEventListener('change', () => this.updateCustomAngleVisibility());
+        }
 
-        // Aspect ratio maintenance
-        this.resizeWidth.addEventListener('input', () => this.updateAspectRatio('width'));
-        this.resizeHeight.addEventListener('input', () => this.updateAspectRatio('height'));
+        // Aspect ratio maintenance (bind conditionally)
+        if (this.resizeWidth) {
+            this.resizeWidth.addEventListener('input', () => this.updateAspectRatio('width'));
+        }
+        if (this.resizeHeight) {
+            this.resizeHeight.addEventListener('input', () => this.updateAspectRatio('height'));
+        }
     }
 
     async initializeLibraries() {
@@ -382,7 +453,7 @@ class ImageEditor {
             
             // Display images and metadata
             await this.updateImageDisplay();
-            this.showMetadata();
+            await this.showMetadata();
             this.showImageControls();
             this.operations = [];
             this.updateOperationList();
@@ -439,24 +510,19 @@ class ImageEditor {
     }
 
     showImageControls() {
-        this.metadataSection.classList.remove('hidden');
         this.previewSection.classList.remove('hidden');
         this.operationsSection.classList.remove('hidden');
         this.enableTabs();
+        
+        // Hide the initial upload section
+        if (this.initialUploadSection) {
+            this.initialUploadSection.classList.add('hidden');
+        }
+        
+        // Close the upload modal if it's open
+        this.closeUploadModal();
     }
 
-    enableTabs() {
-        this.tabsEnabled = true;
-        const tabs = document.querySelectorAll('.tab-btn');
-        tabs.forEach(tab => {
-            tab.classList.remove('disabled');
-        });
-        // Set first tab as active
-        if (tabs.length > 0) {
-            tabs[0].classList.add('active');
-            this.switchTab(tabs[0].dataset.tab);
-        }
-    }
 
     disableTabs() {
         this.tabsEnabled = false;
@@ -513,7 +579,7 @@ class ImageEditor {
             this.operations.push(operationName);
             
             await this.updateImageDisplay();
-            this.showMetadata(); // Update metadata after operation
+            await this.showMetadata(); // Update metadata after operation
             this.updateOperationList();
             this.resetBtn.disabled = false;
             
@@ -899,25 +965,25 @@ class ImageEditor {
     }
 
 
-    toggleMetadata() {
+    async toggleMetadata() {
         const isVisible = !this.originalMetadata.classList.contains('hidden');
         
         if (isVisible) {
             this.originalMetadata.classList.add('hidden');
             this.previewMetadata.classList.add('hidden');
         } else {
-            this.showMetadata();
+            await this.showMetadata();
             this.originalMetadata.classList.remove('hidden');
             this.previewMetadata.classList.remove('hidden');
         }
     }
 
-    showMetadata() {
+    async showMetadata() {
         // Use metadata source image (original HEIC) for metadata extraction when available
         const metadataImage = this.metadataSourceImage || this.currentImage;
         
         this.basicMetadataJson = this.getImageMetadata(metadataImage);
-        this.extendedMetadataJson = this.getExtendedMetadata(metadataImage);
+        this.extendedMetadataJson = await this.getExtendedMetadata(metadataImage);
         
         // Parse the JSON and create readable displays
         try {
@@ -1035,183 +1101,123 @@ class ImageEditor {
         return JSON.stringify(metadataObject, null, 2);
     }
 
-    getExtendedMetadata(image) {
-        const metadata = [];
-        
+    async getExtendedMetadata(image) {
         try {
-            // Get all available metadata fields
-            let allFields = [];
-            let fieldsResult = null;
-            try {
-                console.log('Checking if getFields method exists:', typeof image.getFields);
-                if (typeof image.getFields === 'function') {
-                    fieldsResult = image.getFields();
-                    console.log('getFields() raw result:', fieldsResult);
-                    
-                    // Extract the actual field names array - it's a VectorString object
-                    if (fieldsResult && typeof fieldsResult.size === 'function') {
-                        console.log('fieldsResult is a VectorString with size:', fieldsResult.size());
-                        const size = fieldsResult.size();
-                        
-                        // Extract each field name from the VectorString
-                        for (let i = 0; i < size; i++) {
-                            try {
-                                if (typeof fieldsResult.get === 'function') {
-                                    const fieldName = fieldsResult.get(i);
-                                    allFields.push(fieldName);
-                                    console.log(`Field ${i}:`, fieldName);
-                                }
-                            } catch (e) {
-                                console.log(`Error getting field ${i}:`, e);
-                            }
-                        }
-                    }
-                }
-            } catch (e) {
-                console.error('Error retrieving field list:', e);
-                return 'Could not retrieve metadata fields.';
+            console.log('Using ExifReader to parse all metadata...');
+            
+            // Check if ExifReader is available
+            if (typeof ExifReader === 'undefined') {
+                console.error('ExifReader is not available');
+                return 'ExifReader library not loaded';
             }
 
-            if (allFields.length === 0) {
-                return 'No metadata fields found in this image.';
+            // Get the original image buffer to parse with ExifReader
+            // We need to get the original image data, not the processed VIPS image
+            let imageBuffer = null;
+            
+            // Try to get the buffer from the stored file or convert current image
+            try {
+                // Convert current VIPS image to buffer for metadata extraction
+                imageBuffer = image.writeToBuffer('.jpg', { Q: 95 });
+                console.log('Got image buffer for ExifReader, size:', imageBuffer.length);
+            } catch (e) {
+                console.error('Failed to get image buffer:', e);
+                return 'Failed to get image data for metadata parsing';
             }
-            
-            // Get the specific methods we need
-            const proto = Object.getPrototypeOf(image);
-            const getStringMethod = proto && proto.getString ? proto.getString.bind(image) : null;
-            const getBlobMethod = proto && proto.getBlob ? proto.getBlob.bind(image) : null;
-            
-            console.log('Available specific methods:', {
-                getString: !!getStringMethod,
-                getBlob: !!getBlobMethod
+
+            // Convert to ArrayBuffer
+            const arrayBuffer = imageBuffer.buffer.slice(imageBuffer.byteOffset, imageBuffer.byteOffset + imageBuffer.byteLength);
+
+            // Parse all metadata with ExifReader
+            const tags = ExifReader.load(arrayBuffer, {
+                expanded: true,
+                includeUnknown: true
             });
-            
-            // Group metadata by categories
-            const exifFields = [];
-            const cameraInfo = [];
-            const technicalInfo = [];
-            const otherFields = [];
-            
-            // Process each field and categorize
-            for (const fieldName of allFields) {
-                try {
-                    let value = null;
-                    let displayValue = null;
-                    
-                    // Try to get the value
-                    if (fieldName.includes('data') && getBlobMethod) {
-                        try {
-                            value = getBlobMethod(fieldName);
-                            console.log(`${fieldName} (blob):`, value);
-                            if (value) {
-                                if (fieldName === 'icc-profile-data') {
-                                    displayValue = this.parseIccProfile(value);
-                                } else if (fieldName === 'exif-data') {
-                                    displayValue = `EXIF data [${value.length} bytes] - Contains camera settings and image metadata`;
-                                } else if (fieldName === 'jpeg-thumbnail-data') {
-                                    displayValue = `JPEG thumbnail [${value.length} bytes] - Embedded preview image`;
-                                } else {
-                                    displayValue = `[${value.length} bytes]`;
-                                }
-                            }
-                        } catch (e) {
-                            // Blob access failed, try string
-                            if (getStringMethod) {
-                                try {
-                                    value = getStringMethod(fieldName);
-                                    displayValue = value;
-                                } catch (e2) {
-                                    // String access also failed
-                                }
-                            }
-                        }
-                    } else if (getStringMethod) {
-                        try {
-                            value = getStringMethod(fieldName);
-                            console.log(`${fieldName} (string):`, value);
-                            displayValue = value;
-                        } catch (e) {
-                            // String access failed
-                        }
-                    }
-                    
-                    if (value !== null && value !== undefined) {
-                        // Clean up the value - extract just the readable part before the parentheses
-                        let cleanValue = displayValue;
-                        if (typeof displayValue === 'string' && displayValue.includes(' (')) {
-                            cleanValue = displayValue.split(' (')[0];
-                        }
-                        
-                        const cleanFieldName = fieldName.replace(/^exif-ifd[0-9]-/, '').replace(/^exif-/, '');
-                        
-                        // Handle special cases where displayValue is an object (like ICC profile)
-                        let entry;
-                        if (typeof displayValue === 'object' && displayValue !== null) {
-                            entry = { field: fieldName, name: cleanFieldName, value: displayValue };
-                        } else {
-                            entry = { field: fieldName, name: cleanFieldName, value: cleanValue };
-                        }
-                        
-                        // Categorize the field
-                        if (fieldName.includes('exif-data') || fieldName === 'jpeg-thumbnail-data' || fieldName === 'icc-profile-data') {
-                            otherFields.push(entry);
-                        } else if (fieldName.includes('Make') || fieldName.includes('Model') || fieldName.includes('Software') || fieldName.includes('DateTime')) {
-                            cameraInfo.push(entry);
-                        } else if (fieldName.includes('Exposure') || fieldName.includes('FNumber') || fieldName.includes('ISO') || fieldName.includes('Flash') || fieldName.includes('FocalLength') || fieldName.includes('Shutter') || fieldName.includes('Aperture') || fieldName.includes('Metering')) {
-                            exifFields.push(entry);
-                        } else if (fieldName.includes('Resolution') || fieldName.includes('Orientation') || fieldName.includes('ColorSpace') || fieldName.includes('Pixel') || fieldName.includes('WhiteBalance')) {
-                            technicalInfo.push(entry);
-                        } else {
-                            otherFields.push(entry);
-                        }
-                    }
-                } catch (e) {
-                    console.log(`Error accessing field ${fieldName}:`, e);
-                }
-            }
-            
-            // Build the JSON-like formatted output
+
+            console.log('ExifReader parsed tags:', tags);
+
+            // Organize metadata by categories
             const metadataObject = {};
-            
-            if (cameraInfo.length > 0) {
-                metadataObject.camera = {};
-                cameraInfo.forEach(entry => {
-                    metadataObject.camera[entry.name] = entry.value;
+
+            // Extract EXIF data
+            if (tags.exif) {
+                metadataObject.exif = {};
+                Object.entries(tags.exif).forEach(([key, value]) => {
+                    if (value && value.description !== undefined) {
+                        metadataObject.exif[key] = value.description;
+                    }
                 });
             }
-            
-            if (exifFields.length > 0) {
-                metadataObject.exposure = {};
-                exifFields.forEach(entry => {
-                    metadataObject.exposure[entry.name] = entry.value;
+
+            // Extract IPTC data
+            if (tags.iptc) {
+                metadataObject.iptc = {};
+                Object.entries(tags.iptc).forEach(([key, value]) => {
+                    if (value && value.description !== undefined) {
+                        metadataObject.iptc[key] = value.description;
+                    }
                 });
             }
-            
-            if (technicalInfo.length > 0) {
-                metadataObject.technical = {};
-                technicalInfo.forEach(entry => {
-                    metadataObject.technical[entry.name] = entry.value;
+
+            // Extract XMP data
+            if (tags.xmp) {
+                metadataObject.xmp = {};
+                Object.entries(tags.xmp).forEach(([key, value]) => {
+                    if (value && value.description !== undefined) {
+                        metadataObject.xmp[key] = value.description;
+                    }
                 });
             }
-            
-            if (otherFields.length > 0) {
-                metadataObject.other = {};
-                otherFields.forEach(entry => {
-                    metadataObject.other[entry.name] = entry.value;
+
+            // Extract ICC profile data
+            if (tags.icc) {
+                metadataObject.icc = {};
+                Object.entries(tags.icc).forEach(([key, value]) => {
+                    if (value && value.description !== undefined) {
+                        metadataObject.icc[key] = value.description;
+                    }
                 });
             }
-            
+
+            // Extract other metadata sections
+            Object.entries(tags).forEach(([section, sectionData]) => {
+                if (!['exif', 'iptc', 'xmp', 'icc'].includes(section) && typeof sectionData === 'object') {
+                    const sectionEntries = {};
+                    let hasEntries = false;
+                    
+                    Object.entries(sectionData).forEach(([key, value]) => {
+                        if (value && value.description !== undefined) {
+                            sectionEntries[key] = value.description;
+                            hasEntries = true;
+                        }
+                    });
+                    
+                    if (hasEntries) {
+                        metadataObject[section] = sectionEntries;
+                    }
+                }
+            });
+
+            // Add summary info
+            const summaryInfo = {
+                total_sections: Object.keys(metadataObject).length,
+                parsed_with: 'ExifReader',
+                supported_formats: 'EXIF, IPTC, XMP, ICC, and more'
+            };
+
+            metadataObject._summary = summaryInfo;
+
             // Convert to pretty JSON string
-            const jsonString = JSON.stringify(metadataObject, null, 2);
-            metadata.push(jsonString);
-            
+            return JSON.stringify(metadataObject, null, 2);
             
         } catch (e) {
-            metadata.push('Extended metadata extraction failed');
-            metadata.push('Error:', e.message);
+            console.error('ExifReader metadata extraction failed:', e);
+            return JSON.stringify({
+                error: 'Metadata extraction failed',
+                message: e.message,
+                fallback: 'Could not parse image metadata'
+            }, null, 2);
         }
-
-        return metadata.join('\n');
     }
 
     parseExifPreview(exifData) {
@@ -1352,6 +1358,7 @@ class ImageEditor {
         }
     }
 
+
     copyMetadataText() {
         try {
             const basicData = JSON.parse(this.basicMetadataJson);
@@ -1491,11 +1498,21 @@ class ImageEditor {
 
     updateOperationList() {
         if (this.operations.length === 0) {
-            this.operationList.innerHTML = '<span class="text-sm" style="color: var(--text-secondary);">No operations applied</span>';
+            if (this.operationList) {
+                this.operationList.innerHTML = '<span class="text-sm" style="color: var(--text-secondary);">No operations applied</span>';
+            }
+            if (this.operationListInline) {
+                this.operationListInline.textContent = 'None';
+            }
         } else {
-            this.operationList.innerHTML = this.operations
-                .map(op => `<span class="queue-item">${op}</span>`)
-                .join('');
+            if (this.operationList) {
+                this.operationList.innerHTML = this.operations
+                    .map(op => `<span class="queue-item">${op}</span>`)
+                    .join('');
+            }
+            if (this.operationListInline) {
+                this.operationListInline.textContent = this.operations.join(', ');
+            }
         }
     }
 
@@ -1556,7 +1573,24 @@ class ImageEditor {
         
         // Add active class to clicked tab and corresponding content
         document.querySelector(`[data-tab="${tabId}"]`).classList.add('active');
-        document.getElementById(`${tabId}-tab`).classList.add('active');
+        const contentElement = document.getElementById(`${tabId}-tab`);
+        if (contentElement) {
+            contentElement.classList.add('active');
+        }
+        
+        // Track current active tab and update apply button
+        this.currentActiveTab = tabId;
+        this.updateApplyButton();
+    }
+
+    switchSubTab(subtabId, parentTab) {
+        // Remove active class from all sub-tabs and sub-content within this parent tab
+        parentTab.querySelectorAll('.sub-tab-btn').forEach(btn => btn.classList.remove('active'));
+        parentTab.querySelectorAll('.sub-tab-content').forEach(content => content.classList.remove('active'));
+        
+        // Add active class to clicked sub-tab and corresponding content
+        parentTab.querySelector(`[data-subtab="${subtabId}"]`).classList.add('active');
+        parentTab.querySelector(`#${subtabId}`).classList.add('active');
     }
 
     // Toggle original image visibility
@@ -1587,6 +1621,186 @@ class ImageEditor {
         } else {
             content.classList.add('collapsed');
             btn.textContent = 'Show Metadata';
+        }
+    }
+
+    // Modal functionality
+    openUploadModal() {
+        if (this.uploadModal) {
+            this.uploadModal.classList.remove('hidden');
+        }
+    }
+
+    closeUploadModal() {
+        if (this.uploadModal) {
+            this.uploadModal.classList.add('hidden');
+        }
+    }
+
+    // Operations toggle functionality
+    toggleOperations() {
+        if (this.operationsContent && this.toggleOperationsBtn) {
+            const isCollapsed = this.operationsContent.classList.contains('collapsed');
+            if (isCollapsed) {
+                this.operationsContent.classList.remove('collapsed');
+                this.toggleOperationsBtn.textContent = 'Hide Controls';
+            } else {
+                this.operationsContent.classList.add('collapsed');
+                this.toggleOperationsBtn.textContent = 'Show Controls';
+            }
+        }
+    }
+
+    // Helper method to safely bind events if element exists
+    bindIfExists(elementId, eventType, handler) {
+        const element = document.getElementById(elementId);
+        if (element) {
+            element.addEventListener(eventType, handler);
+        }
+    }
+
+    // Override the enableTabs method to make metadata the default
+    enableTabs() {
+        this.tabsEnabled = true;
+        const tabs = document.querySelectorAll('.tab-btn');
+        tabs.forEach(tab => {
+            tab.classList.remove('disabled');
+        });
+        
+        // Set metadata as the default active tab
+        if (tabs.length > 0) {
+            this.switchTab('metadata');
+        }
+    }
+
+    updateApplyButton() {
+        if (!this.commonApplyBtn) return;
+        
+        // Disable for metadata and export tabs (they don't need apply)
+        const nonApplyTabs = ['metadata', 'export'];
+        
+        if (this.currentActiveTab && !nonApplyTabs.includes(this.currentActiveTab)) {
+            this.commonApplyBtn.disabled = false;
+            this.commonApplyBtn.textContent = this.getApplyButtonText(this.currentActiveTab);
+        } else {
+            this.commonApplyBtn.disabled = true;
+            this.commonApplyBtn.textContent = 'Apply Operation';
+        }
+    }
+
+    getApplyButtonText(tabId) {
+        const buttonTexts = {
+            'crop': 'Apply Crop',
+            'resize': 'Apply Resize',
+            'rotate-flip': 'Apply Transform',
+            'blur-sharpen': 'Apply Effect',
+            'tint-grayscale': 'Apply Color Effect',
+            'filters': 'Apply Filter',
+            'edge-detection': 'Apply Edge Detection'
+        };
+        return buttonTexts[tabId] || 'Apply Operation';
+    }
+
+    async handleCommonApply() {
+        if (!this.currentActiveTab || this.isProcessing) return;
+        
+        try {
+            switch (this.currentActiveTab) {
+                case 'crop':
+                    await this.handleCropApply();
+                    break;
+                case 'resize':
+                    await this.applyResize();
+                    break;
+                case 'rotate-flip':
+                    await this.handleRotateFlipApply();
+                    break;
+                case 'blur-sharpen':
+                    await this.handleBlurSharpenApply();
+                    break;
+                case 'tint-grayscale':
+                    await this.handleTintGrayscaleApply();
+                    break;
+                case 'filters':
+                    await this.handleFiltersApply();
+                    break;
+                case 'edge-detection':
+                    await this.handleEdgeDetectionApply();
+                    break;
+                default:
+                    console.warn('Unknown tab:', this.currentActiveTab);
+            }
+        } catch (error) {
+            console.error('Apply operation failed:', error);
+            this.showStatus(`Failed to apply operation: ${error.message}`, 'error');
+        }
+    }
+
+    async handleCropApply() {
+        // Check if smart crop or manual crop is active
+        const activeSubTab = document.querySelector('#crop-tab .sub-tab-btn.active')?.dataset.subtab;
+        if (activeSubTab === 'smart-crop') {
+            await this.applySmartCrop();
+        } else {
+            await this.applyCrop();
+        }
+    }
+
+    async handleRotateFlipApply() {
+        // For rotate/flip, we'll apply rotation if angle is set
+        const rotateAngle = document.getElementById('rotateAngle').value;
+        
+        if (rotateAngle && rotateAngle !== 'custom') {
+            await this.applyRotation();
+        } else if (rotateAngle === 'custom') {
+            const customAngle = document.getElementById('customAngle').value;
+            if (customAngle) {
+                await this.applyRotation();
+            }
+        }
+        // Note: Flip buttons will still work directly since they're simple one-click operations
+    }
+
+    async handleBlurSharpenApply() {
+        // Apply blur or sharpen based on current slider values - prioritize blur
+        const blurRadius = parseFloat(document.getElementById('blurRadius').value);
+        const sharpenSigma = parseFloat(document.getElementById('sharpenSigma').value);
+        
+        if (blurRadius > 0.1) {
+            await this.applyBlur();
+        } else if (sharpenSigma > 1.0) {
+            await this.applySharpen();
+        } else {
+            this.showStatus('Please adjust blur or sharpen values to apply effect', 'error');
+        }
+    }
+
+    async handleTintGrayscaleApply() {
+        // Check active sub-tab
+        const activeSubTab = document.querySelector('#tint-grayscale-tab .sub-tab-btn.active')?.dataset.subtab;
+        if (activeSubTab === 'tint') {
+            await this.applyTint();
+        } else if (activeSubTab === 'grayscale') {
+            await this.applyGrayscale();
+        } else {
+            this.showStatus('Please select a color effect to apply', 'error');
+        }
+    }
+
+    async handleFiltersApply() {
+        // For now, let's use the first available filter as default
+        // In a real implementation, you might want radio buttons to select which filter
+        await this.applySepia();
+    }
+
+    async handleEdgeDetectionApply() {
+        const edgeType = document.querySelector('input[name="edgeDetection"]:checked')?.value;
+        if (edgeType === 'canny') {
+            await this.applyCanny();
+        } else if (edgeType === 'sobel') {
+            await this.applySobel();
+        } else {
+            this.showStatus('Please select an edge detection method', 'error');
         }
     }
 }

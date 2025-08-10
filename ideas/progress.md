@@ -5,15 +5,8 @@
     - can probably just make a custom button that links out
   - Also, see if cloudflare CDN is an option on free plan, so you can set your own headers for library files
 - need to figure out how to host the library files and get the headers there
-- need to arrange image layout: options on left side instead of bottom (unless mobile?)
-- figure out full metadata
-  - in image.h: GType get_typeof(const std::string &field)
-  - and more details from c: https://www.libvips.org/API/8.17/libvips-header.html
-- add stitching/stacking from 2 (or more)
-- make text images
+- need to figure out mobile layout, or not allow mobile
 - should outline getting libvips working, like metadata, in a blog! It is hard
-  Iptc-Data: [702 bytes]
-  Xmp-Data: [31249 bytes]
 
 # Image Editor Progress
 
