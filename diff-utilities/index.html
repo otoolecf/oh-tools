@@ -11,18 +11,7 @@
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <header class="main-header">
-        <div class="container">
-            <nav class="nav">
-                <a href="/" class="nav-brand">OToolebox</a>
-                <div class="nav-links">
-                    <button id="themeToggle" class="theme-toggle" title="Toggle theme"></button>
-                    <a href="/" class="nav-link">Tools</a>
-                    <span class="nav-link active">Diff Utilities</span>
-                </div>
-            </nav>
-        </div>
-    </header>
+    <otoolebox-header current-tool="Diff Utilities" base-path="../"></otoolebox-header>
 
     <div class="container">
         <div class="hero">
@@ -133,35 +122,13 @@
             </div>
         </main>
 
-        <footer class="main-footer">
-            <p>&copy; 2025 OToolebox. All tools run locally in your browser.</p>
-            <div style="margin-top: 1rem;">
-                <a 
-                    href="https://ko-fi.com/otoolecf" 
-                    target="_blank" 
-                    class="custom-kofi-btn"
-                    style="
-                        display: inline-flex;
-                        align-items: center;
-                        gap: 0.5rem;
-                        padding: 0.5rem 1rem;
-                        background: #64748b;
-                        color: white;
-                        text-decoration: none;
-                        border-radius: 4px;
-                        font-size: 0.9rem;
-                        font-weight: 500;
-                        transition: background-color 0.2s, transform 0.2s;
-                    "
-                >
-                    <img src="../kofi_symbol.svg" width="16" height="16" alt="Ko-fi icon" />
-                    Buy Me a Coffee or Beer
-                </a>
-            </div>
-        </footer>
+        <otoolebox-footer base-path="../"></otoolebox-footer>
     </div>
 
     <script src="node_modules/diff/dist/diff.min.js"></script>
     <script src="script.js"></script>
+    <!-- Load web components -->
+    <script src="../components/otoolebox-header.js"></script>
+    <script src="../components/otoolebox-footer.js"></script>
 </body>
 </html>

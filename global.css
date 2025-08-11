@@ -68,57 +68,6 @@ body {
   padding: 0 1.5rem;
 }
 
-.main-header {
-  background-color: var(--bg-primary);
-  border-bottom: 1px solid var(--border-color);
-  position: sticky;
-  top: 0;
-  z-index: 100;
-  box-shadow: var(--shadow-sm);
-  width: 100%;
-  left: 0;
-  right: 0;
-}
-
-.nav {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 1rem 0;
-}
-
-.nav-brand {
-  font-size: 1.5rem;
-  font-weight: 700;
-  color: var(--primary-color);
-  text-decoration: none;
-}
-
-.nav-links {
-  display: flex;
-  gap: 2rem;
-  align-items: center;
-}
-
-.nav-link {
-  color: var(--text-secondary);
-  text-decoration: none;
-  font-weight: 500;
-  transition: color 0.2s;
-}
-
-.nav-link:hover,
-.nav-link.active {
-  color: var(--primary-color);
-}
-
-.main-footer {
-  margin-top: 4rem;
-  padding: 2rem 0;
-  border-top: 1px solid var(--border-color);
-  text-align: center;
-  color: var(--text-secondary);
-}
 
 .btn {
   display: inline-block;
@@ -186,11 +135,6 @@ body {
   background: var(--button-hover);
 }
 
-/* Custom Ko-fi button styling */
-.custom-kofi-btn:hover {
-  background: #475569 !important;
-  transform: translateY(-1px);
-}
 
 /* Hero section styles - consistent styling for tool descriptions */
 .hero h1 {
@@ -454,65 +398,6 @@ a:visited {
   color: var(--link-visited);
 }
 
-.theme-toggle {
-  background: var(--border-color);
-  border: none;
-  border-radius: 20px;
-  width: 60px;
-  height: 30px;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  position: relative;
-  margin-right: 1.5rem;
-  flex-shrink: 0;
-}
-
-.theme-toggle:hover {
-  background: var(--primary-color);
-}
-
-.theme-toggle::before {
-  content: '';
-  position: absolute;
-  top: 3px;
-  left: 3px;
-  width: 24px;
-  height: 24px;
-  background: white;
-  border-radius: 50%;
-  transition: all 0.3s ease;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-}
-
-[data-theme="dark"] .theme-toggle::before {
-  transform: translateX(30px);
-  background: var(--bg-primary);
-}
-
-[data-theme="dark"] .theme-toggle {
-  background: var(--primary-color);
-}
-
-.theme-toggle::after {
-  content: '';
-  position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
-  font-size: 12px;
-  font-weight: 500;
-  pointer-events: none;
-  transition: all 0.3s ease;
-}
-
-[data-theme="light"] .theme-toggle::after {
-  content: '☀️';
-  right: 8px;
-}
-
-[data-theme="dark"] .theme-toggle::after {
-  content: '🌙';
-  left: 8px;
-}
 
 @media (max-width: 768px) {
   .container {
