@@ -2,51 +2,101 @@
   "tools": [
     {
       "name": "JSON Utilities",
-      "description": "Clean, format, validate, and diff JSON data. Removes comments, fixes quotes, handles MongoDB syntax.",
+      "description": "Clean, format, validate, and diff JSON data. All processing happens in your browser - no data is sent to any server.",
       "path": "/json-utilities/",
-      "status": "active"
+      "status": "active",
+      "poweredBy": [
+        {
+          "name": "jsonrepair",
+          "url": "https://github.com/josdejong/jsonrepair"
+        },
+        { "name": "JSON5", "url": "https://github.com/json5/json5" }
+      ],
+      "heroExtra": "<p style=\"font-size: 0.9rem; color: var(--text-secondary); margin-top: 0.5rem;\"><strong>Clean</strong> removes comments, fixes quotes, handles MongoDB syntax, and repairs malformed JSON. If validation or formatting fails, try using <strong>Clean</strong> first to fix syntax errors.</p>"
     },
     {
       "name": "Image Editor",
-      "description": "Powerful image manipulation with resize, crop, rotate, effects, and format conversion. Supports HEIC, JPEG, PNG, WebP, TIFF.",
+      "description": "Powerful image manipulation tool with resize, crop, rotate, effects, and format conversion. All processing happens in your browser - no data is sent to any server. Supports various import and export formats listed below, with full metadata support for EXIF, IPTC, XMP, and ICC profiles.",
       "path": "/image-editor/",
-      "status": "active"
+      "status": "active",
+      "poweredBy": [
+        {
+          "name": "wasm-vips",
+          "url": "https://github.com/kleisauke/wasm-vips"
+        },
+        { "name": "heic-to", "url": "https://github.com/hoppergee/heic-to" },
+        {
+          "name": "ExifReader",
+          "url": "https://github.com/mattiasw/ExifReader"
+        }
+      ],
+      "heroExtra": "<p style=\"font-size: 0.95rem; font-weight: 500; color: var(--text-primary); margin-top: 1rem;\">Wide format browser or tablet recommended for best editing experience.</p>"
     },
     {
       "name": "Hash Generator",
-      "description": "Generate cryptographic hashes and checksums using SHA-256, MD5, SHA-3, HMAC, and more algorithms.",
+      "description": "Generate cryptographic hashes and checksums from text or data using popular algorithms like SHA-256, MD5, SHA-3, and more. All processing happens in your browser - no data is sent to any server.",
       "path": "/hash-generator/",
-      "status": "active"
+      "status": "active",
+      "poweredBy": [
+        { "name": "CryptoJS", "url": "https://github.com/brix/crypto-js" }
+      ],
+      "heroExtra": ""
     },
     {
       "name": "UUID Generator",
-      "description": "Generate unique identifiers (UUIDs) instantly with various formats and options.",
+      "description": "Generate unique identifiers (UUIDs) instantly. All generation happens in your browser - no data is sent to any server.",
       "path": "/uuid-generator/",
-      "status": "active"
+      "status": "active",
+      "poweredBy": [
+        {
+          "name": "Browser Crypto API",
+          "url": "https://developer.mozilla.org/en-US/docs/Web/API/Crypto"
+        }
+      ],
+      "heroExtra": ""
     },
     {
       "name": "Barcode Generator",
       "description": "Generate various types of barcodes and QR codes for different use cases.",
       "path": "/barcode-generator/",
-      "status": "active"
+      "status": "active",
+      "poweredBy": [
+        { "name": "bwip-js", "url": "https://github.com/metafloor/bwip-js" }
+      ],
+      "heroExtra": ""
     },
     {
       "name": "Passphrase Generator",
       "description": "Generate human memorable natural language or secure random passphrases.",
       "path": "/passphrase-generator/",
-      "status": "active"
+      "status": "active",
+      "poweredBy": [
+        { "name": "PassHelp", "url": "https://github.com/passhelp/passhelp" }
+      ],
+      "heroExtra": ""
     },
     {
       "name": "Diff Utilities",
       "description": "Compare text, JSON, CSS, and array data with visual diff highlighting.",
       "path": "/diff-utilities/",
-      "status": "active"
+      "status": "active",
+      "poweredBy": [
+        { "name": "diff", "url": "https://github.com/kpdecker/jsdiff" }
+      ],
+      "heroExtra": ""
     },
     {
       "name": "Closed Loop",
       "description": "Secure private connection for sharing files and text between devices using WebRTC.",
       "path": "/closed-loop/",
-      "status": "active"
+      "status": "active",
+      "poweredBy": [
+        {
+          "name": "Browser WebRTC API",
+          "url": "https://developer.mozilla.org/en-US/docs/Web/API/WebRTC_API"
+        }
+      ],
+      "heroExtra": ""
     }
   ]
 }

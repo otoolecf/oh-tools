@@ -14,37 +14,18 @@
     <otoolebox-header current-tool="Image Editor" base-path="../"></otoolebox-header>
 
     <div class="container">
-      <div class="hero">
-        <h1>Image Editor</h1>
-        <div class="hero-content">
-          <p>
-            Powerful image manipulation tool with resize, crop, rotate, effects,
-            and format conversion. All processing happens in your browser - no
-            data is sent to any server. Supports various import and export formats listed below,
-            with full metadata support for EXIF, IPTC, XMP, and ICC profiles.
-          </p>
-          <p style="font-size: 0.95rem; font-weight: 500; color: var(--text-primary); margin-top: 1rem;">
-            Wide format browser or tablet recommended for best editing experience.
-          </p>
-          <p style="font-size: 0.9rem; font-style: italic; color: var(--text-secondary); margin-top: 0.75rem;">
-            Uses the excellent 
-            <a href="https://github.com/kleisauke/wasm-vips" target="_blank" style="color: var(--primary-color);">wasm-vips</a>,
-            <a href="https://github.com/hoppergee/heic-to" target="_blank" style="color: var(--primary-color);">heic-to</a>, and
-            <a href="https://github.com/mattiasw/ExifReader" target="_blank" style="color: var(--primary-color);">ExifReader</a>
-            libraries under the hood.
-          </p>
-        </div>
-        
-        <div style="margin: 2rem auto; padding: 1.5rem; background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 8px; max-width: 600px; text-align: center;">
-          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem;">
-            <div>
-              <strong style="color: var(--primary-color); display: block; margin-bottom: 0.5rem;">Import Formats</strong>
-              <span style="color: var(--text-secondary); font-size: 0.9rem;">JPEG, PNG, WebP, HEIC/HEIF, TIFF, SVG, GIF</span>
-            </div>
-            <div>
-              <strong style="color: var(--primary-color); display: block; margin-bottom: 0.5rem;">Export Formats</strong>
-              <span style="color: var(--text-secondary); font-size: 0.9rem;">JPEG, PNG, WebP, TIFF</span>
-            </div>
+      <tool-hero data-tool-path="/image-editor/"></tool-hero>
+
+      <!-- Format Support Card -->
+      <div class="format-support-card">
+        <div class="formats-grid">
+          <div class="format-column">
+            <strong class="format-title">Import Formats</strong>
+            <span class="format-list">JPEG, PNG, WebP, HEIC/HEIF, TIFF, SVG, GIF</span>
+          </div>
+          <div class="format-column">
+            <strong class="format-title">Export Formats</strong>
+            <span class="format-list">JPEG, PNG, WebP, TIFF</span>
           </div>
         </div>
       </div>
@@ -588,5 +569,7 @@
     <!-- Load web components -->
     <script src="../components/otoolebox-header.js"></script>
     <script src="../components/otoolebox-footer.js"></script>
+    <script src="../components/tool-hero.js"></script>
+    <script src="../components/tool-data-loader.js"></script>
   </body>
 </html>

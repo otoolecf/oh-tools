@@ -1,5 +1,52 @@
 /* Image Editor specific styles */
 
+/* Format Support Card */
+.format-support-card {
+    margin: 2rem auto;
+    padding: 1.5rem;
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    max-width: 600px;
+    text-align: center;
+}
+
+.formats-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+}
+
+.format-column {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.format-title {
+    color: var(--primary-color);
+    font-weight: 600;
+    font-size: 0.95rem;
+}
+
+.format-list {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    line-height: 1.4;
+}
+
+@media (max-width: 768px) {
+    .formats-grid {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+    }
+    
+    .format-support-card {
+        margin: 1.5rem auto;
+        padding: 1rem;
+    }
+}
+
 /* Custom Ko-fi button styling */
 .custom-kofi-btn:hover {
     background: #475569 !important;

@@ -11,48 +11,7 @@
     <otoolebox-header current-tool="Hash Generator" base-path="../"></otoolebox-header>
     
     <div class="container">
-        <div class="hero">
-            <h1>Hash Generator</h1>
-            <div class="hero-content">
-                <p>Generate cryptographic hashes and checksums from text or data using popular algorithms like SHA-256, MD5, SHA-3, and more. All processing happens in your browser - no data is sent to any server.</p>
-            </div>
-            
-            <div class="usage-guide">
-                <button class="hmac-toggle" id="hmacToggle">
-                    <span class="toggle-icon">▶</span>
-                    Learn more about HMAC verification
-                </button>
-                <div class="hmac-content" id="hmacContent" style="display: none;">
-                    <h3>HMAC (Hash-based Message Authentication Code)</h3>
-                    <p><strong>HMAC</strong> combines a secret key with your message to create a signature that proves both authenticity and integrity. Use it for:</p>
-                    <ul>
-                        <li><strong>API Authentication:</strong> Sign requests with a shared secret key</li>
-                        <li><strong>Data Integrity:</strong> Verify that data hasn't been tampered with</li>
-                        <li><strong>Message Verification:</strong> Confirm the sender knows the secret key</li>
-                    </ul>
-                    
-                    <h4>How to Generate HMAC:</h4>
-                    <ol>
-                        <li>Select an HMAC algorithm (e.g., HMAC-SHA-256)</li>
-                        <li>Enter your secret key</li>
-                        <li>Enter your message text</li>
-                        <li>Click "Generate Hash" to create the HMAC signature</li>
-                    </ol>
-                    
-                    <h4>How to Verify HMAC:</h4>
-                    <ol>
-                        <li>Select the same HMAC algorithm used for generation</li>
-                        <li>Enter the same secret key</li>
-                        <li><strong>Enter the exact same message text</strong> (verification compares against this)</li>
-                        <li>Switch to "Verify Hash" mode</li>
-                        <li>Paste the HMAC signature to verify</li>
-                        <li>Click "Verify Hash" - you'll see ✓ VALID or ✗ INVALID</li>
-                    </ol>
-                    
-                    <p><strong>Important:</strong> For verification to work, the message, secret key, and algorithm must all match exactly what was used during generation.</p>
-                </div>
-            </div>
-        </div>
+        <tool-hero data-tool-path="/hash-generator/"></tool-hero>
         
         <main class="tool-container">
             
@@ -159,5 +118,7 @@
     <!-- Load web components -->
     <script src="../components/otoolebox-header.js"></script>
     <script src="../components/otoolebox-footer.js"></script>
+    <script src="../components/tool-hero.js"></script>
+    <script src="../components/tool-data-loader.js"></script>
 </body>
 </html>

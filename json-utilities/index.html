@@ -11,27 +11,7 @@
     <otoolebox-header current-tool="JSON Utilities" base-path="../"></otoolebox-header>
 
     <div class="container">
-      <div class="hero">
-        <h1>JSON Utilities</h1>
-        <div class="hero-content">
-          <p>
-            Clean, format, validate, and diff JSON data. All processing happens
-            in your browser - no data is sent to any server.
-          </p>
-          <p
-            style="
-              font-size: 0.9rem;
-              color: var(--text-secondary);
-              margin-top: 0.5rem;
-            "
-          >
-            <strong>Clean</strong> removes comments, fixes quotes, handles
-            MongoDB syntax, and repairs malformed JSON. If validation or
-            formatting fails, try using <strong>Clean</strong> first to fix
-            syntax errors.
-          </p>
-        </div>
-      </div>
+      <tool-hero data-tool-path="/json-utilities/"></tool-hero>
 
       <main class="tool-container">
         <!-- Action Buttons -->
@@ -90,5 +70,7 @@
     <!-- Load web components -->
     <script src="../components/otoolebox-header.js"></script>
     <script src="../components/otoolebox-footer.js"></script>
+    <script src="../components/tool-hero.js"></script>
+    <script src="../components/tool-data-loader.js"></script>
   </body>
 </html>
