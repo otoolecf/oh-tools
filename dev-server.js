@@ -14,6 +14,7 @@ const PORT = process.env.PORT || 8000;
 const mimeTypes = {
     '.html': 'text/html',
     '.js': 'application/javascript',
+    '.mjs': 'application/javascript',  // ES modules
     '.css': 'text/css',
     '.json': 'application/json',
     '.png': 'image/png',

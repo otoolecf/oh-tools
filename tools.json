@@ -86,6 +86,19 @@
       "heroExtra": ""
     },
     {
+      "name": "Data Workbench",
+      "description": "Browser-based BI tool for CSV, JSON, Parquet, Excel, and ZIP files. Convert between formats, run SQL queries, and analyze data entirely in your browser. All processing happens locally - no data leaves your browser.",
+      "path": "/duckdb-browser/",
+      "status": "active",
+      "poweredBy": [
+        {
+          "name": "DuckDB-WASM",
+          "url": "https://duckdb.org/docs/api/wasm/overview"
+        }
+      ],
+      "heroExtra": "<p style=\"font-size: 0.9rem; color: var(--text-secondary); margin-top: 0.5rem;\">Supports <strong>CSV ⇄ JSON ⇄ Parquet ⇄ Excel</strong> conversions plus <strong>ZIP archive</strong> reading with advanced SQL analytics. Features auto-schema detection, statistics generation, and a full SQL console for complex queries.</p>"
+    },
+    {
       "name": "Closed Loop",
       "description": "Secure private connection for sharing files and text between devices using WebRTC.",
       "path": "/closed-loop/",
