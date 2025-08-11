@@ -8,7 +8,7 @@
     <meta http-equiv="Expires" content="0" />
     <title>Image Editor</title>
     <link rel="stylesheet" href="../global.css" />
-    <link rel="stylesheet" href="styles.css?v=18" />
+    <link rel="stylesheet" href="styles.css?v=22" />
   </head>
   <body>
     <otoolebox-header current-tool="Image Editor" base-path="../"></otoolebox-header>
@@ -51,10 +51,10 @@
                   Rotate/Flip
                 </button>
                 <button class="tab-btn disabled" data-tab="blur-sharpen">
-                  Blur & Sharpen
+                  Blur/Sharpen
                 </button>
                 <button class="tab-btn disabled" data-tab="tint-grayscale">
-                  Tint & Grayscale
+                  Tint/Grayscale
                 </button>
                 <button class="tab-btn disabled" data-tab="filters">
                   Filters
@@ -103,368 +103,47 @@
                 <div class="tabs-content">
                   <!-- Metadata Tab -->
                   <div id="metadata-tab" class="tab-content">
-                    <h3>Image Metadata</h3>
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem">
-                      <div>
-                        <div
-                          style="
-                            display: flex;
-                            justify-content: space-between;
-                            align-items: center;
-                            margin-bottom: 0.5rem;
-                          "
-                        >
-                          <h4>Basic Properties</h4>
-                          <div style="display: flex; gap: 0.5rem">
-                            <button
-                              id="copyMetadataTextBtn"
-                              class="btn-copy"
-                              title="Copy readable text"
-                            >
-                              Copy Text
-                            </button>
-                            <button
-                              id="copyMetadataJsonBtn"
-                              class="btn-copy"
-                              title="Copy JSON format"
-                            >
-                              Copy JSON
-                            </button>
-                          </div>
-                        </div>
-                        <div
-                          id="basicMetadataDisplay"
-                          style="
-                            background: var(--surface-light);
-                            border-radius: 8px;
-                            padding: 1rem;
-                            font-size: 0.9rem;
-                            line-height: 1.4;
-                            max-height: 200px;
-                            overflow-y: auto;
-                          "
-                        ></div>
-                      </div>
-                      <div>
-                        <div
-                          style="
-                            display: flex;
-                            justify-content: space-between;
-                            align-items: center;
-                            margin-bottom: 0.5rem;
-                          "
-                        >
-                          <h4>Extended Metadata</h4>
-                          <div style="display: flex; gap: 0.5rem">
-                            <button
-                              id="copyExtendedTextBtn"
-                              class="btn-copy"
-                              title="Copy readable text"
-                            >
-                              Copy Text
-                            </button>
-                            <button
-                              id="copyExtendedJsonBtn"
-                              class="btn-copy"
-                              title="Copy JSON format"
-                            >
-                              Copy JSON
-                            </button>
-                          </div>
-                        </div>
-                        <div
-                          id="extendedMetadataDisplay"
-                          style="
-                            background: var(--surface-light);
-                            border-radius: 8px;
-                            padding: 1rem;
-                            font-size: 0.9rem;
-                            line-height: 1.4;
-                            max-height: 200px;
-                            overflow-y: auto;
-                          "
-                        ></div>
-                      </div>
-                    </div>
-                    <div style="margin-top: 1rem">
-                      <button id="copyAllMetadataBtn" class="btn-enhanced">
-                        Copy All as JSON
-                      </button>
-                    </div>
+                    <metadata-operator id="metadataOperator" disabled></metadata-operator>
                   </div>
 
                   <!-- Crop Operations -->
                   <div id="crop-tab" class="tab-content">
-                    <h3>Crop Operations</h3>
-                    
-                    <!-- Sub-tabs for crop types -->
-                    <div class="sub-tabs">
-                      <button class="sub-tab-btn active" data-subtab="manual-crop">Manual Crop</button>
-                      <button class="sub-tab-btn" data-subtab="smart-crop">Smart Crop</button>
-                    </div>
-
-                    <!-- Manual Crop -->
-                    <div id="manual-crop" class="sub-tab-content active">
-                      <div class="operation-controls">
-                        <div class="control-group">
-                          <label for="cropX">X Position</label>
-                          <input type="number" id="cropX" min="0" placeholder="0" />
-                        </div>
-                        <div class="control-group">
-                          <label for="cropY">Y Position</label>
-                          <input type="number" id="cropY" min="0" placeholder="0" />
-                        </div>
-                        <div class="control-group">
-                          <label for="cropWidth">Width</label>
-                          <input type="number" id="cropWidth" min="1" placeholder="Full width" />
-                        </div>
-                        <div class="control-group">
-                          <label for="cropHeight">Height</label>
-                          <input type="number" id="cropHeight" min="1" placeholder="Full height" />
-                        </div>
-                        <div class="control-group">
-                          <button id="applyCropBtn" class="btn-enhanced">Apply Crop</button>
-                        </div>
-                      </div>
-                    </div>
-
-                    <!-- Smart Crop -->
-                    <div id="smart-crop" class="sub-tab-content">
-                      <div class="operation-controls">
-                        <div class="control-group">
-                          <label for="smartCropWidth">Target Width</label>
-                          <input type="number" id="smartCropWidth" min="50" max="5000" placeholder="500" />
-                        </div>
-                        <div class="control-group">
-                          <label for="smartCropHeight">Target Height</label>
-                          <input type="number" id="smartCropHeight" min="50" max="5000" placeholder="500" />
-                        </div>
-                        <div class="control-group">
-                          <label for="smartCropMode">Mode</label>
-                          <select id="smartCropMode">
-                            <option value="both">Both Dimensions</option>
-                            <option value="width">Width Only</option>
-                            <option value="height">Height Only</option>
-                          </select>
-                        </div>
-                        <div class="control-group">
-                          <label for="smartCropStrategy">Strategy</label>
-                          <select id="smartCropStrategy">
-                            <option value="attention">Attention (Smart)</option>
-                            <option value="entropy">Entropy</option>
-                            <option value="centre">Centre</option>
-                            <option value="high">High</option>
-                            <option value="low">Low</option>
-                          </select>
-                        </div>
-                        <div class="control-group">
-                          <button id="applySmartCropBtn" class="btn-enhanced">Apply Smart Crop</button>
-                        </div>
-                      </div>
-                    </div>
+                    <crop-operator id="cropOperator" disabled></crop-operator>
                   </div>
 
                   <!-- Resize Operations -->
                   <div id="resize-tab" class="tab-content">
-                    <h3>Resize</h3>
-                    <div class="operation-controls">
-                      <div class="control-group">
-                        <label for="resizeWidth">Width (px)</label>
-                        <input type="number" id="resizeWidth" min="1" max="10000" placeholder="Auto" />
-                      </div>
-                      <div class="control-group">
-                        <label for="resizeHeight">Height (px)</label>
-                        <input type="number" id="resizeHeight" min="1" max="10000" placeholder="Auto" />
-                      </div>
-                      <div class="control-group">
-                        <label>
-                          <input type="checkbox" id="maintainAspect" checked />
-                          Maintain aspect ratio
-                        </label>
-                      </div>
-                      <div class="control-group">
-                        <button id="applyResizeBtn" class="btn-enhanced">Apply Resize</button>
-                      </div>
-                    </div>
+                    <resize-operator id="resizeOperator" disabled></resize-operator>
                   </div>
 
                   <!-- Rotate/Flip Operations -->
                   <div id="rotate-flip-tab" class="tab-content">
-                    <h3>Rotate/Flip</h3>
-                    <div class="operation-controls">
-                      <div class="control-group">
-                        <label for="rotateAngle">Rotation</label>
-                        <select id="rotateAngle">
-                          <option value="90">90° Clockwise</option>
-                          <option value="180">180°</option>
-                          <option value="270">270° Clockwise</option>
-                          <option value="custom">Custom Angle</option>
-                        </select>
-                      </div>
-                      <div class="control-group hidden" id="customAngleGroup">
-                        <label for="customAngle">Custom Angle (degrees)</label>
-                        <input type="number" id="customAngle" min="-360" max="360" step="0.1" placeholder="0" />
-                      </div>
-                      <div class="control-group">
-                        <button id="applyRotateBtn" class="btn-enhanced">Apply Rotation</button>
-                      </div>
-                      <div class="control-group">
-                        <button id="flipHBtn" class="btn-enhanced">Flip Horizontal</button>
-                      </div>
-                      <div class="control-group">
-                        <button id="flipVBtn" class="btn-enhanced">Flip Vertical</button>
-                      </div>
-                    </div>
+                    <rotate-flip-operator id="rotateFlipOperator" disabled></rotate-flip-operator>
                   </div>
 
-                  <!-- Blur & Sharpen Operations -->
+                  <!-- Blur/Sharpen Operations -->
                   <div id="blur-sharpen-tab" class="tab-content">
-                    <h3>Blur & Sharpen</h3>
-                    <div class="operation-controls">
-                      <div class="control-group">
-                        <label for="blurRadius">Blur Radius</label>
-                        <div style="display: flex; align-items: center; gap: 0.5rem;">
-                          <input type="range" id="blurRadius" min="0.1" max="10.0" value="2.0" step="0.1" style="flex: 1" />
-                          <input type="number" id="blurRadiusNum" min="0.1" max="10.0" value="2.0" step="0.1" style="width: 70px" />
-                        </div>
-                      </div>
-                      <div class="control-group">
-                        <label for="sharpenSigma">Sharpen Intensity</label>
-                        <div style="display: flex; align-items: center; gap: 0.5rem;">
-                          <input type="range" id="sharpenSigma" min="1.0" max="10.0" value="3.0" step="0.1" style="flex: 1" />
-                          <input type="number" id="sharpenSigmaNum" min="1.0" max="10.0" value="3.0" step="0.1" style="width: 70px" />
-                        </div>
-                      </div>
-                      <div class="control-group">
-                        <button id="applyBlurBtn" class="btn-enhanced">Apply Blur</button>
-                      </div>
-                      <div class="control-group">
-                        <button id="applySharpenBtn" class="btn-enhanced">Apply Sharpen</button>
-                      </div>
-                    </div>
+                    <blur-sharpen-operator id="blurSharpenOperator" disabled></blur-sharpen-operator>
                   </div>
 
-                  <!-- Tint & Grayscale Operations -->
+                  <!-- Tint/Grayscale Operations -->
                   <div id="tint-grayscale-tab" class="tab-content">
-                    <h3>Tint & Grayscale</h3>
-                    
-                    <!-- Sub-tabs for tint and grayscale -->
-                    <div class="sub-tabs">
-                      <button class="sub-tab-btn active" data-subtab="tint">Tint</button>
-                      <button class="sub-tab-btn" data-subtab="grayscale">Grayscale</button>
-                    </div>
-
-                    <!-- Tint -->
-                    <div id="tint" class="sub-tab-content active">
-                      <div class="operation-controls">
-                        <div class="control-group">
-                          <label for="tintColor">Tint Color & Opacity</label>
-                          <div style="display: flex; align-items: center; gap: 0.5rem;">
-                            <input type="color" id="tintColor" value="#ff0000" />
-                            <input type="range" id="tintOpacity" min="0" max="100" value="50" style="flex: 1" />
-                            <input type="number" id="tintOpacityNum" min="0" max="100" value="50" style="width: 70px" />
-                            <span>%</span>
-                          </div>
-                        </div>
-                        <div class="control-group">
-                          <button id="applyTintBtn" class="btn-enhanced">Apply Tint</button>
-                        </div>
-                      </div>
-                    </div>
-
-                    <!-- Grayscale -->
-                    <div id="grayscale" class="sub-tab-content">
-                      <div class="operation-controls">
-                        <div class="control-group">
-                          <label for="grayscaleThreshold">Grayscale Threshold</label>
-                          <div style="display: flex; align-items: center; gap: 0.5rem;">
-                            <input type="range" id="grayscaleThreshold" min="0" max="255" value="128" style="flex: 1" />
-                            <input type="number" id="grayscaleThresholdNum" min="0" max="255" value="128" style="width: 70px" />
-                          </div>
-                        </div>
-                        <div class="control-group">
-                          <button id="applyGrayscaleBtn" class="btn-enhanced">Apply Grayscale</button>
-                        </div>
-                      </div>
-                    </div>
+                    <tint-grayscale-operator id="tintGrayscaleOperator" disabled></tint-grayscale-operator>
                   </div>
 
                   <!-- Filters Operations -->
                   <div id="filters-tab" class="tab-content">
-                    <h3>Filters</h3>
-                    <div class="operation-controls">
-                      <div class="control-group">
-                        <button id="sepiaBtn" class="btn-enhanced">Sepia</button>
-                      </div>
-                      <div class="control-group">
-                        <button id="vintageBtn" class="btn-enhanced">Vintage</button>
-                      </div>
-                      <div class="control-group">
-                        <button id="warmBtn" class="btn-enhanced">Warm</button>
-                      </div>
-                      <div class="control-group">
-                        <button id="coolBtn" class="btn-enhanced">Cool</button>
-                      </div>
-                      <div class="control-group">
-                        <button id="contrastBtn" class="btn-enhanced">High Contrast</button>
-                      </div>
-                    </div>
+                    <filters-operator id="filtersOperator" disabled></filters-operator>
                   </div>
 
                   <!-- Edge Detection Operations -->
                   <div id="edge-detection-tab" class="tab-content">
-                    <h3>Edge Detection</h3>
-                    <div class="operation-controls">
-                      <div class="control-group">
-                        <label for="cannySigma">Canny Sigma</label>
-                        <div style="display: flex; align-items: center; gap: 0.5rem;">
-                          <input type="range" id="cannySigma" min="0.5" max="3.0" value="1.4" step="0.1" style="flex: 1" />
-                          <input type="number" id="cannySigmaNum" min="0.5" max="3.0" value="1.4" step="0.1" style="width: 70px" />
-                        </div>
-                      </div>
-                      <div class="control-group">
-                        <label>
-                          <input type="radio" name="edgeDetection" value="canny" checked />
-                          Canny Edge Detection
-                        </label>
-                      </div>
-                      <div class="control-group">
-                        <label>
-                          <input type="radio" name="edgeDetection" value="sobel" />
-                          Sobel Edge Detection
-                        </label>
-                      </div>
-                      <div class="control-group">
-                        <button id="applyEdgeDetectionBtn" class="btn-enhanced">Apply Edge Detection</button>
-                      </div>
-                    </div>
+                    <edge-detection-operator id="edgeDetectionOperator" disabled></edge-detection-operator>
                   </div>
 
                   <!-- Export Operations -->
                   <div id="export-tab" class="tab-content">
-                    <h3>Export & Download</h3>
-                    <div class="operation-controls">
-                      <div class="control-group">
-                        <label for="exportFormat">Export Format</label>
-                        <select id="exportFormat">
-                          <option value="jpeg">JPEG</option>
-                          <option value="png">PNG</option>
-                          <option value="webp">WebP</option>
-                          <option value="tiff">TIFF</option>
-                        </select>
-                      </div>
-                      <div class="control-group" id="qualityGroup">
-                        <label for="exportQuality">Quality (%)</label>
-                        <div style="display: flex; align-items: center; gap: 0.5rem;">
-                          <input type="range" id="exportQuality" min="10" max="100" value="85" style="flex: 1" />
-                          <input type="number" id="exportQualityNum" min="10" max="100" value="85" style="width: 70px" />
-                          <span>%</span>
-                        </div>
-                      </div>
-                      <div class="control-group">
-                        <button id="downloadBtn" class="btn-enhanced">Download Image</button>
-                      </div>
-                    </div>
+                    <export-operator id="exportOperator" disabled></export-operator>
                   </div>
                 </div>
               </div>
@@ -564,12 +243,21 @@
     <script src="node_modules/heic-to/dist/iife/heic-to.js"></script>
     <!-- ExifReader for metadata parsing -->
     <script src="node_modules/exifreader/dist/exif-reader.js"></script>
-    <script src="script.js?v=78"></script>
+    <script src="script.js?v=84"></script>
 
     <!-- Load web components -->
     <script src="../components/otoolebox-header.js"></script>
     <script src="../components/otoolebox-footer.js"></script>
     <script src="../components/tool-hero.js"></script>
     <script src="../components/tool-data-loader.js"></script>
+    <script src="components/rotate-flip-operator.js?v=2"></script>
+    <script src="components/crop-operator.js?v=3"></script>
+    <script src="components/resize-operator.js?v=2"></script>
+    <script src="components/blur-sharpen-operator.js?v=7&t=1739233300"></script>
+    <script src="components/tint-grayscale-operator.js?v=3"></script>
+    <script src="components/metadata-operator.js?v=6"></script>
+    <script src="components/filters-operator.js?v=3"></script>
+    <script src="components/edge-detection-operator.js?v=3"></script>
+    <script src="components/export-operator.js?v=4"></script>
   </body>
 </html>

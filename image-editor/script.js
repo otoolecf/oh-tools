@@ -33,15 +33,15 @@ class ImageEditor {
             console.error('File input not found!');
         }
 
-        // Metadata elements
-        this.metadataSection = document.getElementById('metadataSection');
-        this.basicMetadataDisplay = document.getElementById('basicMetadataDisplay');
-        this.extendedMetadataDisplay = document.getElementById('extendedMetadataDisplay');
-        this.copyMetadataTextBtn = document.getElementById('copyMetadataTextBtn');
-        this.copyMetadataJsonBtn = document.getElementById('copyMetadataJsonBtn');
-        this.copyExtendedTextBtn = document.getElementById('copyExtendedTextBtn');
-        this.copyExtendedJsonBtn = document.getElementById('copyExtendedJsonBtn');
-        this.copyAllMetadataBtn = document.getElementById('copyAllMetadataBtn');
+        // Metadata elements (now handled by web component)
+        // this.metadataSection = document.getElementById('metadataSection');
+        // this.basicMetadataDisplay = document.getElementById('basicMetadataDisplay');
+        // this.extendedMetadataDisplay = document.getElementById('extendedMetadataDisplay');
+        // this.copyMetadataTextBtn = document.getElementById('copyMetadataTextBtn');
+        // this.copyMetadataJsonBtn = document.getElementById('copyMetadataJsonBtn');
+        // this.copyExtendedTextBtn = document.getElementById('copyExtendedTextBtn');
+        // this.copyExtendedJsonBtn = document.getElementById('copyExtendedJsonBtn');
+        // this.copyAllMetadataBtn = document.getElementById('copyAllMetadataBtn');
 
         // Preview elements
         this.previewSection = document.getElementById('previewSection');
@@ -67,34 +67,37 @@ class ImageEditor {
         this.operationsContent = document.getElementById('operationsContent');
 
         // Control elements
-        this.resizeWidth = document.getElementById('resizeWidth');
-        this.resizeHeight = document.getElementById('resizeHeight');
-        this.maintainAspect = document.getElementById('maintainAspect');
-        this.cropX = document.getElementById('cropX');
-        this.cropY = document.getElementById('cropY');
-        this.cropWidth = document.getElementById('cropWidth');
-        this.cropHeight = document.getElementById('cropHeight');
-        this.smartCropWidth = document.getElementById('smartCropWidth');
-        this.smartCropHeight = document.getElementById('smartCropHeight');
-        this.smartCropMode = document.getElementById('smartCropMode');
-        this.smartCropStrategy = document.getElementById('smartCropStrategy');
+        // Resize elements now handled by web component
+        // this.resizeWidth = document.getElementById('resizeWidth');
+        // this.resizeHeight = document.getElementById('resizeHeight');
+        // this.maintainAspect = document.getElementById('maintainAspect');
+        // Crop elements now handled by web component
+        // this.cropX = document.getElementById('cropX');
+        // this.cropY = document.getElementById('cropY');
+        // this.cropWidth = document.getElementById('cropWidth');
+        // this.cropHeight = document.getElementById('cropHeight');
+        // this.smartCropWidth = document.getElementById('smartCropWidth');
+        // this.smartCropHeight = document.getElementById('smartCropHeight');
+        // this.smartCropMode = document.getElementById('smartCropMode');
+        // this.smartCropStrategy = document.getElementById('smartCropStrategy');
         this.thumbnailWidth = document.getElementById('thumbnailWidth');
         this.thumbnailHeight = document.getElementById('thumbnailHeight');
         this.thumbnailCrop = document.getElementById('thumbnailCrop');
         this.thumbnailNoRotate = document.getElementById('thumbnailNoRotate');
         this.thumbnailNoUpscale = document.getElementById('thumbnailNoUpscale');
-        this.rotateAngle = document.getElementById('rotateAngle');
-        this.customAngle = document.getElementById('customAngle');
-        this.customAngleGroup = document.getElementById('customAngleGroup');
-        this.grayscaleThreshold = document.getElementById('grayscaleThreshold');
-        this.tintColor = document.getElementById('tintColor');
-        this.tintOpacity = document.getElementById('tintOpacity');
-        this.blurRadius = document.getElementById('blurRadius');
-        this.sharpenSigma = document.getElementById('sharpenSigma');
-        this.cannySigma = document.getElementById('cannySigma');
-        this.exportFormat = document.getElementById('exportFormat');
-        this.exportQuality = document.getElementById('exportQuality');
-        this.qualityGroup = document.getElementById('qualityGroup');
+        // rotateAngle, customAngle, customAngleGroup now handled by web component
+        // Tint/grayscale elements now handled by web component
+        // this.grayscaleThreshold = document.getElementById('grayscaleThreshold');
+        // this.tintColor = document.getElementById('tintColor');
+        // this.tintOpacity = document.getElementById('tintOpacity');
+        // Blur/sharpen elements now handled by web component
+        // this.blurRadius = document.getElementById('blurRadius');
+        // this.sharpenSigma = document.getElementById('sharpenSigma');
+        // this.cannySigma = document.getElementById('cannySigma'); // Now handled by web component
+        // Export elements now handled by web component
+        // this.exportFormat = document.getElementById('exportFormat');
+        // this.exportQuality = document.getElementById('exportQuality');
+        // this.qualityGroup = document.getElementById('qualityGroup');
         
     }
 
@@ -124,28 +127,36 @@ class ImageEditor {
         this.uploadArea.addEventListener('drop', this.handleDrop.bind(this));
 
         // Operation buttons (safely bind if they exist)
-        this.bindIfExists('resizeBtn', 'click', () => this.applyResize());
-        this.bindIfExists('cropBtn', 'click', () => this.applyCrop());
-        this.bindIfExists('smartCropBtn', 'click', () => this.applySmartCrop());
+        // Resize operations now handled by web component
+        // this.bindIfExists('resizeBtn', 'click', () => this.applyResize());
+        // Crop operations now handled by web component
+        // this.bindIfExists('cropBtn', 'click', () => this.applyCrop());
+        // this.bindIfExists('smartCropBtn', 'click', () => this.applySmartCrop());
         this.bindIfExists('thumbnailBtn', 'click', () => this.applyThumbnail());
-        this.bindIfExists('rotateBtn', 'click', () => this.applyRotation());
-        this.bindIfExists('flipHBtn', 'click', () => this.applyFlip('horizontal'));
-        this.bindIfExists('flipVBtn', 'click', () => this.applyFlip('vertical'));
-        this.bindIfExists('grayscaleBtn', 'click', () => this.applyGrayscale());
+        // Rotate/flip operations now handled by web component
+        // this.bindIfExists('rotateBtn', 'click', () => this.applyRotation());
+        // this.bindIfExists('flipHBtn', 'click', () => this.applyFlip('horizontal'));
+        // this.bindIfExists('flipVBtn', 'click', () => this.applyFlip('vertical'));
+        // Tint/grayscale operations now handled by web component
+        // this.bindIfExists('grayscaleBtn', 'click', () => this.applyGrayscale());
         this.bindIfExists('negateBtn', 'click', () => this.applyNegate());
-        this.bindIfExists('tintBtn', 'click', () => this.applyTint());
-        this.bindIfExists('sepiaBtn', 'click', () => this.applySepia());
-        this.bindIfExists('vintageBtn', 'click', () => this.applyVintage());
-        this.bindIfExists('warmBtn', 'click', () => this.applyWarm());
-        this.bindIfExists('coolBtn', 'click', () => this.applyCool());
-        this.bindIfExists('contrastBtn', 'click', () => this.applyHighContrast());
+        // this.bindIfExists('tintBtn', 'click', () => this.applyTint());
+        // Filter buttons now handled by web component
+        // this.bindIfExists('sepiaBtn', 'click', () => this.applySepia());
+        // this.bindIfExists('vintageBtn', 'click', () => this.applyVintage());
+        // this.bindIfExists('warmBtn', 'click', () => this.applyWarm());
+        // this.bindIfExists('coolBtn', 'click', () => this.applyCool());
+        // this.bindIfExists('contrastBtn', 'click', () => this.applyHighContrast());
         this.bindIfExists('flattenBtn', 'click', () => this.applyFlatten());
         this.bindIfExists('unflattenBtn', 'click', () => this.applyUnflatten());
-        this.bindIfExists('blurBtn', 'click', () => this.applyBlur());
-        this.bindIfExists('sharpenBtn', 'click', () => this.applySharpen());
-        this.bindIfExists('cannyBtn', 'click', () => this.applyCanny());
-        this.bindIfExists('sobelBtn', 'click', () => this.applySobel());
-        this.bindIfExists('downloadBtn', 'click', () => this.downloadImage());
+        // Blur/sharpen operations now handled by web component
+        // this.bindIfExists('blurBtn', 'click', () => this.applyBlur());
+        // this.bindIfExists('sharpenBtn', 'click', () => this.applySharpen());
+        // Edge detection buttons now handled by web component
+        // this.bindIfExists('cannyBtn', 'click', () => this.applyCanny());
+        // this.bindIfExists('sobelBtn', 'click', () => this.applySobel());
+        // Download button now handled by web component
+        // this.bindIfExists('downloadBtn', 'click', () => this.downloadImage());
 
         // Reset button
         this.resetBtn.addEventListener('click', () => this.resetToOriginal());
@@ -172,31 +183,31 @@ class ImageEditor {
             }
         });
 
-        // Copy metadata buttons
-        this.copyMetadataTextBtn.addEventListener('click', () => this.copyMetadataText());
-        this.copyMetadataJsonBtn.addEventListener('click', () => this.copyMetadataJson());
-        this.copyExtendedTextBtn.addEventListener('click', () => this.copyExtendedText());
-        this.copyExtendedJsonBtn.addEventListener('click', () => this.copyExtendedJson());
-        this.copyAllMetadataBtn.addEventListener('click', () => this.copyAllMetadata());
+        // Copy metadata buttons now handled by web component
+        // this.copyMetadataTextBtn.addEventListener('click', () => this.copyMetadataText());
+        // this.copyMetadataJsonBtn.addEventListener('click', () => this.copyMetadataJson());
+        // this.copyExtendedTextBtn.addEventListener('click', () => this.copyExtendedText());
+        // this.copyExtendedJsonBtn.addEventListener('click', () => this.copyExtendedJson());
+        // this.copyAllMetadataBtn.addEventListener('click', () => this.copyAllMetadata());
 
-        // Individual apply buttons
-        document.getElementById('applyCropBtn')?.addEventListener('click', () => this.applyCrop());
-        document.getElementById('applySmartCropBtn')?.addEventListener('click', () => this.applySmartCrop());
-        document.getElementById('applyResizeBtn')?.addEventListener('click', () => this.applyResize());
-        document.getElementById('applyRotateBtn')?.addEventListener('click', () => this.applyRotation());
-        document.getElementById('applyBlurBtn')?.addEventListener('click', () => this.applyBlur());
-        document.getElementById('applySharpenBtn')?.addEventListener('click', () => this.applySharpen());
-        document.getElementById('applyTintBtn')?.addEventListener('click', () => this.applyTint());
-        document.getElementById('applyGrayscaleBtn')?.addEventListener('click', () => this.applyGrayscale());
-        document.getElementById('applyEdgeDetectionBtn')?.addEventListener('click', () => this.handleEdgeDetectionApply());
+        // Individual apply buttons (crop now handled by web component)
+        // document.getElementById('applyCropBtn')?.addEventListener('click', () => this.applyCrop());
+        // document.getElementById('applySmartCropBtn')?.addEventListener('click', () => this.applySmartCrop());
+        // document.getElementById('applyResizeBtn')?.addEventListener('click', () => this.applyResize());
+        // applyRotateBtn is now handled by the web component
+        // document.getElementById('applyBlurBtn')?.addEventListener('click', () => this.applyBlur());
+        // document.getElementById('applySharpenBtn')?.addEventListener('click', () => this.applySharpen());
+        // document.getElementById('applyTintBtn')?.addEventListener('click', () => this.applyTint());
+        // document.getElementById('applyGrayscaleBtn')?.addEventListener('click', () => this.applyGrayscale());
+        // document.getElementById('applyEdgeDetectionBtn')?.addEventListener('click', () => this.handleEdgeDetectionApply()); // Now handled by web component
 
-        // Individual operation buttons (filters, etc.) - flip buttons are handled via bindIfExists
-        document.getElementById('sepiaBtn')?.addEventListener('click', () => this.applySepia());
-        document.getElementById('vintageBtn')?.addEventListener('click', () => this.applyVintage());
-        document.getElementById('warmBtn')?.addEventListener('click', () => this.applyWarm());
-        document.getElementById('coolBtn')?.addEventListener('click', () => this.applyCool());
-        document.getElementById('contrastBtn')?.addEventListener('click', () => this.applyContrast());
-        document.getElementById('downloadBtn')?.addEventListener('click', () => this.downloadImage());
+        // Individual operation buttons (filters, etc.) - now handled by web component
+        // document.getElementById('sepiaBtn')?.addEventListener('click', () => this.applySepia());
+        // document.getElementById('vintageBtn')?.addEventListener('click', () => this.applyVintage());
+        // document.getElementById('warmBtn')?.addEventListener('click', () => this.applyWarm());
+        // document.getElementById('coolBtn')?.addEventListener('click', () => this.applyCool());
+        // document.getElementById('contrastBtn')?.addEventListener('click', () => this.applyContrast());
+        // document.getElementById('downloadBtn')?.addEventListener('click', () => this.downloadImage()); // Now handled by web component
 
         // Tab switching
         document.querySelectorAll('.tab-btn').forEach(btn => {
@@ -226,78 +237,121 @@ class ImageEditor {
             toggleMetadataBtn.addEventListener('click', () => this.toggleMetadata());
         }
 
-        // Range inputs and their number counterparts (bind conditionally)
-        if (this.grayscaleThreshold) {
-            this.grayscaleThreshold.addEventListener('input', (e) => {
-                const numInput = document.getElementById('grayscaleThresholdNum');
-                if (numInput) numInput.value = e.target.value;
-            });
-        }
-        if (this.tintOpacity) {
-            this.tintOpacity.addEventListener('input', (e) => {
-                const numInput = document.getElementById('tintOpacityNum');
-                if (numInput) numInput.value = e.target.value;
-            });
-        }
-        if (this.exportQuality) {
-            this.exportQuality.addEventListener('input', (e) => {
-                const numInput = document.getElementById('exportQualityNum');
-                if (numInput) numInput.value = e.target.value;
-            });
-        }
-        if (this.blurRadius) {
-            this.blurRadius.addEventListener('input', (e) => {
-                const numInput = document.getElementById('blurRadiusNum');
-                if (numInput) numInput.value = e.target.value;
-            });
-        }
-        if (this.sharpenSigma) {
-            this.sharpenSigma.addEventListener('input', (e) => {
-                const numInput = document.getElementById('sharpenSigmaNum');
-                if (numInput) numInput.value = e.target.value;
-            });
-        }
-        if (this.cannySigma) {
-            this.cannySigma.addEventListener('input', (e) => {
-                const numInput = document.getElementById('cannySigmaNum');
-                if (numInput) numInput.value = e.target.value;
-            });
-        }
+        // Tint/grayscale slider sync now handled by web component
+        // if (this.grayscaleThreshold) {
+        //     this.grayscaleThreshold.addEventListener('input', (e) => {
+        //         const numInput = document.getElementById('grayscaleThresholdNum');
+        //         if (numInput) numInput.value = e.target.value;
+        //     });
+        // }
+        // if (this.tintOpacity) {
+        //     this.tintOpacity.addEventListener('input', (e) => {
+        //         const numInput = document.getElementById('tintOpacityNum');
+        //         if (numInput) numInput.value = e.target.value;
+        //     });
+        // }
+        // Export quality slider sync now handled by web component
+        // if (this.exportQuality) {
+        //     this.exportQuality.addEventListener('input', (e) => {
+        //         const numInput = document.getElementById('exportQualityNum');
+        //         if (numInput) numInput.value = e.target.value;
+        //     });
+        // }
+        // Blur/sharpen slider sync now handled by web component
+        // if (this.blurRadius) {
+        //     this.blurRadius.addEventListener('input', (e) => {
+        //         const numInput = document.getElementById('blurRadiusNum');
+        //         if (numInput) numInput.value = e.target.value;
+        //     });
+        // }
+        // if (this.sharpenSigma) {
+        //     this.sharpenSigma.addEventListener('input', (e) => {
+        //         const numInput = document.getElementById('sharpenSigmaNum');
+        //         if (numInput) numInput.value = e.target.value;
+        //     });
+        // }
+        // Canny sigma slider sync now handled by web component
+        // if (this.cannySigma) {
+        //     this.cannySigma.addEventListener('input', (e) => {
+        //         const numInput = document.getElementById('cannySigmaNum');
+        //         if (numInput) numInput.value = e.target.value;
+        //     });
+        // }
         
-        // Number inputs sync with sliders (bind conditionally)
-        this.bindIfExists('grayscaleThresholdNum', 'input', (e) => {
-            if (this.grayscaleThreshold) this.grayscaleThreshold.value = e.target.value;
-        });
-        this.bindIfExists('tintOpacityNum', 'input', (e) => {
-            if (this.tintOpacity) this.tintOpacity.value = e.target.value;
-        });
-        this.bindIfExists('exportQualityNum', 'input', (e) => {
-            if (this.exportQuality) this.exportQuality.value = e.target.value;
-        });
-        this.bindIfExists('blurRadiusNum', 'input', (e) => {
-            if (this.blurRadius) this.blurRadius.value = e.target.value;
-        });
-        this.bindIfExists('sharpenSigmaNum', 'input', (e) => {
-            if (this.sharpenSigma) this.sharpenSigma.value = e.target.value;
-        });
-        this.bindIfExists('cannySigmaNum', 'input', (e) => {
-            if (this.cannySigma) this.cannySigma.value = e.target.value;
-        });
+        // Tint/grayscale number input sync now handled by web component
+        // this.bindIfExists('grayscaleThresholdNum', 'input', (e) => {
+        //     if (this.grayscaleThreshold) this.grayscaleThreshold.value = e.target.value;
+        // });
+        // this.bindIfExists('tintOpacityNum', 'input', (e) => {
+        //     if (this.tintOpacity) this.tintOpacity.value = e.target.value;
+        // });
+        // this.bindIfExists('exportQualityNum', 'input', (e) => {
+        //     if (this.exportQuality) this.exportQuality.value = e.target.value;
+        // }); // Now handled by web component
+        // Blur/sharpen number input sync now handled by web component
+        // this.bindIfExists('blurRadiusNum', 'input', (e) => {
+        //     if (this.blurRadius) this.blurRadius.value = e.target.value;
+        // });
+        // this.bindIfExists('sharpenSigmaNum', 'input', (e) => {
+        //     if (this.sharpenSigma) this.sharpenSigma.value = e.target.value;
+        // });
+        // this.bindIfExists('cannySigmaNum', 'input', (e) => {
+        //     if (this.cannySigma) this.cannySigma.value = e.target.value;
+        // }); // Now handled by web component
 
-        // Format change (bind conditionally)
-        if (this.exportFormat) {
-            this.exportFormat.addEventListener('change', () => this.updateQualityVisibility());
-        }
-        if (this.rotateAngle) {
-            this.rotateAngle.addEventListener('change', () => this.updateCustomAngleVisibility());
-        }
+        // Format change now handled by web component
+        // if (this.exportFormat) {
+        //     this.exportFormat.addEventListener('change', () => this.updateQualityVisibility());
+        // }
+        // rotateAngle now handled by web component
+        // if (this.rotateAngle) {
+        //     this.rotateAngle.addEventListener('change', () => this.updateCustomAngleVisibility());
+        // }
+        
+        // Listen for web component events
+        this.setupWebComponentListeners();
 
-        // Aspect ratio maintenance (bind conditionally)
-        if (this.resizeWidth) {
-            this.resizeWidth.addEventListener('input', () => this.updateAspectRatio('width'));
-        }
-        if (this.resizeHeight) {
-            this.resizeHeight.addEventListener('input', () => this.updateAspectRatio('height'));
+        // Aspect ratio maintenance now handled by web component
+        // if (this.resizeWidth) {
+        //     this.resizeWidth.addEventListener('input', () => this.updateAspectRatio('width'));
+        // }
+        // if (this.resizeHeight) {
+        //     this.resizeHeight.addEventListener('input', () => this.updateAspectRatio('height'));
+        // }
+    }
+
+    setupWebComponentListeners() {
+        // Listen for operation events from web components
+        document.addEventListener('operation-applied', (event) => {
+            this.handleWebComponentOperation(event.detail);
+        });
+        
+        document.addEventListener('operation-error', (event) => {
+            this.showStatus(`${event.detail.operatorName} error: ${event.detail.error}`, 'error');
+        });
+    }
+
+    async handleWebComponentOperation(detail) {
+        try {
+            console.log('Web component operation:', detail);
+            
+            // Update the current image
+            this.currentImage = detail.image;
+            
+            // Add to operations list
+            this.operations.push(detail.description);
+            
+            // Update display and metadata
+            await this.updateImageDisplay();
+            // Metadata now handled by web component during initialization
+            this.updateOperationList();
+            this.resetBtn.disabled = false;
+            
+            this.showStatus(`${detail.description} applied successfully!`, 'success');
+            
+        } catch (error) {
+            console.error('Failed to process web component operation:', error);
+            this.showStatus(`Failed to apply ${detail.description}: ${error.message}`, 'error');
         }
     }
 
@@ -417,11 +471,14 @@ class ImageEditor {
             let processedFile = file;
             let originalFileBuffer = null;
             
-            // For HEIC and TIFF files, store the original buffer for proper metadata extraction
-            if (isHeic || isTiff) {
-                this.showStatus('Processing file and extracting metadata...', 'info');
-                originalFileBuffer = await file.arrayBuffer();
-                console.log(`Stored original ${isHeic ? 'HEIC' : 'TIFF'} buffer for metadata extraction`);
+            // Store the original buffer for metadata extraction
+            this.showStatus('Processing file and extracting metadata...', 'info');
+            originalFileBuffer = await file.arrayBuffer();
+            console.log('Stored original file buffer for metadata extraction');
+            
+            // For HEIC files, convert to a more standard format
+            if (isHeic) {
+                console.log('Converting HEIC file...');
             }
             
             if (isHeic && this.heif) {
@@ -461,12 +518,12 @@ class ImageEditor {
                 console.warn('Error checking metadata fields:', e.message);
             }
             
-            // Store the original file buffer for metadata extraction (for HEIC/TIFF files)
+            // Store the original file buffer for metadata extraction
             this.originalFileBuffer = originalFileBuffer;
             
             // Display images and metadata
             await this.updateImageDisplay();
-            await this.showMetadata();
+            // Metadata now handled by web component during initialization
             this.showImageControls();
             this.operations = [];
             this.updateOperationList();
@@ -500,8 +557,7 @@ class ImageEditor {
             this.originalImageEl.src = URL.createObjectURL(originalBlob);
             this.previewImageEl.src = URL.createObjectURL(currentBlob);
             
-            // Update crop controls with current image dimensions
-            this.updateCropLimits();
+            // Crop controls now handled by web component
             
         } catch (error) {
             console.error('Display conversion error:', error);
@@ -509,23 +565,15 @@ class ImageEditor {
         }
     }
 
-    updateCropLimits() {
-        const width = this.currentImage.width;
-        const height = this.currentImage.height;
-        
-        this.cropWidth.max = width;
-        this.cropHeight.max = height;
-        this.cropX.max = width - 1;
-        this.cropY.max = height - 1;
-        
-        this.cropWidth.placeholder = `${width}`;
-        this.cropHeight.placeholder = `${height}`;
-    }
+    // updateCropLimits now handled by web component
 
     showImageControls() {
         this.previewSection.classList.remove('hidden');
         this.operationsSection.classList.remove('hidden');
         this.enableTabs();
+        
+        // Initialize web components with image data
+        this.initializeWebComponents();
         
         // Hide the initial upload section
         if (this.initialUploadSection) {
@@ -534,6 +582,66 @@ class ImageEditor {
         
         // Close the upload modal if it's open
         this.closeUploadModal();
+    }
+
+    initializeWebComponents() {
+        // Initialize the rotate-flip operator
+        const rotateFlipOperator = document.getElementById('rotateFlipOperator');
+        if (rotateFlipOperator && this.currentImage && this.vips) {
+            rotateFlipOperator.setImage(this.currentImage, this.vips);
+        }
+        
+        // Initialize the crop operator
+        const cropOperator = document.getElementById('cropOperator');
+        if (cropOperator && this.currentImage && this.vips) {
+            cropOperator.setImage(this.currentImage, this.vips);
+        }
+        
+        // Initialize the resize operator
+        const resizeOperator = document.getElementById('resizeOperator');
+        if (resizeOperator && this.currentImage && this.vips) {
+            resizeOperator.setImage(this.currentImage, this.vips);
+        }
+        
+        // Initialize the blur-sharpen operator
+        const blurSharpenOperator = document.getElementById('blurSharpenOperator');
+        if (blurSharpenOperator && this.currentImage && this.vips) {
+            blurSharpenOperator.setImage(this.currentImage, this.vips);
+        }
+        
+        // Initialize the tint-grayscale operator
+        const tintGrayscaleOperator = document.getElementById('tintGrayscaleOperator');
+        if (tintGrayscaleOperator && this.currentImage && this.vips) {
+            tintGrayscaleOperator.setImage(this.currentImage, this.vips);
+        }
+        
+        // Initialize the metadata operator
+        const metadataOperator = document.getElementById('metadataOperator');
+        if (metadataOperator && this.currentImage && this.vips) {
+            if (this.originalFileBuffer) {
+                metadataOperator.setImageWithBuffer(this.currentImage, this.vips, this.originalFileBuffer);
+            } else {
+                metadataOperator.setImage(this.currentImage, this.vips);
+            }
+        }
+        
+        // Initialize the filters operator
+        const filtersOperator = document.getElementById('filtersOperator');
+        if (filtersOperator && this.currentImage && this.vips) {
+            filtersOperator.setImage(this.currentImage, this.vips);
+        }
+        
+        // Initialize the edge detection operator
+        const edgeDetectionOperator = document.getElementById('edgeDetectionOperator');
+        if (edgeDetectionOperator && this.currentImage && this.vips) {
+            edgeDetectionOperator.setImage(this.currentImage, this.vips);
+        }
+        
+        // Initialize the export operator
+        const exportOperator = document.getElementById('exportOperator');
+        if (exportOperator && this.currentImage && this.vips) {
+            exportOperator.setImage(this.currentImage, this.vips);
+        }
     }
 
 
@@ -546,28 +654,12 @@ class ImageEditor {
         });
     }
 
-    updateAspectRatio(changedField) {
-        if (!this.maintainAspect.checked || !this.originalImage) return;
-        
-        const aspectRatio = this.originalImage.width / this.originalImage.height;
-        
-        if (changedField === 'width' && this.resizeWidth.value) {
-            const newHeight = Math.round(parseInt(this.resizeWidth.value) / aspectRatio);
-            this.resizeHeight.value = newHeight;
-        } else if (changedField === 'height' && this.resizeHeight.value) {
-            const newWidth = Math.round(parseInt(this.resizeHeight.value) * aspectRatio);
-            this.resizeWidth.value = newWidth;
-        }
-    }
+    // updateAspectRatio now handled by web component
 
-    updateCustomAngleVisibility() {
-        if (this.rotateAngle.value === 'custom') {
-            this.customAngleGroup.classList.remove('hidden');
-        } else {
-            this.customAngleGroup.classList.add('hidden');
-        }
-    }
+    // updateCustomAngleVisibility now handled by web component
 
+    // OLD EXPORT METHOD - Now handled by export-operator web component
+    /*
     updateQualityVisibility() {
         const format = this.exportFormat.value;
         // PNG and TIFF don't typically use quality settings
@@ -577,6 +669,7 @@ class ImageEditor {
             this.qualityGroup.classList.remove('hidden');
         }
     }
+    */
 
     disableAllOperationButtons() {
         // Get all buttons that trigger operations
@@ -624,7 +717,7 @@ class ImageEditor {
             this.operations.push(operationName);
             
             await this.updateImageDisplay();
-            await this.showMetadata(); // Update metadata after operation
+            // Metadata automatically updates with new image in web component
             this.updateOperationList();
             this.resetBtn.disabled = false;
             
@@ -638,87 +731,9 @@ class ImageEditor {
         }
     }
 
-    async applyResize() {
-        const width = parseInt(this.resizeWidth.value) || null;
-        const height = parseInt(this.resizeHeight.value) || null;
-        
-        if (!width && !height) {
-            this.showStatus('Please specify width and/or height', 'error');
-            return;
-        }
-        
-        await this.applyOperation(
-            (image) => image.resize(width / image.width, { vscale: height ? height / image.height : width / image.width }),
-            `Resize to ${width || 'auto'}x${height || 'auto'}`
-        );
-    }
+    // applyResize now handled by web component
 
-    async applyCrop() {
-        const x = parseInt(this.cropX.value) || 0;
-        const y = parseInt(this.cropY.value) || 0;
-        const width = parseInt(this.cropWidth.value) || this.currentImage.width;
-        const height = parseInt(this.cropHeight.value) || this.currentImage.height;
-        
-        console.log('Crop values:', { x, y, width, height });
-        console.log('Image dimensions:', this.currentImage.width, 'x', this.currentImage.height);
-        
-        await this.applyOperation(
-            (image) => {
-                console.log('Attempting crop with crop():', x, y, width, height);
-                return image.crop(x, y, width, height);
-            },
-            `Crop ${width}x${height} at (${x},${y})`
-        );
-    }
-
-    async applySmartCrop() {
-        const width = parseInt(this.smartCropWidth.value) || 500;
-        const height = parseInt(this.smartCropHeight.value) || 500;
-        const mode = this.smartCropMode.value;
-        const strategy = this.smartCropStrategy.value;
-        
-        // Calculate description and target parameters outside the operation function
-        let description, targetWidth, targetHeight = null;
-        
-        switch (mode) {
-            case 'width':
-                targetWidth = width;
-                description = `Smart Crop ${width}px width (${strategy})`;
-                break;
-            case 'height':
-                targetWidth = height;
-                targetHeight = height;
-                description = `Smart Crop ${height}px height (${strategy})`;
-                break;
-            case 'both':
-            default:
-                targetWidth = width;
-                targetHeight = height;
-                description = `Smart Crop ${width}x${height} (${strategy})`;
-                break;
-        }
-        
-        await this.applyOperation(
-            (image) => {
-                // Create a buffer from the current image
-                const buffer = image.writeToBuffer('.jpg', { Q: 95 });
-                
-                // Build options based on constraint mode
-                const options = {
-                    no_rotate: true,
-                    crop: strategy
-                };
-                
-                // Add height if specified
-                if (targetHeight) {
-                    options.height = targetHeight;
-                }
-                
-                return this.vips.Image.thumbnailBuffer(buffer, targetWidth, options);
-            },
-            description
-        );
-    }
+    // applyCrop and applySmartCrop now handled by web component
 
     async applyThumbnail() {
         const width = parseInt(this.thumbnailWidth.value) || 300;
@@ -755,44 +770,9 @@ class ImageEditor {
         );
     }
 
-    async applyRotation() {
-        let angle;
-        if (this.rotateAngle.value === 'custom') {
-            angle = parseFloat(this.customAngle.value) || 0;
-        } else {
-            angle = parseInt(this.rotateAngle.value);
-        }
-        
-        await this.applyOperation(
-            (image) => image.rotate(angle),
-            `Rotate ${angle}°`
-        );
-    }
+    // applyRotation and applyFlip now handled by web component
 
-    async applyFlip(direction) {
-        console.log('Attempting flip:', direction);
-        
-        await this.applyOperation(
-            (image) => {
-                const flipDirection = direction === 'horizontal' ? 0 : 1; // 0 = horizontal, 1 = vertical
-                console.log('Calling flip() with direction:', flipDirection);
-                return image.flip(flipDirection);
-            },
-            `Flip ${direction}`
-        );
-    }
-
-    async applyGrayscale() {
-        const threshold = parseInt(this.grayscaleThreshold.value);
-        
-        await this.applyOperation(
-            (image) => {
-                const gray = image.colourspace('b-w');
-                return gray.more(threshold).ifthenelse(255, 0);
-            },
-            `Grayscale (threshold: ${threshold})`
-        );
-    }
+    // applyGrayscale and applyTint now handled by web component
 
     async applyNegate() {
         await this.applyOperation(
@@ -801,62 +781,8 @@ class ImageEditor {
         );
     }
 
-    async applyTint() {
-        const color = this.tintColor.value;
-        const opacity = parseInt(this.tintOpacity.value) / 100;
-        
-        console.log('Tint values:', { color, opacity });
-        
-        // Convert hex to RGB then to LAB for proper tinting
-        const r = parseInt(color.substr(1, 2), 16);
-        const g = parseInt(color.substr(3, 2), 16);
-        const b = parseInt(color.substr(5, 2), 16);
-        
-        await this.applyOperation(
-            (image) => {
-                console.log('Applying LAB-based tint with RGB:', r, g, b, 'opacity:', opacity);
-                
-                // Get original colorspace
-                const originalColorspace = image.interpretation;
-                console.log('Original colorspace:', originalColorspace);
-                
-                // Create a small RGB image to convert to LAB for the tint color
-                const tintRgb = this.vips.Image.black(1, 1, { bands: 3 }).add([r, g, b]);
-                const tintLab = tintRgb.colourspace('lab');
-                
-                // Extract LAB values from the tint color
-                const labPixel = tintLab.getpoint(0, 0);
-                const tintChroma = [labPixel[1], labPixel[2]]; // A and B channels
-                
-                console.log('Tint LAB chroma:', tintChroma);
-                
-                // Convert image to LAB and extract luminance
-                const imageLab = image.colourspace('lab');
-                const luminance = imageLab.extractBand(0);
-                
-                // Create tinted version by combining original L with tint chroma
-                const tinted = luminance.bandjoin(tintChroma)
-                    .copy({ interpretation: 'lab' })
-                    .colourspace(originalColorspace);
-                
-                // Handle alpha channel if present
-                let result = tinted;
-                if (image.hasAlpha()) {
-                    const alpha = image.extractBand(image.bands - 1);
-                    result = result.bandjoin(alpha);
-                }
-                
-                // Blend based on opacity
-                if (opacity < 1.0) {
-                    result = image.linear([1 - opacity], [0]).add(result.linear([opacity], [0]));
-                }
-                
-                return result;
-            },
-            `Tint ${color} (${Math.round(opacity * 100)}%)`
-        );
-    }
-
+    // OLD FILTER METHODS - Now handled by filters-operator web component
+    /*
     async applySepia() {
         await this.applyOperation(
             (image) => {
@@ -931,6 +857,7 @@ class ImageEditor {
             'High contrast filter'
         );
     }
+    */
 
     async applyFlatten() {
         await this.applyOperation(
@@ -946,24 +873,10 @@ class ImageEditor {
         );
     }
 
-    async applyBlur() {
-        const radius = parseFloat(this.blurRadius.value);
-        
-        await this.applyOperation(
-            (image) => image.gaussblur(radius),
-            `Blur (radius: ${radius})`
-        );
-    }
+    // applyBlur and applySharpen now handled by web component
 
-    async applySharpen() {
-        const sigma = parseFloat(this.sharpenSigma.value);
-        
-        await this.applyOperation(
-            (image) => image.sharpen({ sigma: sigma }),
-            `Sharpen (sigma: ${sigma})`
-        );
-    }
-
+    // OLD EDGE DETECTION METHODS - Now handled by edge-detection-operator web component
+    /*
     async applyCanny() {
         const sigma = parseFloat(this.cannySigma.value);
         
@@ -998,6 +911,7 @@ class ImageEditor {
             'Sobel Edge Detection'
         );
     }
+    */
 
 
 
@@ -1018,12 +932,14 @@ class ImageEditor {
             this.originalMetadata.classList.add('hidden');
             this.previewMetadata.classList.add('hidden');
         } else {
-            await this.showMetadata();
+            // Metadata display now handled by web component
             this.originalMetadata.classList.remove('hidden');
             this.previewMetadata.classList.remove('hidden');
         }
     }
 
+    // OLD METADATA METHODS - Now handled by metadata-operator web component
+    /*
     async showMetadata() {
         // Use original image for basic metadata (VIPS-based)
         this.basicMetadataJson = this.getImageMetadata(this.originalImage);
@@ -1466,7 +1382,10 @@ class ImageEditor {
             this.showStatus('All metadata copied as JSON!', 'success');
         });
     }
+    */
 
+    // OLD DOWNLOAD METHOD - Now handled by export-operator web component
+    /*
     async downloadImage() {
         if (!this.currentImage) return;
         
@@ -1524,8 +1443,14 @@ class ImageEditor {
             this.showStatus('Failed to download image: ' + error.message, 'error');
         }
     }
+    */
 
     generateGUID() {
+        // Use browser's built-in crypto API for secure UUID generation
+        if (crypto && crypto.randomUUID) {
+            return crypto.randomUUID();
+        }
+        // Fallback for older browsers
         return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
             const r = Math.random() * 16 | 0;
             const v = c == 'x' ? r : (r & 0x3 | 0x8);
@@ -1541,6 +1466,66 @@ class ImageEditor {
         this.updateImageDisplay();
         this.updateOperationList();
         this.resetBtn.disabled = true;
+        
+        // Reset web components
+        const rotateFlipOperator = document.getElementById('rotateFlipOperator');
+        if (rotateFlipOperator) {
+            rotateFlipOperator.setImage(this.currentImage, this.vips);
+            rotateFlipOperator.reset();
+        }
+        
+        const cropOperator = document.getElementById('cropOperator');
+        if (cropOperator) {
+            cropOperator.setImage(this.currentImage, this.vips);
+            cropOperator.reset();
+        }
+        
+        const resizeOperator = document.getElementById('resizeOperator');
+        if (resizeOperator) {
+            resizeOperator.setImage(this.currentImage, this.vips);
+            resizeOperator.reset();
+        }
+        
+        const blurSharpenOperator = document.getElementById('blurSharpenOperator');
+        if (blurSharpenOperator) {
+            blurSharpenOperator.setImage(this.currentImage, this.vips);
+            blurSharpenOperator.reset();
+        }
+        
+        const tintGrayscaleOperator = document.getElementById('tintGrayscaleOperator');
+        if (tintGrayscaleOperator) {
+            tintGrayscaleOperator.setImage(this.currentImage, this.vips);
+            tintGrayscaleOperator.reset();
+        }
+        
+        const metadataOperator = document.getElementById('metadataOperator');
+        if (metadataOperator) {
+            if (this.originalFileBuffer) {
+                metadataOperator.setImageWithBuffer(this.currentImage, this.vips, this.originalFileBuffer);
+            } else {
+                metadataOperator.setImage(this.currentImage, this.vips);
+            }
+            metadataOperator.reset();
+        }
+        
+        const filtersOperator = document.getElementById('filtersOperator');
+        if (filtersOperator) {
+            filtersOperator.setImage(this.currentImage, this.vips);
+            filtersOperator.reset();
+        }
+        
+        const edgeDetectionOperator = document.getElementById('edgeDetectionOperator');
+        if (edgeDetectionOperator) {
+            edgeDetectionOperator.setImage(this.currentImage, this.vips);
+            edgeDetectionOperator.reset();
+        }
+        
+        const exportOperator = document.getElementById('exportOperator');
+        if (exportOperator) {
+            exportOperator.setImage(this.currentImage, this.vips);
+            exportOperator.reset();
+        }
+        
         this.showStatus('Reset to original image', 'success');
     }
 
@@ -1614,6 +1599,8 @@ class ImageEditor {
         }
     }
 
+    // OLD EDGE DETECTION HANDLER - Now handled by web component
+    /*
     async handleEdgeDetectionApply() {
         const edgeType = document.querySelector('input[name="edgeDetection"]:checked')?.value;
         if (edgeType === 'canny') {
@@ -1624,6 +1611,7 @@ class ImageEditor {
             this.showStatus('Please select an edge detection method', 'error');
         }
     }
+    */
 
     showStatus(message, type) {
         let className = '';
@@ -1826,19 +1814,19 @@ class ImageEditor {
         try {
             switch (this.currentActiveTab) {
                 case 'crop':
-                    await this.handleCropApply();
+                    // Now handled by web component
                     break;
                 case 'resize':
-                    await this.applyResize();
+                    // Now handled by web component
                     break;
                 case 'rotate-flip':
-                    await this.handleRotateFlipApply();
+                    // Now handled by web component
                     break;
                 case 'blur-sharpen':
-                    await this.handleBlurSharpenApply();
+                    // Now handled by web component
                     break;
                 case 'tint-grayscale':
-                    await this.handleTintGrayscaleApply();
+                    // Now handled by web component
                     break;
                 case 'filters':
                     await this.handleFiltersApply();
@@ -1855,56 +1843,13 @@ class ImageEditor {
         }
     }
 
-    async handleCropApply() {
-        // Check if smart crop or manual crop is active
-        const activeSubTab = document.querySelector('#crop-tab .sub-tab-btn.active')?.dataset.subtab;
-        if (activeSubTab === 'smart-crop') {
-            await this.applySmartCrop();
-        } else {
-            await this.applyCrop();
-        }
-    }
+    // handleCropApply now handled by web component
 
-    async handleRotateFlipApply() {
-        // For rotate/flip, we'll apply rotation if angle is set
-        const rotateAngle = document.getElementById('rotateAngle').value;
-        
-        if (rotateAngle && rotateAngle !== 'custom') {
-            await this.applyRotation();
-        } else if (rotateAngle === 'custom') {
-            const customAngle = document.getElementById('customAngle').value;
-            if (customAngle) {
-                await this.applyRotation();
-            }
-        }
-        // Note: Flip buttons will still work directly since they're simple one-click operations
-    }
+    // handleRotateFlipApply now handled by web component
 
-    async handleBlurSharpenApply() {
-        // Apply blur or sharpen based on current slider values - prioritize blur
-        const blurRadius = parseFloat(document.getElementById('blurRadius').value);
-        const sharpenSigma = parseFloat(document.getElementById('sharpenSigma').value);
-        
-        if (blurRadius > 0.1) {
-            await this.applyBlur();
-        } else if (sharpenSigma > 1.0) {
-            await this.applySharpen();
-        } else {
-            this.showStatus('Please adjust blur or sharpen values to apply effect', 'error');
-        }
-    }
+    // handleBlurSharpenApply now handled by web component
 
-    async handleTintGrayscaleApply() {
-        // Check active sub-tab
-        const activeSubTab = document.querySelector('#tint-grayscale-tab .sub-tab-btn.active')?.dataset.subtab;
-        if (activeSubTab === 'tint') {
-            await this.applyTint();
-        } else if (activeSubTab === 'grayscale') {
-            await this.applyGrayscale();
-        } else {
-            this.showStatus('Please select a color effect to apply', 'error');
-        }
-    }
+    // handleTintGrayscaleApply now handled by web component
 
     async handleFiltersApply() {
         // For now, let's use the first available filter as default
@@ -1912,6 +1857,8 @@ class ImageEditor {
         await this.applySepia();
     }
 
+    // OLD EDGE DETECTION HANDLER - Now handled by web component
+    /*
     async handleEdgeDetectionApply() {
         const edgeType = document.querySelector('input[name="edgeDetection"]:checked')?.value;
         if (edgeType === 'canny') {
@@ -1922,6 +1869,7 @@ class ImageEditor {
             this.showStatus('Please select an edge detection method', 'error');
         }
     }
+    */
 }
 
 // Initialize the image editor when DOM is loaded
