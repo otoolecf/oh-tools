@@ -3,8 +3,7 @@
 class BDWFileDrop extends HTMLElement {
     constructor() {
         super();
-        this.acceptedTypes = ['.csv', '.json', '.jsonl', '.ndjson', '.parquet', '.xlsx', '.xls', '.zip'];
-        this.zipSupported = null; // Will be checked when DuckDB is ready
+        this.acceptedTypes = ['.csv', '.json', '.jsonl', '.ndjson', '.parquet', '.xlsx', '.xls'];
     }
 
     connectedCallback() {
@@ -13,7 +12,7 @@ class BDWFileDrop extends HTMLElement {
                 <div class="drop-text">
                     <strong>Drop your data files here</strong><br>
                     or choose files to upload<br>
-                    <small>Supports: CSV, JSON, JSONL, Parquet, Excel, ZIP archives</small>
+                    <small>Supports: CSV, JSON, JSONL, Parquet, Excel</small>
                 </div>
                 
                 <div class="drop-actions">
@@ -102,8 +101,6 @@ class BDWFileDrop extends HTMLElement {
         
         while (retries < maxRetries) {
             if (window.duckDBManager && window.duckDBManager.isInitialized) {
-                // Check if ZIP support is available
-                await this.checkZipSupport();
                 this.setFileInputsEnabled(true);
                 this.updateDropZoneText('Drop your data files here', 'or choose files to upload');
                 break;
@@ -123,28 +120,6 @@ class BDWFileDrop extends HTMLElement {
         }
     }
     
-    async checkZipSupport() {
-        try {
-            const result = await window.duckDBManager.executeSQL("SELECT extension_name FROM duckdb_extensions() WHERE loaded = true AND extension_name = 'zipfs'");
-            this.zipSupported = result.success && result.data.length > 0;
-            
-            if (!this.zipSupported) {
-                console.warn('ZIP file support not available - zipfs extension not loaded');
-                // Remove .zip from accepted types
-                this.acceptedTypes = this.acceptedTypes.filter(type => type !== '.zip');
-                // Update file input accept attribute
-                const fileInput = this.querySelector('#fileInput');
-                if (fileInput) {
-                    fileInput.setAttribute('accept', this.acceptedTypes.join(','));
-                }
-                // Update supported file types text
-                this.updateSupportedTypesText();
-            }
-        } catch (error) {
-            console.warn('Could not check ZIP support:', error);
-            this.zipSupported = false;
-        }
-    }
     
     setFileInputsEnabled(enabled) {
         const chooseFilesBtn = this.querySelector('#chooseFilesBtn');
@@ -191,9 +166,6 @@ class BDWFileDrop extends HTMLElement {
     
     getSupportedTypesText() {
         const types = ['CSV', 'JSON', 'JSONL', 'Parquet', 'Excel'];
-        if (this.zipSupported !== false) {
-            types.push('ZIP archives');
-        }
         return `Supports: ${types.join(', ')}`;
     }
 
@@ -381,12 +353,6 @@ class BDWFileDrop extends HTMLElement {
     isValidFileType(file) {
         const fileName = file.name.toLowerCase();
         
-        // Special check for ZIP files
-        if (fileName.endsWith('.zip')) {
-            if (this.zipSupported === false) {
-                return false;
-            }
-        }
         
         return this.acceptedTypes.some(type => fileName.endsWith(type.substring(1)));
     }
@@ -407,7 +373,6 @@ class BDWFileDrop extends HTMLElement {
         if (name.endsWith('.jsonl') || name.endsWith('.ndjson')) return 'JSON Lines';
         if (name.endsWith('.parquet')) return 'Parquet';
         if (name.endsWith('.xlsx') || name.endsWith('.xls')) return 'Excel';
-        if (name.endsWith('.zip')) return 'ZIP Archive';
         return 'Unknown';
     }
 
@@ -418,7 +383,6 @@ class BDWFileDrop extends HTMLElement {
         if (path.endsWith('.jsonl') || path.endsWith('.ndjson')) return 'JSON Lines';
         if (path.endsWith('.parquet')) return 'Parquet';
         if (path.endsWith('.xlsx') || path.endsWith('.xls')) return 'Excel';
-        if (path.endsWith('.zip')) return 'ZIP Archive';
         return 'Unknown';
     }
 

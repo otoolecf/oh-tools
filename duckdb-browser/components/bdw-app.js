@@ -153,6 +153,7 @@ class BDWApp extends HTMLElement {
             }
             
             this.currentTable = result.tableName;
+            console.log('Setting currentTable to:', this.currentTable);
 
             // Get table information
             const tableInfo = await window.duckDBManager.getTableInfo(result.tableName);
@@ -175,12 +176,6 @@ class BDWApp extends HTMLElement {
             // Create success message based on file type
             let successMessage = `Successfully loaded ${fileData.fileName} (${tableInfo.stats.row_count} rows)`;
             
-            if (result.extension === 'zip') {
-                successMessage = `Successfully loaded ${result.innerFile} from ${fileData.fileName} (${tableInfo.stats.row_count} rows)`;
-                if (result.availableFiles > 1) {
-                    successMessage += ` - ${result.availableFiles} data files found in archive`;
-                }
-            }
 
             this.showStatus(successMessage, 'success');
 
@@ -394,9 +389,10 @@ class BDWApp extends HTMLElement {
             case 'parquet':
                 viewQuery = `CREATE OR REPLACE TEMP VIEW ${tableName} AS FROM read_parquet('${fileName}')`;
                 break;
-            case 'zip':
-                // For ZIP files, we need special handling even with direct URLs
-                return await window.duckDBManager.handleZipFile(fileName);
+            case 'xlsx':
+            case 'xls':
+                viewQuery = `CREATE OR REPLACE TEMP VIEW ${tableName} AS FROM st_read('${fileName}')`;
+                break;
             default:
                 throw new Error(`Unsupported file type: ${extension}`);
         }
@@ -471,7 +467,7 @@ class BDWApp extends HTMLElement {
                     </div>
                 </div>
             `;
-            document.body.appendChild(modal);
+            this.appendChild(modal);
         }
         
         modal.style.display = 'block';

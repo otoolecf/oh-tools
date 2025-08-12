@@ -133,21 +133,6 @@ class BDWSQLConsole extends HTMLElement {
                 query: 'SELECT \n  COUNT(*) as total_rows,\n  COUNT(column_name) as non_null_rows,\n  COUNT(*) - COUNT(column_name) as null_rows\nFROM input_data;',
                 description: 'Count null values in a column'
             },
-            {
-                title: 'List ZIP Contents',
-                query: 'SELECT * FROM glob(\'zip://your_file.zip/*\');',
-                description: 'List all files inside a ZIP archive'
-            },
-            {
-                title: 'Read from ZIP',
-                query: 'SELECT * FROM \'zip://archive.zip/data.csv\' LIMIT 10;',
-                description: 'Read a specific file from ZIP archive'
-            },
-            {
-                title: 'ZIP Glob Pattern',
-                query: 'SELECT * FROM \'zip://archive.zip/*.csv\' LIMIT 10;',
-                description: 'Read all CSV files from ZIP archive'
-            }
         ];
 
         examples.forEach(example => {
@@ -322,6 +307,17 @@ class BDWSQLConsole extends HTMLElement {
         const infoElement = this.querySelector('#queryInfo');
         infoElement.textContent = message;
         infoElement.style.color = 'var(--error-color)';
+    }
+
+    getCurrentQuery() {
+        const textarea = this.querySelector('#sqlTextarea');
+        const query = textarea ? textarea.value.trim() : '';
+        console.log('getCurrentQuery called - textarea found:', !!textarea, 'query length:', query.length, 'query:', query);
+        if (textarea) {
+            console.log('Textarea value raw:', JSON.stringify(textarea.value));
+            console.log('Parent element:', textarea.parentElement?.tagName);
+        }
+        return query;
     }
 }
 

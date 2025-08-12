@@ -27,11 +27,34 @@ class BDWExportPanel extends HTMLElement {
                 <div id="exportSettings"></div>
 
                 <div style="margin-top: 1rem;">
-                    <input type="text" 
-                           id="fileNameInput" 
-                           class="url-input" 
-                           placeholder="export.csv" 
-                           style="width: 100%; margin-bottom: 0.5rem;">
+                    <div class="setting-group" style="margin-bottom: 1rem;">
+                        <label>Export Data Source</label>
+                        <select id="dataSource">
+                            <option value="full">Full File/Table</option>
+                            <option value="query">Current Query Results</option>
+                        </select>
+                        <small id="dataSourceHelp" style="color: var(--text-secondary); font-size: 0.8rem; margin-top: 0.25rem; display: block;">
+                            Export the entire loaded dataset
+                        </small>
+                    </div>
+                    
+                    <div class="filename-input-group" style="display: flex; align-items: center; margin-bottom: 0.5rem;">
+                        <input type="text" 
+                               id="fileNameInput" 
+                               class="url-input" 
+                               placeholder="export" 
+                               style="flex: 1; border-top-right-radius: 0; border-bottom-right-radius: 0; border-right: none;">
+                        <span id="fileExtension" style="
+                            background: var(--input-bg); 
+                            border: 1px solid var(--border-color); 
+                            border-left: none;
+                            border-top-right-radius: 4px;
+                            border-bottom-right-radius: 4px;
+                            padding: 0.5rem 0.75rem;
+                            color: var(--text-secondary);
+                            font-family: monospace;
+                        ">.csv</span>
+                    </div>
                     
                     <button class="btn btn-primary" 
                             onclick="this.parentElement.parentElement.parentElement.__startExport()" 
@@ -52,8 +75,19 @@ class BDWExportPanel extends HTMLElement {
         this.__selectFormat = (format) => this.selectFormat(format);
         this.__startExport = () => this.startExport();
         this.__showPreview = () => this.showPreview();
+        this.__updateDataSource = () => this.updateDataSource();
 
         this.updateSettings();
+        this.updateFileExtension();
+        
+        // Add event listener for data source change
+        const dataSourceSelect = this.querySelector('#dataSource');
+        if (dataSourceSelect) {
+            dataSourceSelect.addEventListener('change', () => this.updateDataSource());
+        }
+        
+        // Initialize data source help text
+        this.updateDataSource();
     }
 
     selectFormat(format) {
@@ -65,13 +99,30 @@ class BDWExportPanel extends HTMLElement {
         });
         this.querySelector(`[data-format="${format}"]`).classList.add('active');
         
-        // Update filename placeholder
-        const fileNameInput = this.querySelector('#fileNameInput');
-        const extension = this.getFileExtension(format);
-        fileNameInput.placeholder = `export.${extension}`;
+        // Update file extension display
+        this.updateFileExtension();
         
         // Update settings panel
         this.updateSettings();
+    }
+
+    updateFileExtension() {
+        const extension = this.getFileExtension(this.selectedFormat);
+        const extensionSpan = this.querySelector('#fileExtension');
+        if (extensionSpan) {
+            extensionSpan.textContent = `.${extension}`;
+        }
+    }
+
+    updateDataSource() {
+        const dataSource = this.querySelector('#dataSource').value;
+        const helpText = this.querySelector('#dataSourceHelp');
+        
+        if (dataSource === 'full') {
+            helpText.textContent = 'Export the entire loaded dataset';
+        } else {
+            helpText.textContent = 'Export results from the current SQL query in the console';
+        }
     }
 
     updateSettings() {
@@ -162,6 +213,7 @@ class BDWExportPanel extends HTMLElement {
     async startExport() {
         try {
             const app = this.closest('bdw-app');
+            console.log('Export: app found:', !!app, 'currentTable:', app?.currentTable);
             if (!app || !app.currentTable) {
                 alert('No data available to export');
                 return;
@@ -169,14 +221,45 @@ class BDWExportPanel extends HTMLElement {
 
             const fileName = this.getFileName();
             const options = this.getExportOptions();
+            const dataSource = this.querySelector('#dataSource').value;
+
+            let query;
+            if (dataSource === 'query') {
+                // Get the current query from the SQL console
+                // Try to get the SQL console from the main content area first (when data is loaded)
+                let sqlConsole = app.querySelector('#sqlTab bdw-sql-console');
+                if (!sqlConsole) {
+                    // Fallback to standalone SQL console (when no data is loaded)
+                    sqlConsole = app.querySelector('#standaloneSQL bdw-sql-console');
+                }
+                console.log('SQL Console found:', !!sqlConsole);
+                console.log('All SQL consoles in app:', app.querySelectorAll('bdw-sql-console').length);
+                if (sqlConsole) {
+                    query = sqlConsole.getCurrentQuery();
+                    console.log('Current query from SQL console:', query);
+                    if (!query || query.trim() === '') {
+                        alert('No query available to export. Please:\n1. Go to the SQL Console tab\n2. Type a query (e.g., SELECT * FROM input_data WHERE column > 100)\n3. Come back to export the results');
+                        return;
+                    }
+                    // Remove trailing semicolon if present (DuckDB COPY doesn't like it)
+                    query = query.trim().replace(/;+$/, '');
+                } else {
+                    alert('SQL Console not found. Cannot export query results.');
+                    return;
+                }
+            } else {
+                // Export full table
+                query = `SELECT * FROM ${app.currentTable}`;
+            }
 
             // Emit export request event
             const event = new CustomEvent('export-request', {
                 detail: {
                     format: this.selectedFormat,
                     fileName: fileName,
-                    query: `SELECT * FROM ${app.currentTable}`,
-                    options: options
+                    query: query,
+                    options: options,
+                    dataSource: dataSource
                 },
                 bubbles: true
             });
@@ -192,15 +275,43 @@ class BDWExportPanel extends HTMLElement {
     async showPreview() {
         try {
             const app = this.closest('bdw-app');
+            console.log('Preview: app found:', !!app, 'currentTable:', app?.currentTable);
             if (!app || !app.currentTable) {
                 alert('No data available to preview');
                 return;
             }
 
-            // Get a sample of the data (first 10 rows)
-            const result = await window.duckDBManager.executeSQL(`
-                SELECT * FROM ${app.currentTable} LIMIT 10
-            `);
+            const dataSource = this.querySelector('#dataSource').value;
+            let query;
+            
+            if (dataSource === 'query') {
+                // Get the current query from the SQL console
+                // Try to get the SQL console from the main content area first (when data is loaded)
+                let sqlConsole = app.querySelector('#sqlTab bdw-sql-console');
+                if (!sqlConsole) {
+                    // Fallback to standalone SQL console (when no data is loaded)
+                    sqlConsole = app.querySelector('#standaloneSQL bdw-sql-console');
+                }
+                if (sqlConsole) {
+                    const fullQuery = sqlConsole.getCurrentQuery();
+                    if (!fullQuery || fullQuery.trim() === '') {
+                        alert('No query available to preview. Please run a query in the SQL Console first.');
+                        return;
+                    }
+                    // Remove trailing semicolon if present and limit the query results for preview
+                    const cleanQuery = fullQuery.trim().replace(/;+$/, '');
+                    query = `SELECT * FROM (${cleanQuery}) LIMIT 10`;
+                } else {
+                    alert('SQL Console not found. Cannot preview query results.');
+                    return;
+                }
+            } else {
+                // Preview full table (limited to 10 rows)
+                query = `SELECT * FROM ${app.currentTable} LIMIT 10`;
+            }
+
+            // Get a sample of the data
+            const result = await window.duckDBManager.executeSQL(query);
 
             const options = this.getExportOptions();
             const previewData = this.formatPreviewData(result.data, options);
@@ -330,22 +441,19 @@ class BDWExportPanel extends HTMLElement {
         const input = this.querySelector('#fileNameInput');
         let fileName = input.value.trim();
         
+        // Strip any extension the user might have typed
+        const lastDot = fileName.lastIndexOf('.');
+        if (lastDot > 0) {
+            fileName = fileName.substring(0, lastDot);
+        }
+        
         if (!fileName) {
-            const extension = this.getFileExtension(this.selectedFormat);
-            fileName = `export.${extension}`;
+            fileName = 'export';
         }
         
-        // Ensure correct extension
-        const expectedExt = this.getFileExtension(this.selectedFormat);
-        if (!fileName.endsWith(`.${expectedExt}`)) {
-            const lastDot = fileName.lastIndexOf('.');
-            if (lastDot > 0) {
-                fileName = fileName.substring(0, lastDot);
-            }
-            fileName += `.${expectedExt}`;
-        }
-        
-        return fileName;
+        // Always add the correct extension based on format
+        const extension = this.getFileExtension(this.selectedFormat);
+        return `${fileName}.${extension}`;
     }
 
     getFileExtension(format) {

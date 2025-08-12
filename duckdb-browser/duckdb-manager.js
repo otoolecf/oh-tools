@@ -45,18 +45,18 @@ class DuckDBManager {
             // Create connection
             this.conn = await this.db.connect();
             
-            // Load community extensions
-            const communityExtensions = ['zipfs'];
+            // Load core extensions
+            const coreExtensions = ['excel', 'fts', 'json', 'parquet'];
             
-            for (const ext of communityExtensions) {
+            for (const ext of coreExtensions) {
                 try {
                     console.log(`Installing extension: ${ext}`);
-                    await this.conn.query(`INSTALL ${ext} FROM community;`);
+                    await this.conn.query(`INSTALL ${ext};`);
                     console.log(`Loading extension: ${ext}`);
                     await this.conn.query(`LOAD ${ext};`);
-                    console.log(`Successfully installed and loaded community extension: ${ext}`);
+                    console.log(`Successfully installed and loaded extension: ${ext}`);
                 } catch (error) {
-                    console.warn(`Failed to install/load community extension ${ext}:`, error);
+                    console.warn(`Failed to install/load extension ${ext}:`, error);
                 }
             }
             
@@ -73,7 +73,7 @@ class DuckDBManager {
         try {
             if (!this.db) throw new Error('DuckDB not initialized');
             
-            // Use registerFileHandle for better compatibility with extensions like zipfs
+            // Use registerFileHandle for better file compatibility
             await this.db.registerFileHandle(name, file, this.duckdb.DuckDBDataProtocol.BROWSER_FILEREADER, true);
             console.log(`File ${name} registered using BROWSER_FILEREADER protocol`);
             return { success: true, message: `File ${name} registered` };
@@ -226,9 +226,10 @@ class DuckDBManager {
             case 'parquet':
                 viewQuery = `CREATE OR REPLACE TEMP VIEW ${tableName} AS FROM read_parquet('${fileName}')`;
                 break;
-            case 'zip':
-                // For ZIP files, we need special handling
-                return this.handleZipFile(fileName);
+            case 'xlsx':
+            case 'xls':
+                viewQuery = `CREATE OR REPLACE TEMP VIEW ${tableName} AS FROM st_read('${fileName}')`;
+                break;
             default:
                 throw new Error(`Unsupported file type: ${extension}`);
         }
@@ -241,109 +242,6 @@ class DuckDBManager {
         return { tableName, fileName, extension };
     }
 
-    async handleZipFile(zipFileName) {
-        try {
-            console.log('handleZipFile called with zipFileName:', zipFileName);
-            
-            // Check if zipfs extension is loaded
-            const extensionCheck = await this.executeSQL("SELECT extension_name FROM duckdb_extensions() WHERE loaded = true AND extension_name = 'zipfs'");
-            if (!extensionCheck.success || extensionCheck.data.length === 0) {
-                throw new Error('ZIP file support not available. The zipfs extension failed to load.');
-            }
-
-            // Use the zipfs extension to list contents
-            let listResult;
-            try {
-                // Use file:// protocol for registered files in the zip URL
-                const zipFileUrl = `file://${zipFileName}`;
-                console.log(`Attempting to list contents of: zip://${zipFileUrl}/*`);
-                const allFilesResult = await this.executeSQL(`SELECT file FROM glob('zip://${zipFileUrl}/*')`);
-                console.log('All files in ZIP:', allFilesResult);
-                
-                // Now try to get data files specifically
-                listResult = await this.executeSQL(`
-                    SELECT file FROM glob('zip://${zipFileUrl}/*.csv')
-                    UNION ALL
-                    SELECT file FROM glob('zip://${zipFileUrl}/*.json')
-                    UNION ALL
-                    SELECT file FROM glob('zip://${zipFileUrl}/*.jsonl')
-                    UNION ALL
-                    SELECT file FROM glob('zip://${zipFileUrl}/*.parquet')
-                    LIMIT 100
-                `);
-                console.log('Data files found:', listResult);
-            } catch (error) {
-                console.error('Failed to list ZIP contents:', error);
-                throw new Error(`Unable to read ZIP file contents: ${error.message}. The file may be corrupted or contain unsupported file types.`);
-            }
-            
-            if (!listResult.success || listResult.data.length === 0) {
-                throw new Error('No supported data files (CSV, JSON, JSONL, Parquet) found in ZIP archive');
-            }
-            
-            // Find the first data file in the ZIP (CSV, JSON, Parquet)
-            const dataFiles = listResult.data.filter(row => {
-                const fileName = row.file || row.name || Object.values(row)[0];
-                return fileName && (
-                    fileName.endsWith('.csv') || 
-                    fileName.endsWith('.json') || 
-                    fileName.endsWith('.jsonl') ||
-                    fileName.endsWith('.ndjson') ||
-                    fileName.endsWith('.parquet')
-                );
-            });
-            
-            if (dataFiles.length === 0) {
-                throw new Error('No supported data files found in ZIP archive');
-            }
-            
-            // Use the first data file found
-            const firstFile = dataFiles[0];
-            const firstFileName = firstFile.file || firstFile.name || Object.values(firstFile)[0];
-            const fileExtension = firstFileName.split('.').pop().toLowerCase();
-            
-            // Create view based on the file type inside the ZIP
-            let viewQuery = '';
-            let tableName = 'input_data';
-            // The firstFileName from glob already includes the zip:// prefix and full path
-            const zipPath = firstFileName;
-            
-            switch (fileExtension) {
-                case 'csv':
-                    viewQuery = `CREATE OR REPLACE TEMP VIEW ${tableName} AS FROM read_csv('${zipPath}', auto_detect=true)`;
-                    break;
-                case 'json':
-                    viewQuery = `CREATE OR REPLACE TEMP VIEW ${tableName} AS FROM read_json('${zipPath}', format='auto')`;
-                    break;
-                case 'jsonl':
-                case 'ndjson':
-                    viewQuery = `CREATE OR REPLACE TEMP VIEW ${tableName} AS FROM read_json('${zipPath}', format='newline_delimited')`;
-                    break;
-                case 'parquet':
-                    viewQuery = `CREATE OR REPLACE TEMP VIEW ${tableName} AS FROM read_parquet('${zipPath}')`;
-                    break;
-            }
-            
-            const result = await this.executeSQL(viewQuery);
-            if (!result.success) {
-                throw new Error(result.error);
-            }
-            
-            return { 
-                tableName, 
-                fileName: zipFileName, 
-                extension: 'zip',
-                innerFile: firstFileName,
-                innerExtension: fileExtension,
-                availableFiles: dataFiles.length,
-                zipContents: listResult.data
-            };
-            
-        } catch (error) {
-            console.error('Error handling ZIP file:', error);
-            throw new Error(`Failed to process ZIP file: ${error.message}`);
-        }
-    }
 
     async getTableInfo(tableName) {
         // Get schema
