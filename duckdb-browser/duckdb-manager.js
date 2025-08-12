@@ -1,4 +1,4 @@
-// DuckDB Manager - Direct node_modules references
+// DuckDB Manager - Direct CDN import
 class DuckDBManager {
     constructor() {
         this.db = null;
@@ -9,35 +9,37 @@ class DuckDBManager {
 
     async init(options = {}) {
         try {
-            console.log('Initializing DuckDB from node_modules...');
+            console.log('Initializing DuckDB with JSDelivr CDN...');
             
-            // Import DuckDB directly from node_modules
-            const duckdb = await import('./node_modules/@duckdb/duckdb-wasm/dist/duckdb-browser.mjs');
-            console.log('DuckDB module loaded from node_modules');
+            // Import DuckDB directly from JSDelivr CDN
+            const duckdb = await import('https://cdn.jsdelivr.net/npm/@duckdb/duckdb-wasm@1.29.1-dev132.0/+esm');
+            console.log('DuckDB module loaded successfully');
 
-            // Configure bundle with node_modules files
-            const DUCKDB_CONFIG = await duckdb.selectBundle({
-                mvp: {
-                    mainModule: './node_modules/@duckdb/duckdb-wasm/dist/duckdb-mvp.wasm',
-                    mainWorker: './node_modules/@duckdb/duckdb-wasm/dist/duckdb-browser-mvp.worker.js',
-                },
-                eh: {
-                    mainModule: './node_modules/@duckdb/duckdb-wasm/dist/duckdb-eh.wasm',
-                    mainWorker: './node_modules/@duckdb/duckdb-wasm/dist/duckdb-browser-eh.worker.js',
-                },
-            });
+            // Use JSDelivr bundles
+            const JSDELIVR_BUNDLES = duckdb.getJsDelivrBundles();
+            
+            // Select a bundle based on browser checks
+            const DUCKDB_CONFIG = await duckdb.selectBundle(JSDELIVR_BUNDLES);
 
             console.log('DuckDB config selected:', DUCKDB_CONFIG);
 
             // Create logger
             const logger = new duckdb.ConsoleLogger(duckdb.LogLevel.WARNING);
             
+            // Create worker URL using blob (JSDelivr pattern)
+            const worker_url = URL.createObjectURL(
+                new Blob([`importScripts("${DUCKDB_CONFIG.mainWorker}");`], {type: 'text/javascript'})
+            );
+            
             // Create worker and database
-            this.worker = new Worker(DUCKDB_CONFIG.mainWorker);
+            this.worker = new Worker(worker_url);
             this.db = new duckdb.AsyncDuckDB(logger, this.worker);
             
             // Instantiate the database
             await this.db.instantiate(DUCKDB_CONFIG.mainModule, DUCKDB_CONFIG.pthreadWorker);
+            
+            // Clean up the blob URL
+            URL.revokeObjectURL(worker_url);
             
             // Create connection
             this.conn = await this.db.connect();
@@ -214,13 +216,46 @@ class DuckDBManager {
 
     async handleZipFile(zipFileName) {
         try {
-            // First, let's try to list the contents of the ZIP file
-            const listResult = await this.executeSQL(`
-                SELECT * FROM glob('zip://${zipFileName}/*') LIMIT 100
-            `);
+            // Check if zipfs extension is loaded
+            const extensionCheck = await this.executeSQL("SELECT extension_name FROM duckdb_extensions() WHERE loaded = true AND extension_name = 'zipfs'");
+            if (!extensionCheck.success || extensionCheck.data.length === 0) {
+                throw new Error('ZIP file support not available. The zipfs extension failed to load.');
+            }
+
+            // First, let's try to list the contents of the ZIP file using read_blob
+            let listResult;
+            try {
+                listResult = await this.executeSQL(`
+                    SELECT file FROM glob('${zipFileName}/*.csv')
+                    UNION ALL
+                    SELECT file FROM glob('${zipFileName}/*.json')
+                    UNION ALL
+                    SELECT file FROM glob('${zipFileName}/*.jsonl')
+                    UNION ALL
+                    SELECT file FROM glob('${zipFileName}/*.parquet')
+                    LIMIT 100
+                `);
+            } catch (error) {
+                // If that fails, try the zip:// protocol
+                try {
+                    listResult = await this.executeSQL(`
+                        SELECT file FROM glob('zip://${zipFileName}/*.csv')
+                        UNION ALL
+                        SELECT file FROM glob('zip://${zipFileName}/*.json')
+                        UNION ALL
+                        SELECT file FROM glob('zip://${zipFileName}/*.jsonl')
+                        UNION ALL
+                        SELECT file FROM glob('zip://${zipFileName}/*.parquet')
+                        LIMIT 100
+                    `);
+                } catch (zipError) {
+                    console.error('Both glob methods failed:', error, zipError);
+                    throw new Error('Unable to read ZIP file contents. The file may be corrupted or contain unsupported file types.');
+                }
+            }
             
             if (!listResult.success || listResult.data.length === 0) {
-                throw new Error('ZIP file appears to be empty or cannot be read');
+                throw new Error('No supported data files (CSV, JSON, JSONL, Parquet) found in ZIP archive');
             }
             
             // Find the first data file in the ZIP (CSV, JSON, Parquet)
@@ -293,19 +328,37 @@ class DuckDBManager {
         // Get basic stats
         const statsResult = await this.executeSQL(`
             SELECT 
-                COUNT(*) as row_count,
-                COUNT(DISTINCT *) as distinct_rows
+                COUNT(*) as row_count
             FROM ${tableName}
         `);
+        
+        // Get distinct count separately (DISTINCT * is not supported)
+        let distinctResult;
+        try {
+            distinctResult = await this.executeSQL(`
+                SELECT COUNT(*) as distinct_rows 
+                FROM (SELECT DISTINCT COLUMNS(*) FROM ${tableName})
+            `);
+        } catch (error) {
+            // Fallback: just use row count if distinct fails
+            console.warn('Could not calculate distinct rows:', error);
+            distinctResult = { success: true, data: [{ distinct_rows: statsResult.data[0]?.row_count || 0 }] };
+        }
         
         // Get sample data
         const sampleResult = await this.executeSQL(`
             SELECT * FROM ${tableName} LIMIT 100
         `);
         
+        // Combine stats
+        const combinedStats = {
+            ...statsResult.data[0],
+            ...distinctResult.data[0]
+        };
+        
         return {
             schema: schema.schema,
-            stats: statsResult.data[0],
+            stats: combinedStats,
             sample: sampleResult.data,
             sampleSchema: sampleResult.schema
         };
@@ -313,7 +366,7 @@ class DuckDBManager {
 }
 
 // Create global instance immediately
-console.log('Creating DuckDB Manager (node_modules version)...');
+console.log('Creating DuckDB Manager (ES Module version)...');
 const duckDBManager = new DuckDBManager();
 window.duckDBManager = duckDBManager;
 console.log('DuckDB Manager created and assigned to window:', window.duckDBManager);

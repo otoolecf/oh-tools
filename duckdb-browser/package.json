@@ -7,9 +7,6 @@
     "dev": "cd .. && node dev-server.js",
     "test": "echo \"No tests yet\" && exit 0"
   },
-  "dependencies": {
-    "@duckdb/duckdb-wasm": "^1.29.0"
-  },
   "keywords": ["duckdb", "csv", "json", "parquet", "data", "browser", "wasm"],
   "author": "",
   "license": "ISC"

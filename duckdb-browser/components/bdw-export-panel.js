@@ -11,16 +11,16 @@ class BDWExportPanel extends HTMLElement {
             <div id="exportContent">
                 <div class="export-options" id="formatOptions">
                     <button class="format-btn active" data-format="csv" onclick="this.parentElement.parentElement.parentElement.__selectFormat('csv')">
-                        📄 CSV
+                        CSV
                     </button>
                     <button class="format-btn" data-format="json" onclick="this.parentElement.parentElement.parentElement.__selectFormat('json')">
-                        📋 JSON
+                        JSON
                     </button>
                     <button class="format-btn" data-format="parquet" onclick="this.parentElement.parentElement.parentElement.__selectFormat('parquet')">
-                        🗃️ Parquet
+                        Parquet
                     </button>
                     <button class="format-btn" data-format="excel" onclick="this.parentElement.parentElement.parentElement.__selectFormat('excel')">
-                        📊 Excel
+                        Excel
                     </button>
                 </div>
 
@@ -36,13 +36,13 @@ class BDWExportPanel extends HTMLElement {
                     <button class="btn btn-primary" 
                             onclick="this.parentElement.parentElement.parentElement.__startExport()" 
                             style="width: 100%; margin-bottom: 0.5rem;">
-                        💾 Export Data
+                        Export Data
                     </button>
                     
                     <button class="btn" 
                             onclick="this.parentElement.parentElement.parentElement.__showPreview()" 
                             style="width: 100%;">
-                        👁️ Preview Export
+                        Preview Export
                     </button>
                 </div>
             </div>
@@ -149,7 +149,7 @@ class BDWExportPanel extends HTMLElement {
                         </label>
                     </div>
                     <p style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 0.5rem;">
-                        ⚠️ Excel export requires conversion through CSV format
+                        Note: Excel export requires conversion through CSV format
                     </p>
                 `;
                 break;

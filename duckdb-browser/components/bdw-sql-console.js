@@ -9,8 +9,8 @@ class BDWSQLConsole extends HTMLElement {
 
     connectedCallback() {
         this.innerHTML = `
-            <div id="sqlConsoleContent">
-                <div style="margin-bottom: 1rem;">
+            <div id="sqlConsoleContent" style="display: flex; flex-direction: column; height: 100%;">
+                <div style="margin-bottom: 1rem; flex: 1; display: flex; flex-direction: column;">
                     <textarea id="sqlTextarea" 
                               class="sql-textarea" 
                               placeholder="Enter SQL query here... (e.g., SELECT * FROM input_data LIMIT 10)"
@@ -19,14 +19,14 @@ class BDWSQLConsole extends HTMLElement {
                 
                 <div class="sql-actions">
                     <div>
-                        <button class="btn btn-primary" onclick="this.parentElement.parentElement.parentElement.__executeSQL()">
-                            ▶️ Execute Query
+                        <button class="btn btn-primary" id="executeBtn">
+                            Execute Query
                         </button>
-                        <button class="btn" onclick="this.parentElement.parentElement.parentElement.__clearSQL()">
-                            🗑️ Clear
+                        <button class="btn" id="clearBtn">
+                            Clear
                         </button>
-                        <button class="btn" onclick="this.parentElement.parentElement.parentElement.__showExamples()">
-                            📚 Examples
+                        <button class="btn" id="examplesBtn">
+                            Examples
                         </button>
                     </div>
                     <div class="sql-info">
@@ -34,10 +34,6 @@ class BDWSQLConsole extends HTMLElement {
                     </div>
                 </div>
 
-                <div id="queryResults" style="margin-top: 1rem; display: none;">
-                    <h4>Query Results:</h4>
-                    <div id="resultsContent"></div>
-                </div>
 
                 <div id="exampleQueries" style="display: none; margin-top: 1rem;">
                     <h4>Example Queries:</h4>
@@ -48,17 +44,26 @@ class BDWSQLConsole extends HTMLElement {
             </div>
         `;
 
-        // Make methods available to inline handlers
-        this.__executeSQL = () => this.executeSQL();
-        this.__clearSQL = () => this.clearSQL();
-        this.__showExamples = () => this.toggleExamples();
-
         this.setupEventListeners();
         this.populateExamples();
     }
 
     setupEventListeners() {
         const textarea = this.querySelector('#sqlTextarea');
+        const executeBtn = this.querySelector('#executeBtn');
+        const clearBtn = this.querySelector('#clearBtn');
+        const examplesBtn = this.querySelector('#examplesBtn');
+        
+        // Button event listeners
+        if (executeBtn) {
+            executeBtn.addEventListener('click', () => this.executeSQL());
+        }
+        if (clearBtn) {
+            clearBtn.addEventListener('click', () => this.clearSQL());
+        }
+        if (examplesBtn) {
+            examplesBtn.addEventListener('click', () => this.toggleExamples());
+        }
         
         // Keyboard shortcuts
         textarea.addEventListener('keydown', (e) => {
@@ -194,19 +199,21 @@ class BDWSQLConsole extends HTMLElement {
             // Add to history
             this.addToHistory(query);
             
-            // Emit SQL execute event
+            // Execute SQL query
+            const result = await window.duckDBManager.executeSQL(query);
+            
+            // Emit SQL execute event with results
             const event = new CustomEvent('sql-execute', {
-                detail: { query: query },
+                detail: { 
+                    query: query,
+                    result: result
+                },
                 bubbles: true
             });
             
             this.dispatchEvent(event);
             
-            // Execute directly to show results in console
-            const result = await window.duckDBManager.executeSQL(query);
-            this.displayResults(result, query);
-            
-            this.showInfo(`Query executed successfully (${result.rowCount} rows)`);
+            this.showInfo(`Query executed successfully (${result.rowCount} rows) - Results shown in Data Preview tab`);
             
         } catch (error) {
             console.error('SQL execution error:', error);
@@ -214,73 +221,6 @@ class BDWSQLConsole extends HTMLElement {
         }
     }
 
-    displayResults(result, query) {
-        const resultsDiv = this.querySelector('#queryResults');
-        const contentDiv = this.querySelector('#resultsContent');
-        
-        resultsDiv.style.display = 'block';
-        
-        if (!result.data || result.data.length === 0) {
-            contentDiv.innerHTML = '<p style="color: var(--text-secondary);">Query returned no results</p>';
-            return;
-        }
-
-        // Create results table
-        let html = `
-            <div style="margin-bottom: 1rem; display: flex; justify-content: space-between; align-items: center;">
-                <span style="font-size: 0.9rem; color: var(--text-secondary);">
-                    ${result.rowCount} rows returned
-                </span>
-                <button class="btn" onclick="this.parentElement.parentElement.parentElement.__exportResults('${query}')">
-                    💾 Export Results
-                </button>
-            </div>
-            <div class="data-grid" style="max-height: 300px;">
-                <table>
-                    <thead>
-                        <tr>
-        `;
-
-        // Headers
-        if (result.data.length > 0) {
-            Object.keys(result.data[0]).forEach(key => {
-                html += `<th>${key}</th>`;
-            });
-        }
-        
-        html += '</tr></thead><tbody>';
-
-        // Data rows (limit display for performance)
-        const displayRows = result.data.slice(0, 1000);
-        displayRows.forEach(row => {
-            html += '<tr>';
-            Object.values(row).forEach(value => {
-                let displayValue = value;
-                if (value === null || value === undefined) {
-                    displayValue = '<em style="color: var(--text-secondary);">null</em>';
-                } else if (typeof value === 'string' && value.length > 100) {
-                    displayValue = value.substring(0, 97) + '...';
-                }
-                html += `<td>${displayValue}</td>`;
-            });
-            html += '</tr>';
-        });
-
-        html += '</tbody></table>';
-        
-        if (result.data.length > 1000) {
-            html += `<p style="text-align: center; color: var(--text-secondary); margin-top: 1rem;">
-                Showing first 1000 rows of ${result.rowCount} total rows
-            </p>`;
-        }
-        
-        html += '</div>';
-        
-        contentDiv.innerHTML = html;
-        
-        // Make export method available
-        contentDiv.__exportResults = (query) => this.exportResults(query);
-    }
 
     exportResults(query) {
         // Emit export request with custom query
@@ -301,9 +241,6 @@ class BDWSQLConsole extends HTMLElement {
         const textarea = this.querySelector('#sqlTextarea');
         textarea.value = '';
         textarea.style.height = 'auto';
-        
-        const resultsDiv = this.querySelector('#queryResults');
-        resultsDiv.style.display = 'none';
         
         this.showInfo('Ready');
     }

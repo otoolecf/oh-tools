@@ -71,7 +71,7 @@ function showCompatibilityError(message) {
     if (container) {
         container.innerHTML = `
             <div style="text-align: center; padding: 3rem; color: var(--error-color);">
-                <h2>❌ Compatibility Issue</h2>
+                <h2>Compatibility Issue</h2>
                 <p style="margin: 1rem 0; font-size: 1.1rem;">${message}</p>
                 <p style="color: var(--text-secondary);">
                     Please use a modern browser like Chrome, Firefox, Safari, or Edge.

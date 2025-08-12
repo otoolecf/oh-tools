@@ -4,6 +4,7 @@ class BDWFileDrop extends HTMLElement {
     constructor() {
         super();
         this.acceptedTypes = ['.csv', '.json', '.jsonl', '.ndjson', '.parquet', '.xlsx', '.xls', '.zip'];
+        this.zipSupported = null; // Will be checked when DuckDB is ready
     }
 
     connectedCallback() {
@@ -16,12 +17,12 @@ class BDWFileDrop extends HTMLElement {
                 </div>
                 
                 <div class="drop-actions">
-                    <button class="btn btn-primary" onclick="this.nextElementSibling.click()">
+                    <button class="btn btn-primary" id="chooseFilesBtn" onclick="this.nextElementSibling.click()" disabled>
                         Choose Files
                     </button>
-                    <input type="file" id="fileInput" accept="${this.acceptedTypes.join(',')}" multiple>
+                    <input type="file" id="fileInput" accept="${this.acceptedTypes.join(',')}" multiple disabled>
                     
-                    <button class="btn" onclick="document.getElementById('urlInput').focus()">
+                    <button class="btn" id="loadUrlBtn" onclick="document.getElementById('urlInput').focus()" disabled>
                         Load from URL
                     </button>
                 </div>
@@ -30,8 +31,9 @@ class BDWFileDrop extends HTMLElement {
                     <input type="url" 
                            id="urlInput" 
                            class="url-input" 
-                           placeholder="https://example.com/data.csv">
-                    <button class="btn" onclick="this.parentElement.parentElement.parentElement.__loadFromURL()">
+                           placeholder="https://example.com/data.csv"
+                           disabled>
+                    <button class="btn" id="loadBtn" onclick="this.parentElement.parentElement.parentElement.__loadFromURL()" disabled>
                         Load
                     </button>
                 </div>
@@ -41,6 +43,7 @@ class BDWFileDrop extends HTMLElement {
         `;
 
         this.setupEventListeners();
+        this.checkDuckDBStatus();
     }
 
     setupEventListeners() {
@@ -84,6 +87,111 @@ class BDWFileDrop extends HTMLElement {
 
         // Make loadFromURL method available to inline onclick
         dropZone.__loadFromURL = () => this.loadFromURL();
+    }
+
+    async checkDuckDBStatus() {
+        // Disable all file inputs initially
+        this.setFileInputsEnabled(false);
+        
+        // Wait for DuckDB to be initialized
+        let retries = 0;
+        const maxRetries = 100; // 10 seconds
+        
+        while (retries < maxRetries) {
+            if (window.duckDBManager && window.duckDBManager.isInitialized) {
+                // Check if ZIP support is available
+                await this.checkZipSupport();
+                this.setFileInputsEnabled(true);
+                this.updateDropZoneText('Drop your data files here', 'or choose files to upload');
+                break;
+            }
+            
+            // Update status text to show loading
+            if (retries % 10 === 0) { // Update every second
+                this.updateDropZoneText('Initializing DuckDB...', 'Please wait while the database loads');
+            }
+            
+            await new Promise(resolve => setTimeout(resolve, 100));
+            retries++;
+        }
+        
+        if (retries >= maxRetries) {
+            this.updateDropZoneText('DuckDB initialization failed', 'Please refresh the page to try again');
+        }
+    }
+    
+    async checkZipSupport() {
+        try {
+            const result = await window.duckDBManager.executeSQL("SELECT extension_name FROM duckdb_extensions() WHERE loaded = true AND extension_name = 'zipfs'");
+            this.zipSupported = result.success && result.data.length > 0;
+            
+            if (!this.zipSupported) {
+                console.warn('ZIP file support not available - zipfs extension not loaded');
+                // Remove .zip from accepted types
+                this.acceptedTypes = this.acceptedTypes.filter(type => type !== '.zip');
+                // Update file input accept attribute
+                const fileInput = this.querySelector('#fileInput');
+                if (fileInput) {
+                    fileInput.setAttribute('accept', this.acceptedTypes.join(','));
+                }
+                // Update supported file types text
+                this.updateSupportedTypesText();
+            }
+        } catch (error) {
+            console.warn('Could not check ZIP support:', error);
+            this.zipSupported = false;
+        }
+    }
+    
+    setFileInputsEnabled(enabled) {
+        const chooseFilesBtn = this.querySelector('#chooseFilesBtn');
+        const fileInput = this.querySelector('#fileInput');
+        const loadUrlBtn = this.querySelector('#loadUrlBtn');
+        const urlInput = this.querySelector('#urlInput');
+        const loadBtn = this.querySelector('#loadBtn');
+        const dropZone = this.querySelector('#dropZone');
+        
+        if (chooseFilesBtn) chooseFilesBtn.disabled = !enabled;
+        if (fileInput) fileInput.disabled = !enabled;
+        if (loadUrlBtn) loadUrlBtn.disabled = !enabled;
+        if (urlInput) urlInput.disabled = !enabled;
+        if (loadBtn) loadBtn.disabled = !enabled;
+        
+        if (dropZone) {
+            if (enabled) {
+                dropZone.style.pointerEvents = 'auto';
+                dropZone.style.opacity = '1';
+            } else {
+                dropZone.style.pointerEvents = 'none';
+                dropZone.style.opacity = '0.6';
+            }
+        }
+    }
+    
+    updateDropZoneText(mainText, subText) {
+        const dropText = this.querySelector('.drop-text');
+        if (dropText) {
+            dropText.innerHTML = `
+                <strong>${mainText}</strong><br>
+                ${subText}<br>
+                <small>${this.getSupportedTypesText()}</small>
+            `;
+        }
+    }
+    
+    updateSupportedTypesText() {
+        const dropText = this.querySelector('.drop-text small');
+        if (dropText) {
+            dropText.textContent = this.getSupportedTypesText();
+        }
+    }
+    
+    getSupportedTypesText() {
+        const types = ['CSV', 'JSON', 'JSONL', 'Parquet', 'Excel'];
+        if (this.zipSupported !== false) {
+            types.push('ZIP archives');
+        }
+        return `Supports: ${types.join(', ')}`;
     }
 
     async handleFiles(files) {
@@ -150,13 +258,13 @@ class BDWFileDrop extends HTMLElement {
 
             // Update file status to success
             const loadingDiv = fileDiv.querySelector('.loading');
-            loadingDiv.innerHTML = '✅ Loaded';
+            loadingDiv.innerHTML = 'Loaded';
             loadingDiv.className = 'success';
 
         } catch (error) {
             console.error('Error processing file:', error);
             const loadingDiv = fileDiv.querySelector('.loading');
-            loadingDiv.innerHTML = '❌ Error';
+            loadingDiv.innerHTML = 'Error';
             loadingDiv.className = 'error';
         }
     }
@@ -228,7 +336,7 @@ class BDWFileDrop extends HTMLElement {
 
             // Update status to success
             const loadingDiv = urlDiv.querySelector('.loading');
-            loadingDiv.innerHTML = '✅ Loaded';
+            loadingDiv.innerHTML = 'Loaded';
             loadingDiv.className = 'success';
 
             // Clear URL input
@@ -237,13 +345,21 @@ class BDWFileDrop extends HTMLElement {
         } catch (error) {
             console.error('Error loading from URL:', error);
             const loadingDiv = urlDiv.querySelector('.loading');
-            loadingDiv.innerHTML = `❌ ${error.message}`;
+            loadingDiv.innerHTML = `Error: ${error.message}`;
             loadingDiv.className = 'error';
         }
     }
 
     isValidFileType(file) {
         const fileName = file.name.toLowerCase();
+        
+        // Special check for ZIP files
+        if (fileName.endsWith('.zip')) {
+            if (this.zipSupported === false) {
+                return false;
+            }
+        }
+        
         return this.acceptedTypes.some(type => fileName.endsWith(type.substring(1)));
     }
 
@@ -308,7 +424,7 @@ class BDWFileDrop extends HTMLElement {
                             ${error}
                         </div>
                     </div>
-                    <div style="color: var(--error-color);">❌</div>
+                    <div style="color: var(--error-color);">Error</div>
                 </div>
             </div>
         `;

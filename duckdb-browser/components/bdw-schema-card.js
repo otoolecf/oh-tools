@@ -9,7 +9,7 @@ class BDWSchemaCard extends HTMLElement {
     connectedCallback() {
         this.innerHTML = `
             <div class="panel">
-                <h3>📋 Schema</h3>
+                <h3>Schema</h3>
                 <div id="schemaContent">
                     <p style="color: var(--text-secondary); text-align: center; padding: 2rem;">
                         Import a file to see its schema
@@ -54,7 +54,7 @@ class BDWSchemaCard extends HTMLElement {
                 <tr>
                     <td><strong>${column.column_name}</strong></td>
                     <td><span class="type-badge ${typeBadgeClass}">${column.column_type}</span></td>
-                    <td>${column.null === 'YES' ? '✓' : '✗'}</td>
+                    <td>${column.null === 'YES' ? 'Yes' : 'No'}</td>
                 </tr>
             `;
         });

@@ -14,8 +14,240 @@
     display: flex;
     flex-direction: column;
     gap: 1.5rem;
-    max-width: 1200px;
+    max-width: 1600px;
     margin: 0 auto;
+    padding: 0 1rem 2rem 1rem;
+}
+
+/* Resizable Layout */
+.resizable-layout {
+    display: flex;
+    flex-direction: column;
+    height: auto;
+    max-height: none;
+}
+
+.resizable-layout.resizing {
+    cursor: ns-resize;
+    user-select: none;
+}
+
+/* Main Content Panel */
+.main-content-panel {
+    display: flex;
+    flex-direction: column;
+    min-height: 150px;
+    overflow: hidden;
+}
+
+.main-content-panel .panel {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+}
+
+/* SQL Console Panel */
+.sql-console-panel {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.sql-console-panel .panel {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+}
+
+.sql-content {
+    flex: 1;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+.sql-content bdw-sql-console {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Resize Handle */
+.resize-handle {
+    height: 8px;
+    background: var(--border-color);
+    cursor: ns-resize;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.2s;
+    user-select: none;
+}
+
+.resize-handle:hover {
+    background: var(--primary-color);
+}
+
+.resize-grip {
+    width: 40px;
+    height: 3px;
+    background: var(--text-secondary);
+    border-radius: 2px;
+    position: relative;
+}
+
+.resize-grip::before {
+    content: '';
+    position: absolute;
+    top: -2px;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: var(--text-secondary);
+    border-radius: 1px;
+}
+
+.resize-grip::after {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: var(--text-secondary);
+    border-radius: 1px;
+}
+
+.resize-handle:hover .resize-grip,
+.resize-handle:hover .resize-grip::before,
+.resize-handle:hover .resize-grip::after {
+    background: white;
+}
+
+/* Progress Bar for Detailed Stats */
+.progress-bar {
+    width: 100%;
+    height: 8px;
+    background: var(--input-bg);
+    border-radius: 4px;
+    overflow: hidden;
+    margin-bottom: 0.5rem;
+}
+
+.progress-fill {
+    height: 100%;
+    background: var(--primary-color);
+    transition: width 0.3s ease;
+    border-radius: 4px;
+}
+
+.progress-text {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    text-align: center;
+    margin-bottom: 1rem;
+}
+
+.stats-results {
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+/* Stats Button Description */
+.stats-button-description {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    margin-top: 0.5rem;
+    padding: 0.75rem;
+    background: var(--input-bg);
+    border-radius: 4px;
+    border-left: 3px solid var(--info-color);
+}
+
+/* Tab Navigation */
+.tab-nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 2px solid var(--border-color);
+    margin-bottom: 1rem;
+    padding-bottom: 0.5rem;
+}
+
+.tab-btn {
+    background: none;
+    border: none;
+    padding: 0.75rem 1.5rem;
+    cursor: pointer;
+    font-size: 1rem;
+    color: var(--text-secondary);
+    border-bottom: 3px solid transparent;
+    transition: all 0.2s;
+}
+
+.tab-btn:hover {
+    color: var(--text-primary);
+    background: var(--input-bg);
+}
+
+.tab-btn.active {
+    color: var(--primary-color);
+    border-bottom-color: var(--primary-color);
+    font-weight: 600;
+}
+
+.tab-actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+/* Tab Content */
+.tab-content {
+    position: relative;
+    flex: 1;
+    overflow: hidden;
+    min-height: 0;
+}
+
+.tab-panel {
+    display: none;
+}
+
+.tab-panel.active {
+    display: block;
+    height: 100%;
+    overflow: auto;
+}
+
+/* Tab Panel Specific Styles */
+#dataTab.active {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    min-height: 0;
+    overflow: hidden;
+}
+
+#schemaTab bdw-schema-card,
+#statsTab bdw-stats-panel {
+    display: block;
+    width: 100%;
+    flex: 1;
+    overflow: auto;
+}
+
+#schemaTab bdw-schema-card .panel,
+#statsTab bdw-stats-panel .panel {
+    border: none;
+    padding: 0;
+    background: transparent;
+}
+
+#schemaTab bdw-schema-card .panel h3,
+#statsTab bdw-stats-panel .panel h3 {
+    margin-top: 0;
 }
 
 /* File Drop Zone */
@@ -94,23 +326,16 @@
     color: var(--text-primary);
 }
 
-/* Panel Layout */
+/* Panel Layout - Updated for single column tabbed interface */
 .panels-container {
-    display: grid;
-    grid-template-columns: 1fr;
+    display: flex;
+    flex-direction: column;
     gap: 1.5rem;
+    width: 100%;
 }
 
-@media (min-width: 768px) {
-    .panels-container {
-        grid-template-columns: 1fr 1fr;
-    }
-}
-
-@media (min-width: 1024px) {
-    .panels-container {
-        grid-template-columns: 2fr 1fr;
-    }
+@media (min-width: 1200px) {
+    /* No additional constraints for larger screens */
 }
 
 .panel {
@@ -127,16 +352,83 @@
     font-weight: 600;
 }
 
+/* Data Grid Container */
+.data-grid-container {
+    display: flex;
+    flex-direction: column;
+    height: 400px;
+    min-height: 200px;
+    /* Removed max-height constraint to allow unlimited growth */
+}
+
+.data-grid-container.resizing {
+    cursor: ns-resize;
+    user-select: none;
+}
+
 /* Data Grid */
 .data-grid {
     overflow: auto;
-    max-height: 400px;
+    flex: 1;
+    border: 1px solid var(--border-color);
+    border-radius: 4px 4px 0 0;
+    width: 100%;
+    background: var(--panel-bg);
+}
+
+/* Data Grid Resize Handle */
+.data-grid-resize-handle {
+    height: 8px;
+    background: var(--border-color);
+    cursor: ns-resize;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.2s;
+    user-select: none;
+    border-radius: 0 0 4px 4px;
+}
+
+.data-grid-resize-handle:hover {
+    background: var(--primary-color);
+}
+
+/* Data Grid Controls */
+.data-grid-controls {
+    display: flex;
+    justify-content: center;
+    padding: 0.5rem 0;
+    background: var(--panel-bg);
+}
+
+/* Reset Button */
+.resize-reset-btn {
+    background: var(--input-bg);
     border: 1px solid var(--border-color);
     border-radius: 4px;
+    padding: 0.25rem 0.5rem;
+    font-size: 0.8rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    color: var(--text-secondary);
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.resize-reset-btn:hover {
+    background: var(--primary-color);
+    color: white;
+    border-color: var(--primary-color);
+}
+
+.resize-reset-btn:active {
+    transform: scale(0.95);
 }
 
 .data-grid table {
-    width: 100%;
+    width: max-content;
+    min-width: 100%;
     border-collapse: collapse;
     font-size: 0.9rem;
 }
@@ -146,6 +438,10 @@
     padding: 0.5rem 0.75rem;
     text-align: left;
     border-bottom: 1px solid var(--border-color);
+    white-space: nowrap;
+    max-width: 200px;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .data-grid th {
@@ -286,7 +582,8 @@
 /* SQL Console */
 .sql-textarea {
     width: 100%;
-    height: 200px;
+    height: 150px;
+    min-height: 100px;
     padding: 0.75rem;
     border: 1px solid var(--border-color);
     border-radius: 4px;
@@ -360,6 +657,86 @@
     100% { transform: rotate(360deg); }
 }
 
+/* Modal */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(4px);
+}
+
+.modal-content {
+    background-color: var(--panel-bg);
+    margin: 5% auto;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    width: 90%;
+    max-width: 600px;
+    max-height: 80vh;
+    overflow: auto;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.5rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.modal-header h3 {
+    margin: 0;
+    color: var(--primary-color);
+}
+
+.modal-close {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    color: var(--text-secondary);
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: all 0.2s;
+}
+
+.modal-close:hover {
+    background: var(--error-color);
+    color: white;
+}
+
+.modal-body {
+    padding: 1.5rem;
+}
+
+/* Mobile Optimization Notice */
+.mobile-notice {
+    display: none;
+    background: var(--info-color);
+    color: white;
+    padding: 0.75rem;
+    border-radius: 4px;
+    margin-bottom: 1rem;
+    text-align: center;
+    font-size: 0.9rem;
+}
+
+@media (max-width: 768px) {
+    .mobile-notice {
+        display: block;
+    }
+}
+
 /* Responsive Design */
 @media (max-width: 768px) {
     .drop-actions {
@@ -370,11 +747,46 @@
         flex-direction: column;
     }
     
-    .panels-container {
-        grid-template-columns: 1fr;
-    }
-    
     .export-options {
         grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+    }
+    
+    .data-grid th,
+    .data-grid td {
+        max-width: 120px;
+    }
+    
+    .tab-nav {
+        flex-direction: column;
+        gap: 1rem;
+        align-items: stretch;
+    }
+    
+    .tab-btn {
+        padding: 0.5rem 1rem;
+        font-size: 0.9rem;
+    }
+    
+    .tab-actions {
+        justify-content: center;
+    }
+    
+    .modal-content {
+        margin: 2% auto;
+        width: 95%;
+        max-height: 90vh;
+    }
+    
+    .resizable-layout {
+        min-height: 70vh;
+    }
+    
+    .resize-handle {
+        height: 12px;
+    }
+    
+    .resize-grip {
+        width: 60px;
+        height: 4px;
     }
 }
