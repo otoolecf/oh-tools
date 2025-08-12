@@ -19,6 +19,20 @@ class BDWApp extends HTMLElement {
                 <div class="panel">
                     <h3>Import Data</h3>
                     <bdw-file-drop></bdw-file-drop>
+                    <div style="margin-top: 1rem; text-align: center;">
+                        <button class="btn" id="showFullInterface" onclick="this.closest('bdw-app').showFullInterface()">
+                            Show Full Interface (No Data)
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Standalone SQL Console -->
+                <div class="panel" id="standaloneSQL" style="display: none;">
+                    <h3>SQL Console</h3>
+                    <div class="sql-warning" style="background: var(--bg-secondary); border: 1px solid var(--border-color); padding: 0.75rem; margin-bottom: 1rem; border-radius: 6px; color: var(--text-secondary); font-size: 0.9rem;">
+                        <strong>Note:</strong> No data file loaded. The table <code>input_data</code> does not exist. Load a file above or test with queries like <code>SELECT 1 as test</code>.
+                    </div>
+                    <bdw-sql-console></bdw-sql-console>
                 </div>
 
                 <!-- Main Content Area -->
@@ -127,15 +141,25 @@ class BDWApp extends HTMLElement {
         try {
             this.showStatus(`Processing ${fileData.fileName}...`, 'info');
 
-            // Auto-detect and load the file
-            const result = await window.duckDBManager.autoDetectAndLoad(fileData.file);
+            let result;
+            
+            // Handle direct URL registrations vs file uploads
+            if (fileData.isDirect) {
+                // For direct URL registrations, file is already registered, just create a view
+                result = await this.handleDirectURLFile(fileData);
+            } else {
+                // For uploaded files or fetched URLs, use autoDetectAndLoad
+                result = await window.duckDBManager.autoDetectAndLoad(fileData.file);
+            }
+            
             this.currentTable = result.tableName;
 
             // Get table information
             const tableInfo = await window.duckDBManager.getTableInfo(result.tableName);
 
-            // Show the main content
+            // Show the main content and hide standalone SQL
             document.getElementById('mainContent').style.display = 'block';
+            document.getElementById('standaloneSQL').style.display = 'none';
 
             // Update components with the data
             this.updateDataPreview(tableInfo.sample, tableInfo.sampleSchema, tableInfo.stats);
@@ -346,6 +370,60 @@ class BDWApp extends HTMLElement {
             xlsx: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
         };
         return types[format] || 'application/octet-stream';
+    }
+
+    async handleDirectURLFile(fileData) {
+        const fileName = fileData.fileName;
+        const extension = fileData.fileType || fileName.split('.').pop().toLowerCase();
+        
+        // Create appropriate view based on file type for directly registered URL
+        let viewQuery = '';
+        let tableName = 'input_data';
+        
+        switch (extension) {
+            case 'csv':
+                viewQuery = `CREATE OR REPLACE TEMP VIEW ${tableName} AS FROM read_csv('${fileName}', auto_detect=true)`;
+                break;
+            case 'json':
+                viewQuery = `CREATE OR REPLACE TEMP VIEW ${tableName} AS FROM read_json('${fileName}', format='auto')`;
+                break;
+            case 'jsonl':
+            case 'ndjson':
+                viewQuery = `CREATE OR REPLACE TEMP VIEW ${tableName} AS FROM read_json('${fileName}', format='newline_delimited')`;
+                break;
+            case 'parquet':
+                viewQuery = `CREATE OR REPLACE TEMP VIEW ${tableName} AS FROM read_parquet('${fileName}')`;
+                break;
+            case 'zip':
+                // For ZIP files, we need special handling even with direct URLs
+                return await window.duckDBManager.handleZipFile(fileName);
+            default:
+                throw new Error(`Unsupported file type: ${extension}`);
+        }
+        
+        const result = await window.duckDBManager.executeSQL(viewQuery);
+        if (!result.success) {
+            throw new Error(result.error);
+        }
+        
+        return { tableName, fileName, extension };
+    }
+
+    showFullInterface() {
+        // Show the main content without loading data
+        document.getElementById('mainContent').style.display = 'block';
+        document.getElementById('standaloneSQL').style.display = 'none';
+        
+        // Update the data preview with a message about no data
+        this.updateDataPreview([], [], { row_count: 0 }, false);
+        
+        // Switch to SQL tab
+        this.switchTab('sql');
+        
+        // Hide the show full interface button since we're now showing it
+        document.getElementById('showFullInterface').style.display = 'none';
+        
+        this.showStatus('Full interface shown. No data loaded - use SQL Console to test queries.', 'info');
     }
 
     switchTab(tabName) {

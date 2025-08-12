@@ -37,6 +37,9 @@ class BDWFileDrop extends HTMLElement {
                         Load
                     </button>
                 </div>
+                <div class="url-auth-info" style="margin-top: 0.5rem; padding: 0.5rem; background: var(--bg-secondary); border-radius: 4px; font-size: 0.85rem; color: var(--text-secondary);">
+                    <strong>For authenticated URLs:</strong> Open the full interface and use the SQL Console to set up credentials first (e.g., <code>SET s3_access_key_id='...';</code>). Check the DuckDB documentation for specific authentication settings for your cloud provider.
+                </div>
             </div>
             
             <div id="fileList" style="margin-top: 1rem;"></div>
@@ -307,32 +310,57 @@ class BDWFileDrop extends HTMLElement {
         fileListElement.appendChild(urlDiv);
 
         try {
-            // Fetch the file
-            const response = await fetch(url);
-            if (!response.ok) {
-                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-            }
-
-            const blob = await response.blob();
             const fileName = this.getFileNameFromURL(url);
             
-            // Create a File object from the blob
-            const file = new File([blob], fileName, { type: blob.type });
+            // Try to register URL directly with DuckDB (more efficient)
+            const registerResult = await window.duckDBManager.registerFileURL(fileName, url);
+            
+            if (registerResult.success) {
+                console.log('Successfully registered URL directly');
+                
+                // Emit file-imported event for direct URL registration
+                const event = new CustomEvent('file-imported', {
+                    detail: {
+                        fileName: fileName,
+                        fileType: this.detectFileTypeFromURL(url),
+                        isRemote: true,
+                        isDirect: true, // Flag to indicate direct URL registration
+                        url: url
+                    },
+                    bubbles: true
+                });
 
-            // Emit file-imported event
-            const event = new CustomEvent('file-imported', {
-                detail: {
-                    file: file,
-                    fileName: fileName,
-                    fileType: this.detectFileTypeFromURL(url),
-                    fileSize: blob.size,
-                    isRemote: true,
-                    url: url
-                },
-                bubbles: true
-            });
+                this.dispatchEvent(event);
+            } else {
+                // Fallback to fetch + blob approach
+                console.log('Direct URL registration failed, falling back to fetch method:', registerResult.error);
+                
+                const response = await fetch(url);
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
 
-            this.dispatchEvent(event);
+                const blob = await response.blob();
+                
+                // Create a File object from the blob
+                const file = new File([blob], fileName, { type: blob.type });
+
+                // Emit file-imported event
+                const event = new CustomEvent('file-imported', {
+                    detail: {
+                        file: file,
+                        fileName: fileName,
+                        fileType: this.detectFileTypeFromURL(url),
+                        fileSize: blob.size,
+                        isRemote: true,
+                        isDirect: false,
+                        url: url
+                    },
+                    bubbles: true
+                });
+
+                this.dispatchEvent(event);
+            }
 
             // Update status to success
             const loadingDiv = urlDiv.querySelector('.loading');

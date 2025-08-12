@@ -5,6 +5,7 @@ class DuckDBManager {
         this.conn = null;
         this.worker = null;
         this.isInitialized = false;
+        this.duckdb = null; // Store the DuckDB module reference
     }
 
     async init(options = {}) {
@@ -12,19 +13,19 @@ class DuckDBManager {
             console.log('Initializing DuckDB with JSDelivr CDN...');
             
             // Import DuckDB directly from JSDelivr CDN
-            const duckdb = await import('https://cdn.jsdelivr.net/npm/@duckdb/duckdb-wasm@1.29.1-dev132.0/+esm');
+            this.duckdb = await import('https://cdn.jsdelivr.net/npm/@duckdb/duckdb-wasm@1.29.1-dev132.0/+esm');
             console.log('DuckDB module loaded successfully');
 
             // Use JSDelivr bundles
-            const JSDELIVR_BUNDLES = duckdb.getJsDelivrBundles();
+            const JSDELIVR_BUNDLES = this.duckdb.getJsDelivrBundles();
             
             // Select a bundle based on browser checks
-            const DUCKDB_CONFIG = await duckdb.selectBundle(JSDELIVR_BUNDLES);
+            const DUCKDB_CONFIG = await this.duckdb.selectBundle(JSDELIVR_BUNDLES);
 
             console.log('DuckDB config selected:', DUCKDB_CONFIG);
 
             // Create logger
-            const logger = new duckdb.ConsoleLogger(duckdb.LogLevel.WARNING);
+            const logger = new this.duckdb.ConsoleLogger(this.duckdb.LogLevel.WARNING);
             
             // Create worker URL using blob (JSDelivr pattern)
             const worker_url = URL.createObjectURL(
@@ -33,7 +34,7 @@ class DuckDBManager {
             
             // Create worker and database
             this.worker = new Worker(worker_url);
-            this.db = new duckdb.AsyncDuckDB(logger, this.worker);
+            this.db = new this.duckdb.AsyncDuckDB(logger, this.worker);
             
             // Instantiate the database
             await this.db.instantiate(DUCKDB_CONFIG.mainModule, DUCKDB_CONFIG.pthreadWorker);
@@ -49,11 +50,13 @@ class DuckDBManager {
             
             for (const ext of communityExtensions) {
                 try {
+                    console.log(`Installing extension: ${ext}`);
                     await this.conn.query(`INSTALL ${ext} FROM community;`);
+                    console.log(`Loading extension: ${ext}`);
                     await this.conn.query(`LOAD ${ext};`);
-                    console.log(`Loaded community extension: ${ext}`);
+                    console.log(`Successfully installed and loaded community extension: ${ext}`);
                 } catch (error) {
-                    console.warn(`Failed to load community extension ${ext}:`, error);
+                    console.warn(`Failed to install/load community extension ${ext}:`, error);
                 }
             }
             
@@ -70,10 +73,34 @@ class DuckDBManager {
         try {
             if (!this.db) throw new Error('DuckDB not initialized');
             
-            const buffer = await file.arrayBuffer();
-            await this.db.registerFileBuffer(name, new Uint8Array(buffer));
+            // Use registerFileHandle for better compatibility with extensions like zipfs
+            await this.db.registerFileHandle(name, file, this.duckdb.DuckDBDataProtocol.BROWSER_FILEREADER, true);
+            console.log(`File ${name} registered using BROWSER_FILEREADER protocol`);
             return { success: true, message: `File ${name} registered` };
         } catch (error) {
+            console.error('registerFileHandle failed, falling back to registerFileBuffer:', error);
+            // Fallback to the old method if registerFileHandle fails
+            try {
+                const buffer = await file.arrayBuffer();
+                await this.db.registerFileBuffer(name, new Uint8Array(buffer));
+                console.log(`File ${name} registered using registerFileBuffer fallback`);
+                return { success: true, message: `File ${name} registered` };
+            } catch (bufferError) {
+                return { success: false, error: bufferError.message };
+            }
+        }
+    }
+
+    async registerFileURL(name, url) {
+        try {
+            if (!this.db) throw new Error('DuckDB not initialized');
+            
+            // Use registerFileURL for efficient streaming of remote files
+            await this.db.registerFileURL(name, url, this.duckdb.DuckDBDataProtocol.HTTP, false);
+            console.log(`File ${name} registered from URL using HTTP protocol: ${url}`);
+            return { success: true, message: `File ${name} registered from URL` };
+        } catch (error) {
+            console.error('registerFileURL failed:', error);
             return { success: false, error: error.message };
         }
     }
@@ -216,42 +243,38 @@ class DuckDBManager {
 
     async handleZipFile(zipFileName) {
         try {
+            console.log('handleZipFile called with zipFileName:', zipFileName);
+            
             // Check if zipfs extension is loaded
             const extensionCheck = await this.executeSQL("SELECT extension_name FROM duckdb_extensions() WHERE loaded = true AND extension_name = 'zipfs'");
             if (!extensionCheck.success || extensionCheck.data.length === 0) {
                 throw new Error('ZIP file support not available. The zipfs extension failed to load.');
             }
 
-            // First, let's try to list the contents of the ZIP file using read_blob
+            // Use the zipfs extension to list contents
             let listResult;
             try {
+                // Use file:// protocol for registered files in the zip URL
+                const zipFileUrl = `file://${zipFileName}`;
+                console.log(`Attempting to list contents of: zip://${zipFileUrl}/*`);
+                const allFilesResult = await this.executeSQL(`SELECT file FROM glob('zip://${zipFileUrl}/*')`);
+                console.log('All files in ZIP:', allFilesResult);
+                
+                // Now try to get data files specifically
                 listResult = await this.executeSQL(`
-                    SELECT file FROM glob('${zipFileName}/*.csv')
+                    SELECT file FROM glob('zip://${zipFileUrl}/*.csv')
                     UNION ALL
-                    SELECT file FROM glob('${zipFileName}/*.json')
+                    SELECT file FROM glob('zip://${zipFileUrl}/*.json')
                     UNION ALL
-                    SELECT file FROM glob('${zipFileName}/*.jsonl')
+                    SELECT file FROM glob('zip://${zipFileUrl}/*.jsonl')
                     UNION ALL
-                    SELECT file FROM glob('${zipFileName}/*.parquet')
+                    SELECT file FROM glob('zip://${zipFileUrl}/*.parquet')
                     LIMIT 100
                 `);
+                console.log('Data files found:', listResult);
             } catch (error) {
-                // If that fails, try the zip:// protocol
-                try {
-                    listResult = await this.executeSQL(`
-                        SELECT file FROM glob('zip://${zipFileName}/*.csv')
-                        UNION ALL
-                        SELECT file FROM glob('zip://${zipFileName}/*.json')
-                        UNION ALL
-                        SELECT file FROM glob('zip://${zipFileName}/*.jsonl')
-                        UNION ALL
-                        SELECT file FROM glob('zip://${zipFileName}/*.parquet')
-                        LIMIT 100
-                    `);
-                } catch (zipError) {
-                    console.error('Both glob methods failed:', error, zipError);
-                    throw new Error('Unable to read ZIP file contents. The file may be corrupted or contain unsupported file types.');
-                }
+                console.error('Failed to list ZIP contents:', error);
+                throw new Error(`Unable to read ZIP file contents: ${error.message}. The file may be corrupted or contain unsupported file types.`);
             }
             
             if (!listResult.success || listResult.data.length === 0) {
@@ -282,7 +305,8 @@ class DuckDBManager {
             // Create view based on the file type inside the ZIP
             let viewQuery = '';
             let tableName = 'input_data';
-            const zipPath = `zip://${zipFileName}/${firstFileName}`;
+            // The firstFileName from glob already includes the zip:// prefix and full path
+            const zipPath = firstFileName;
             
             switch (fileExtension) {
                 case 'csv':
