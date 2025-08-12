@@ -36,6 +36,18 @@ class BDWFileDrop extends HTMLElement {
                         Load
                     </button>
                 </div>
+                
+                <div class="file-options" style="margin-top: 1rem; padding: 0.75rem; background: var(--input-bg); border-radius: 6px;">
+                    <label class="ignore-errors-checkbox">
+                        <input type="checkbox" id="ignoreErrors">
+                        <span class="checkmark"></span>
+                        Ignore parse errors (recommended for files with data quality issues)
+                    </label>
+                    <div class="option-help" style="margin-top: 0.5rem; font-size: 0.85rem; color: var(--text-secondary);">
+                        When enabled, DuckDB will skip problematic rows and load valid data. Useful for CSV files with inconsistent formatting or Excel files with mixed data types.
+                    </div>
+                </div>
+                
                 <div class="url-auth-info" style="margin-top: 0.5rem; padding: 0.5rem; background: var(--bg-secondary); border-radius: 4px; font-size: 0.85rem; color: var(--text-secondary);">
                     <strong>For authenticated URLs:</strong> Open the full interface and use the SQL Console to set up credentials first (e.g., <code>SET s3_access_key_id='...';</code>). Check the DuckDB documentation for specific authentication settings for your cloud provider.
                 </div>
@@ -45,6 +57,7 @@ class BDWFileDrop extends HTMLElement {
         `;
 
         this.setupEventListeners();
+        this.setupIgnoreErrorsChangeListener();
         this.checkDuckDBStatus();
     }
 
@@ -89,6 +102,28 @@ class BDWFileDrop extends HTMLElement {
 
         // Make loadFromURL method available to inline onclick
         dropZone.__loadFromURL = () => this.loadFromURL();
+    }
+
+    setupIgnoreErrorsChangeListener() {
+        // Clear file input when ignore errors setting changes
+        const ignoreErrorsCheckbox = this.querySelector('#ignoreErrors');
+        if (ignoreErrorsCheckbox) {
+            ignoreErrorsCheckbox.addEventListener('change', () => {
+                // Clear file input to force re-processing with new settings
+                const fileInput = this.querySelector('#fileInput');
+                if (fileInput) {
+                    fileInput.value = '';
+                }
+                
+                // Clear file list display
+                const fileListElement = this.querySelector('#fileList');
+                if (fileListElement) {
+                    fileListElement.innerHTML = '';
+                }
+                
+                console.log(`Ignore errors setting changed to: ${ignoreErrorsCheckbox.checked}`);
+            });
+        }
     }
 
     async checkDuckDBStatus() {
@@ -218,13 +253,18 @@ class BDWFileDrop extends HTMLElement {
         fileListElement.appendChild(fileDiv);
 
         try {
+            // Get ignore errors setting from checkbox
+            const ignoreErrorsCheckbox = this.querySelector('#ignoreErrors');
+            const ignoreErrors = ignoreErrorsCheckbox ? ignoreErrorsCheckbox.checked : false;
+            
             // Emit file-imported event
             const event = new CustomEvent('file-imported', {
                 detail: {
                     file: file,
                     fileName: file.name,
                     fileType: this.detectFileType(file),
-                    fileSize: file.size
+                    fileSize: file.size,
+                    ignoreErrors: ignoreErrors
                 },
                 bubbles: true
             });
@@ -284,6 +324,10 @@ class BDWFileDrop extends HTMLElement {
         try {
             const fileName = this.getFileNameFromURL(url);
             
+            // Get ignore errors setting from checkbox
+            const ignoreErrorsCheckbox = this.querySelector('#ignoreErrors');
+            const ignoreErrors = ignoreErrorsCheckbox ? ignoreErrorsCheckbox.checked : false;
+            
             // Try to register URL directly with DuckDB (more efficient)
             const registerResult = await window.duckDBManager.registerFileURL(fileName, url);
             
@@ -297,7 +341,8 @@ class BDWFileDrop extends HTMLElement {
                         fileType: this.detectFileTypeFromURL(url),
                         isRemote: true,
                         isDirect: true, // Flag to indicate direct URL registration
-                        url: url
+                        url: url,
+                        ignoreErrors: ignoreErrors
                     },
                     bubbles: true
                 });
@@ -326,7 +371,8 @@ class BDWFileDrop extends HTMLElement {
                         fileSize: blob.size,
                         isRemote: true,
                         isDirect: false,
-                        url: url
+                        url: url,
+                        ignoreErrors: ignoreErrors
                     },
                     bubbles: true
                 });
@@ -402,6 +448,25 @@ class BDWFileDrop extends HTMLElement {
         if (bytes === 0) return '0 B';
         const i = Math.floor(Math.log(bytes) / Math.log(1024));
         return Math.round(bytes / Math.pow(1024, i) * 100) / 100 + ' ' + sizes[i];
+    }
+
+    clearFileList() {
+        const fileListElement = this.querySelector('#fileList');
+        if (fileListElement) {
+            fileListElement.innerHTML = '';
+        }
+        
+        // Reset URL input
+        const urlInput = this.querySelector('#urlInput');
+        if (urlInput) {
+            urlInput.value = '';
+        }
+        
+        // Clear file input to prevent browser caching
+        const fileInput = this.querySelector('#fileInput');
+        if (fileInput) {
+            fileInput.value = '';
+        }
     }
 
     showFileError(fileName, error) {

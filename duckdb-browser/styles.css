@@ -719,6 +719,137 @@
     padding: 1.5rem;
 }
 
+/* Error Modal Styles */
+.error-modal-content {
+    max-width: 600px;
+}
+
+.error-header {
+    background: linear-gradient(135deg, var(--error-color) 0%, #dc2626 100%);
+    color: white;
+    border-bottom: none;
+}
+
+.error-header h3 {
+    color: white;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.error-details {
+    margin-bottom: 1.5rem;
+}
+
+.error-details h4 {
+    color: var(--text-primary);
+    margin: 0 0 0.5rem 0;
+    font-size: 1.1rem;
+}
+
+.error-details p {
+    margin: 0.5rem 0;
+    color: var(--text-secondary);
+}
+
+.error-explanation {
+    background: var(--input-bg);
+    padding: 1rem;
+    border-radius: 6px;
+    margin: 1rem 0;
+    border-left: 3px solid var(--warning-color);
+}
+
+.error-explanation ul {
+    margin: 0.5rem 0 0 0;
+    padding-left: 1.2rem;
+    color: var(--text-secondary);
+}
+
+.error-explanation li {
+    margin: 0.3rem 0;
+}
+
+.error-actions h4 {
+    color: var(--text-primary);
+    margin: 0 0 1rem 0;
+    font-size: 1.1rem;
+}
+
+.action-buttons {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1rem;
+    flex-wrap: wrap;
+}
+
+.action-buttons .btn {
+    flex: 1;
+    min-width: 160px;
+    padding: 0.75rem 1rem;
+    font-weight: 600;
+    justify-content: center;
+    text-align: center;
+}
+
+.ignore-errors-btn {
+    background: var(--warning-color) !important;
+    border-color: var(--warning-color) !important;
+}
+
+.ignore-errors-btn:hover {
+    background: #d97706 !important;
+    border-color: #d97706 !important;
+}
+
+.ignore-explanation {
+    background: var(--panel-bg);
+    padding: 0.75rem;
+    border-radius: 6px;
+    border: 1px solid var(--border-color);
+    border-left: 3px solid var(--info-color);
+}
+
+.ignore-explanation p {
+    margin: 0;
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+}
+
+.ignore-explanation strong {
+    color: var(--text-primary);
+}
+
+/* Ignore Errors Checkbox Styles */
+.ignore-errors-checkbox {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    cursor: pointer;
+    font-size: 0.9rem;
+    color: var(--text-primary);
+    user-select: none;
+}
+
+.ignore-errors-checkbox input[type="checkbox"] {
+    margin: 0;
+    width: 16px;
+    height: 16px;
+    cursor: pointer;
+}
+
+.ignore-errors-checkbox:hover {
+    color: var(--primary-color);
+}
+
+.file-options {
+    border: 1px solid var(--border-color);
+}
+
+.option-help {
+    line-height: 1.4;
+}
+
 /* Mobile Optimization Notice */
 .mobile-notice {
     display: none;

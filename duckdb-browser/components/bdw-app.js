@@ -139,6 +139,9 @@ class BDWApp extends HTMLElement {
 
     async handleFileImport(fileData) {
         try {
+            // Clean up any existing data before starting new import
+            await this.cleanupBeforeImport();
+            
             this.showStatus(`Processing ${fileData.fileName}...`, 'info');
 
             let result;
@@ -148,14 +151,16 @@ class BDWApp extends HTMLElement {
                 // For direct URL registrations, file is already registered, just create a view
                 result = await this.handleDirectURLFile(fileData);
             } else {
-                // For uploaded files or fetched URLs, use autoDetectAndLoad
-                result = await window.duckDBManager.autoDetectAndLoad(fileData.file);
+                // For uploaded files or fetched URLs, use autoDetectAndLoad with ignore errors option
+                result = await window.duckDBManager.autoDetectAndLoad(fileData.file, { 
+                    ignoreErrors: fileData.ignoreErrors || false 
+                });
             }
             
             this.currentTable = result.tableName;
             console.log('Setting currentTable to:', this.currentTable);
 
-            // Get table information
+            // Get table information - this might also fail with parse errors
             const tableInfo = await window.duckDBManager.getTableInfo(result.tableName);
 
             // Show the main content and hide standalone SQL
@@ -175,13 +180,18 @@ class BDWApp extends HTMLElement {
 
             // Create success message based on file type
             let successMessage = `Successfully loaded ${fileData.fileName} (${tableInfo.stats.row_count} rows)`;
-            
+            if (result.usedIgnoreErrors) {
+                successMessage += ' (errors ignored)';
+            }
 
             this.showStatus(successMessage, 'success');
 
         } catch (error) {
             console.error('File import failed:', error);
             this.showStatus(`Failed to import file: ${error.message}`, 'error');
+            
+            // Clean up any partial state on error
+            await this.cleanupFailedImport();
         }
     }
 
@@ -189,7 +199,22 @@ class BDWApp extends HTMLElement {
         const previewElement = document.getElementById('dataPreview');
         
         if (!data || data.length === 0) {
-            previewElement.innerHTML = '<p>No data to display</p>';
+            previewElement.innerHTML = `
+                <div style="text-align: center; padding: 2rem; color: var(--text-secondary);">
+                    <p style="margin: 0 0 1rem 0; font-size: 1.1rem;">No data to display</p>
+                    <div style="background: var(--input-bg); padding: 1rem; border-radius: 6px; border-left: 3px solid var(--warning-color);">
+                        <p style="margin: 0 0 0.5rem 0;"><strong>Possible issues:</strong></p>
+                        <ul style="text-align: left; margin: 0; padding-left: 1.2rem;">
+                            <li>File may contain parse errors or formatting issues</li>
+                            <li>Data might be empty or in an unexpected format</li>
+                            <li>File encoding may not be compatible</li>
+                        </ul>
+                        <p style="margin: 1rem 0 0 0; font-size: 0.9rem;">
+                            <strong>Try:</strong> Re-upload with "<strong>Ignore parse errors</strong>" checkbox enabled, or check browser console for details.
+                        </p>
+                    </div>
+                </div>
+            `;
             return;
         }
 
@@ -368,8 +393,12 @@ class BDWApp extends HTMLElement {
     }
 
     async handleDirectURLFile(fileData) {
-        const fileName = fileData.fileName;
+        const fileName = fileData.fileName; // For direct URLs, we use the registered filename as-is
         const extension = fileData.fileType || fileName.split('.').pop().toLowerCase();
+        const ignoreErrors = fileData.ignoreErrors || false;
+        
+        // For direct URLs, we can't change the filename since it's already registered
+        // So we create the view with different parameters instead
         
         // Create appropriate view based on file type for directly registered URL
         let viewQuery = '';
@@ -377,33 +406,36 @@ class BDWApp extends HTMLElement {
         
         switch (extension) {
             case 'csv':
-                viewQuery = `CREATE OR REPLACE TEMP VIEW ${tableName} AS FROM read_csv('${fileName}', auto_detect=true)`;
+                viewQuery = `CREATE OR REPLACE TEMP VIEW ${tableName} AS FROM read_csv('${fileName}', auto_detect=true${ignoreErrors ? ', ignore_errors=true' : ''})`;
                 break;
             case 'json':
-                viewQuery = `CREATE OR REPLACE TEMP VIEW ${tableName} AS FROM read_json('${fileName}', format='auto')`;
+                viewQuery = `CREATE OR REPLACE TEMP VIEW ${tableName} AS FROM read_json('${fileName}', format='auto'${ignoreErrors ? ', ignore_errors=true' : ''})`;
                 break;
             case 'jsonl':
             case 'ndjson':
-                viewQuery = `CREATE OR REPLACE TEMP VIEW ${tableName} AS FROM read_json('${fileName}', format='newline_delimited')`;
+                viewQuery = `CREATE OR REPLACE TEMP VIEW ${tableName} AS FROM read_json('${fileName}', format='newline_delimited'${ignoreErrors ? ', ignore_errors=true' : ''})`;
                 break;
             case 'parquet':
+                // Parquet doesn't support ignore_errors flag
                 viewQuery = `CREATE OR REPLACE TEMP VIEW ${tableName} AS FROM read_parquet('${fileName}')`;
                 break;
             case 'xlsx':
             case 'xls':
-                viewQuery = `CREATE OR REPLACE TEMP VIEW ${tableName} AS FROM read_excel('${fileName}')`;
+                viewQuery = `CREATE OR REPLACE TEMP VIEW ${tableName} AS FROM read_excel('${fileName}'${ignoreErrors ? ', ignore_errors=true' : ''})`;
                 break;
             default:
                 throw new Error(`Unsupported file type: ${extension}`);
         }
         
         const result = await window.duckDBManager.executeSQL(viewQuery);
+        
         if (!result.success) {
             throw new Error(result.error);
         }
         
-        return { tableName, fileName, extension };
+        return { tableName, fileName: fileData.fileName, extension, usedIgnoreErrors: ignoreErrors };
     }
+
 
     showFullInterface() {
         // Show the main content without loading data
@@ -595,6 +627,87 @@ class BDWApp extends HTMLElement {
         }
     }
     
+    async cleanupBeforeImport() {
+        // Clean up any existing database objects before new import
+        if (window.duckDBManager && window.duckDBManager.conn) {
+            try {
+                await window.duckDBManager.executeSQL('DROP VIEW IF EXISTS input_data');
+                await window.duckDBManager.executeSQL('DROP TABLE IF EXISTS input_data');
+                console.log('Cleaned up existing database objects');
+            } catch (e) {
+                console.debug('Pre-import cleanup completed (some objects may not have existed)');
+            }
+        }
+        
+        // Reset current references
+        this.currentTable = null;
+        this.currentData = null;
+    }
+    
+    async cleanupFailedImport() {
+        // Reset current table reference
+        this.currentTable = null;
+        this.currentData = null;
+        
+        // Hide main content if no successful import
+        document.getElementById('mainContent').style.display = 'none';
+        document.getElementById('standaloneSQL').style.display = 'none';
+        
+        // Clear any displayed data
+        const dataPreview = document.getElementById('dataPreview');
+        if (dataPreview) {
+            dataPreview.innerHTML = '';
+        }
+        
+        // Reset schema and stats components
+        const schemaCard = this.querySelector('bdw-schema-card');
+        if (schemaCard && typeof schemaCard.reset === 'function') {
+            schemaCard.reset();
+        }
+        
+        const statsPanel = this.querySelector('bdw-stats-panel');
+        if (statsPanel && typeof statsPanel.reset === 'function') {
+            statsPanel.reset();
+        }
+        
+        // Aggressively clean up any database state
+        if (window.duckDBManager && window.duckDBManager.conn) {
+            try {
+                // Drop the main view
+                await window.duckDBManager.executeSQL('DROP VIEW IF EXISTS input_data');
+                
+                // Also try to drop any tables that might have been created
+                await window.duckDBManager.executeSQL('DROP TABLE IF EXISTS input_data');
+                
+                // Clear any temporary objects that might exist
+                const cleanupQueries = [
+                    'DROP VIEW IF EXISTS input_data',
+                    'DROP TABLE IF EXISTS input_data', 
+                    'DROP SCHEMA IF EXISTS temp CASCADE'
+                ];
+                
+                for (const query of cleanupQueries) {
+                    try {
+                        await window.duckDBManager.executeSQL(query);
+                    } catch (e) {
+                        // Individual cleanup failures are okay
+                    }
+                }
+                
+            } catch (e) {
+                // Ignore cleanup errors
+                console.debug('Database cleanup failed (this is usually okay):', e);
+            }
+        }
+        
+        // Clear file list in the file drop component
+        const fileDropComponent = this.querySelector('bdw-file-drop');
+        if (fileDropComponent && typeof fileDropComponent.clearFileList === 'function') {
+            fileDropComponent.clearFileList();
+        }
+        
+        console.log('Cleaned up failed import state');
+    }
 
     showStatus(message, type = 'info') {
         const statusArea = document.getElementById('statusArea');

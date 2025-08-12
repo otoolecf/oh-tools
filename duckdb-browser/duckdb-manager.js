@@ -350,7 +350,7 @@ class DuckDBManager {
   }
 
   // Convenience methods for common operations
-  async autoDetectAndLoad(file) {
+  async autoDetectAndLoad(file, options = {}) {
     // Ensure extensions are loaded before attempting to use them
     if (!this.extensionsLoaded) {
       throw new Error(
@@ -358,10 +358,17 @@ class DuckDBManager {
       );
     }
 
-    const fileName = file.name;
-    const extension = fileName.split(".").pop().toLowerCase();
+    const originalFileName = file.name;
+    const extension = originalFileName.split(".").pop().toLowerCase();
+    const ignoreErrors = options.ignoreErrors || false;
+    
+    // Create unique filename to avoid DuckDB caching issues when settings change
+    const timestamp = Date.now();
+    const fileName = ignoreErrors ? 
+      `${originalFileName}_ignore_${timestamp}` : 
+      `${originalFileName}_${timestamp}`;
 
-    // Register the file
+    // Register the file with unique name
     const registerResult = await this.registerFile(fileName, file);
     if (!registerResult.success) {
       throw new Error(registerResult.error);
@@ -373,20 +380,21 @@ class DuckDBManager {
 
     switch (extension) {
       case "csv":
-        viewQuery = `CREATE OR REPLACE TEMP VIEW ${tableName} AS FROM read_csv('${fileName}', auto_detect=true)`;
+        viewQuery = `CREATE OR REPLACE TEMP VIEW ${tableName} AS FROM read_csv('${fileName}', auto_detect=true${ignoreErrors ? ', ignore_errors=true' : ''})`;
         break;
       case "json":
-        viewQuery = `CREATE OR REPLACE TEMP VIEW ${tableName} AS FROM read_json('${fileName}', format='auto')`;
+        viewQuery = `CREATE OR REPLACE TEMP VIEW ${tableName} AS FROM read_json('${fileName}', format='auto'${ignoreErrors ? ', ignore_errors=true' : ''})`;
         break;
       case "jsonl":
       case "ndjson":
-        viewQuery = `CREATE OR REPLACE TEMP VIEW ${tableName} AS FROM read_json('${fileName}', format='newline_delimited')`;
+        viewQuery = `CREATE OR REPLACE TEMP VIEW ${tableName} AS FROM read_json('${fileName}', format='newline_delimited'${ignoreErrors ? ', ignore_errors=true' : ''})`;
         break;
       case "parquet":
+        // Parquet doesn't support ignore_errors flag
         viewQuery = `CREATE OR REPLACE TEMP VIEW ${tableName} AS FROM read_parquet('${fileName}')`;
         break;
       case "xlsx":
-        viewQuery = `CREATE OR REPLACE TEMP VIEW ${tableName} AS FROM read_xlsx('${fileName}')`;
+        viewQuery = `CREATE OR REPLACE TEMP VIEW ${tableName} AS FROM read_xlsx('${fileName}'${ignoreErrors ? ', ignore_errors=true' : ''})`;
         break;
       case "xls":
         throw new Error(".xls is not supported; please convert to .xlsx");
@@ -407,11 +415,19 @@ class DuckDBManager {
     }
 
     const result = await this.executeSQL(viewQuery);
+    
     if (!result.success) {
       throw new Error(result.error);
     }
 
-    return { tableName, fileName, extension };
+    return { tableName, fileName: originalFileName, extension, usedIgnoreErrors: ignoreErrors };
+  }
+
+  async cleanupOldFiles() {
+    // This would ideally clean up old registered files, but DuckDB-WASM 
+    // doesn't provide a direct way to unregister files. The files will be
+    // cleaned up when the database connection is closed/reset.
+    console.log('Note: Old file registrations will be cleaned up on page refresh');
   }
 
   async getTableInfo(tableName) {
@@ -446,17 +462,20 @@ class DuckDBManager {
             SELECT * FROM ${tableName} LIMIT 100
         `);
 
-    // Combine stats
+    // Combine stats with safety checks
+    const statsData = statsResult.success ? (statsResult.data[0] || {}) : {};
+    const distinctData = distinctResult.success ? (distinctResult.data[0] || {}) : {};
+    
     const combinedStats = {
-      ...statsResult.data[0],
-      ...distinctResult.data[0],
+      ...statsData,
+      ...distinctData,
     };
 
     return {
-      schema: schema.schema,
+      schema: schema.success ? schema.schema : [],
       stats: combinedStats,
-      sample: sampleResult.data,
-      sampleSchema: sampleResult.schema,
+      sample: sampleResult.success ? sampleResult.data : [],
+      sampleSchema: sampleResult.success ? sampleResult.schema : null,
     };
   }
 }
