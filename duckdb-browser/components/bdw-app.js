@@ -391,7 +391,7 @@ class BDWApp extends HTMLElement {
                 break;
             case 'xlsx':
             case 'xls':
-                viewQuery = `CREATE OR REPLACE TEMP VIEW ${tableName} AS FROM st_read('${fileName}')`;
+                viewQuery = `CREATE OR REPLACE TEMP VIEW ${tableName} AS FROM read_excel('${fileName}')`;
                 break;
             default:
                 throw new Error(`Unsupported file type: ${extension}`);

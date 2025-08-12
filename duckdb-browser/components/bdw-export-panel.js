@@ -57,10 +57,13 @@ class BDWExportPanel extends HTMLElement {
                     </div>
                     
                     <button class="btn btn-primary" 
+                            id="exportButton"
                             onclick="this.parentElement.parentElement.parentElement.__startExport()" 
                             style="width: 100%; margin-bottom: 0.5rem;">
                         Export Data
                     </button>
+                    <div id="exportWarning" style="display: none; color: var(--text-warning); font-size: 0.9rem; margin-bottom: 0.5rem; padding: 0.5rem; background: var(--warning-bg); border-radius: 4px;">
+                    </div>
                     
                     <button class="btn" 
                             onclick="this.parentElement.parentElement.parentElement.__showPreview()" 
@@ -83,11 +86,17 @@ class BDWExportPanel extends HTMLElement {
         // Add event listener for data source change
         const dataSourceSelect = this.querySelector('#dataSource');
         if (dataSourceSelect) {
-            dataSourceSelect.addEventListener('change', () => this.updateDataSource());
+            dataSourceSelect.addEventListener('change', () => {
+                this.updateDataSource();
+                this.checkRowCount();
+            });
         }
         
         // Initialize data source help text
         this.updateDataSource();
+        
+        // Check row count and update export button
+        this.checkRowCount();
     }
 
     selectFormat(format) {
@@ -191,16 +200,12 @@ class BDWExportPanel extends HTMLElement {
             case 'excel':
                 html += `
                     <div class="setting-group">
-                        <label>Sheet Name</label>
-                        <input type="text" id="excelSheetName" value="Sheet1" placeholder="Sheet1">
-                    </div>
-                    <div class="setting-group">
                         <label>
                             <input type="checkbox" id="excelHeader" checked> Include Header Row
                         </label>
                     </div>
                     <p style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 0.5rem;">
-                        Note: Excel export requires conversion through CSV format
+                        Note: Excel files will be generated in .xlsx format with default sheet name 'Sheet1'
                     </p>
                 `;
                 break;
@@ -208,6 +213,78 @@ class BDWExportPanel extends HTMLElement {
 
         html += '</div>';
         settingsDiv.innerHTML = html;
+    }
+
+    async checkRowCount() {
+        try {
+            const app = this.closest('bdw-app');
+            if (!app || !app.currentTable) {
+                return;
+            }
+
+            const dataSource = this.querySelector('#dataSource').value;
+            const exportButton = this.querySelector('#exportButton');
+            const warning = this.querySelector('#exportWarning');
+            
+            let query;
+            if (dataSource === 'query') {
+                // For query results, we can't easily check count without running the query
+                // So we'll allow the export but show a general warning
+                warning.style.display = 'block';
+                warning.innerHTML = `
+                    <strong>Query Export Warning:</strong> 
+                    Large query results may cause browser performance issues. 
+                    Consider adding LIMIT clauses to your query for large datasets.
+                `;
+                exportButton.disabled = false;
+                exportButton.textContent = 'Export Data';
+                return;
+            } else {
+                // Check full table row count
+                query = `SELECT COUNT(*) as count FROM ${app.currentTable}`;
+            }
+
+            const result = await window.duckDBManager.executeSQL(query);
+            if (result.success && result.data.length > 0) {
+                const rowCount = result.data[0].count;
+                const MAX_ROWS = 100000; // 100K rows threshold
+                
+                if (rowCount > MAX_ROWS) {
+                    // Disable export for very large datasets
+                    exportButton.disabled = true;
+                    exportButton.textContent = `Dataset Too Large (${rowCount.toLocaleString()} rows)`;
+                    warning.style.display = 'block';
+                    warning.innerHTML = `
+                        <strong>Export Blocked:</strong> 
+                        Dataset has ${rowCount.toLocaleString()} rows (limit: ${MAX_ROWS.toLocaleString()}). 
+                        Use the SQL Console to filter data first (e.g., add WHERE or LIMIT clauses).
+                    `;
+                } else if (rowCount > 10000) {
+                    // Show warning for moderately large datasets
+                    exportButton.disabled = false;
+                    exportButton.textContent = 'Export Data';
+                    warning.style.display = 'block';
+                    warning.innerHTML = `
+                        <strong>Large Dataset Warning:</strong> 
+                        Exporting ${rowCount.toLocaleString()} rows may take time and use significant memory.
+                    `;
+                } else {
+                    // Small dataset - no warning needed
+                    exportButton.disabled = false;
+                    exportButton.textContent = 'Export Data';
+                    warning.style.display = 'none';
+                }
+            }
+        } catch (error) {
+            console.warn('Could not check row count:', error);
+            // If we can't check, allow export but show warning
+            const warning = this.querySelector('#exportWarning');
+            warning.style.display = 'block';
+            warning.innerHTML = `
+                <strong>Unable to check dataset size.</strong> 
+                Export may be slow for large datasets.
+            `;
+        }
     }
 
     async startExport() {
@@ -488,7 +565,6 @@ class BDWExportPanel extends HTMLElement {
                 break;
 
             case 'excel':
-                options.sheetName = this.querySelector('#excelSheetName')?.value || 'Sheet1';
                 options.header = this.querySelector('#excelHeader')?.checked !== false;
                 break;
         }
