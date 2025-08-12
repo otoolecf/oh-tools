@@ -85,6 +85,7 @@ class DuckDBManager {
     }
 
     const coreExtensions = ["fts", "json", "parquet"]; // Remove excel for now
+    const communityExtensions = ["zipfs"];
     const loadedExtensions = [];
 
     for (const ext of coreExtensions) {
@@ -101,6 +102,21 @@ class DuckDBManager {
         console.log(`Successfully installed and loaded extension: ${ext}`);
       } catch (error) {
         console.warn(`Failed to install/load extension ${ext}:`, error);
+      }
+    }
+
+    // Load community extensions
+    for (const ext of communityExtensions) {
+      try {
+        console.log(`Installing community extension: ${ext}`);
+        await this.conn.query(`INSTALL ${ext} FROM community;`);
+        console.log(`Loading extension: ${ext}`);
+        await this.conn.query(`LOAD ${ext};`);
+
+        loadedExtensions.push(ext);
+        console.log(`Successfully installed and loaded community extension: ${ext}`);
+      } catch (error) {
+        console.warn(`Failed to install/load community extension ${ext}:`, error);
       }
     }
 
@@ -374,6 +390,18 @@ class DuckDBManager {
         break;
       case "xls":
         throw new Error(".xls is not supported; please convert to .xlsx");
+      case "zip":
+        // ZIP files need special handling - we'll create a view that shows available files
+        console.log(`Processing ZIP file: ${fileName}`);
+        console.log(`ZIP file registered for zipfs extension usage`);
+        console.log(`Use syntax: SELECT * FROM 'zip://${fileName}/path/to/file' to query files within the archive`);
+        viewQuery = `CREATE OR REPLACE TEMP VIEW ${tableName} AS 
+          SELECT 'ZIP file loaded. Use zip://filename.zip/path/to/file syntax to query specific files within the archive.' as info,
+                 '${fileName}' as zip_file_name,
+                 'Examples:' as usage_examples,
+                 'SELECT * FROM ''zip://${fileName}/data.csv''' as example_1,
+                 'SELECT * FROM ''zip://${fileName}/*.csv''' as example_2`;
+        break;
       default:
         throw new Error(`Unsupported file type: ${extension}`);
     }
