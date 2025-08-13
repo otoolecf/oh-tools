@@ -28,15 +28,11 @@
 /*/*.js
   Cross-Origin-Resource-Policy: cross-origin
 
-# Force correct MIME types for specific node_modules JS files
-/image-editor/node_modules/wasm-vips/lib/vips.js
+# Force correct MIME types for all lib directories
+*/lib/*.js
   Content-Type: application/javascript
   Cross-Origin-Resource-Policy: cross-origin
 
-/image-editor/node_modules/heic-to/dist/iife/heic-to.js
-  Content-Type: application/javascript  
-  Cross-Origin-Resource-Policy: cross-origin
-
-/image-editor/node_modules/exifreader/dist/exif-reader.js
-  Content-Type: application/javascript
+*/lib/*.wasm
+  Content-Type: application/wasm
   Cross-Origin-Resource-Policy: cross-origin
