@@ -10,11 +10,20 @@
   Cross-Origin-Opener-Policy: same-origin
   Cross-Origin-Resource-Policy: cross-origin
 
-# Allow WASM files
-*.wasm
+# Allow WASM files globally
+/*.wasm
   Content-Type: application/wasm
   Cross-Origin-Resource-Policy: cross-origin
 
-# Allow JS modules
-*.js
+# Allow nested WASM files
+/*/*.wasm
+  Content-Type: application/wasm
+  Cross-Origin-Resource-Policy: cross-origin
+
+# Allow JS modules globally
+/*.js
+  Cross-Origin-Resource-Policy: cross-origin
+
+# Allow nested JS files
+/*/*.js
   Cross-Origin-Resource-Policy: cross-origin
