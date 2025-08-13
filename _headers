@@ -28,17 +28,15 @@
 /*/*.js
   Cross-Origin-Resource-Policy: cross-origin
 
-# Force correct MIME types for node_modules JS files
-*/node_modules/*.js
+# Force correct MIME types for specific node_modules JS files
+/image-editor/node_modules/wasm-vips/lib/vips.js
   Content-Type: application/javascript
   Cross-Origin-Resource-Policy: cross-origin
 
-# Nested node_modules JS files
-*/node_modules/*/*.js
-  Content-Type: application/javascript
+/image-editor/node_modules/heic-to/dist/iife/heic-to.js
+  Content-Type: application/javascript  
   Cross-Origin-Resource-Policy: cross-origin
 
-# Deep nested node_modules JS files
-*/node_modules/*/*/*.js
+/image-editor/node_modules/exifreader/dist/exif-reader.js
   Content-Type: application/javascript
   Cross-Origin-Resource-Policy: cross-origin
