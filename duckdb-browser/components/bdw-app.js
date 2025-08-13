@@ -61,7 +61,8 @@ class BDWApp extends HTMLElement {
                                             <div class="resize-grip"></div>
                                         </div>
                                         <div class="data-grid-controls">
-                                            <button class="resize-reset-btn" title="Reset to default height">⟲ Reset Height</button>
+                                            <button class="resize-reset-btn" title="Reset to default height" onclick="this.closest('bdw-app').resetDataGridHeight()">⟲ Reset Height</button>
+                                            <button class="column-reset-btn" title="Reset all columns to default width" onclick="this.closest('bdw-app').resetColumnWidths()">⟲ Reset Columns</button>
                                         </div>
                                     </div>
                                 </div>
@@ -142,7 +143,7 @@ class BDWApp extends HTMLElement {
             // Clean up any existing data before starting new import
             await this.cleanupBeforeImport();
             
-            this.showStatus(`Processing ${fileData.fileName}...`, 'info');
+            this.showFileStatus(fileData.fileName, `Processing ${fileData.fileName}...`, 'info');
 
             let result;
             
@@ -184,11 +185,11 @@ class BDWApp extends HTMLElement {
                 successMessage += ' (errors ignored)';
             }
 
-            this.showStatus(successMessage, 'success');
+            this.showFileStatus(fileData.fileName, successMessage, 'success');
 
         } catch (error) {
             console.error('File import failed:', error);
-            this.showStatus(`Failed to import file: ${error.message}`, 'error');
+            this.showFileStatus(fileData.fileName, `Failed to import file: ${error.message}`, 'error');
             
             // Clean up any partial state on error
             await this.cleanupFailedImport();
@@ -250,18 +251,31 @@ class BDWApp extends HTMLElement {
             `;
         }
 
-        // Create table
-        html += '<table><thead><tr>';
+        // Create table with resizable columns
+        html += '<table class="resizable-table"><thead><tr>';
         
-        // Create headers from schema
+        // Create headers from schema with resize handles
+        let columnIndex = 0;
         if (schema && schema.fields) {
             schema.fields.forEach(field => {
-                html += `<th>${field.name}</th>`;
+                html += `<th data-column="${columnIndex}">
+                    <div class="column-header">
+                        <span class="column-title">${field.name}</span>
+                        <div class="column-resize-handle" data-column="${columnIndex}"></div>
+                    </div>
+                </th>`;
+                columnIndex++;
             });
         } else {
             // Fallback: use keys from first row
             Object.keys(data[0]).forEach(key => {
-                html += `<th>${key}</th>`;
+                html += `<th data-column="${columnIndex}">
+                    <div class="column-header">
+                        <span class="column-title">${key}</span>
+                        <div class="column-resize-handle" data-column="${columnIndex}"></div>
+                    </div>
+                </th>`;
+                columnIndex++;
             });
         }
         
@@ -271,14 +285,24 @@ class BDWApp extends HTMLElement {
         const displayData = isQueryResult ? data : data.slice(0, 100);
         displayData.forEach(row => {
             html += '<tr>';
+            let cellIndex = 0;
             Object.values(row).forEach(value => {
                 let displayValue = value;
+                let fullValue = value;
                 if (value === null || value === undefined) {
                     displayValue = '<em style="color: var(--text-secondary);">null</em>';
-                } else if (typeof value === 'string' && value.length > 50) {
-                    displayValue = value.substring(0, 47) + '...';
+                    fullValue = 'null';
+                } else {
+                    // Don't truncate - show full value and let CSS handle overflow
+                    displayValue = this.escapeHtml(value);
+                    fullValue = value;
                 }
-                html += `<td>${displayValue}</td>`;
+                html += `<td data-column="${cellIndex}" data-full-value="${this.escapeHtml(fullValue)}" 
+                            title="${this.escapeHtml(fullValue)}" class="copyable-cell">
+                            <div class="cell-content">${displayValue}</div>
+                            <button class="copy-btn" onclick="this.closest('bdw-app').copyToClipboard('${this.escapeHtml(fullValue)}', this)" title="Copy full content">Copy</button>
+                         </td>`;
+                cellIndex++;
             });
             html += '</tr>';
         });
@@ -300,6 +324,9 @@ class BDWApp extends HTMLElement {
         }
 
         previewElement.innerHTML = html;
+        
+        // Setup column resizing and copy functionality after table is created
+        this.setupTableInteractions();
     }
 
     formatNumber(value, decimals = 0) {
@@ -321,6 +348,133 @@ class BDWApp extends HTMLElement {
         
         // Format large numbers with commas
         return num.toLocaleString();
+    }
+
+    escapeHtml(text) {
+        if (text === null || text === undefined) return '';
+        return String(text)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#039;');
+    }
+
+    setupTableInteractions() {
+        const table = document.querySelector('#dataPreview .resizable-table');
+        if (!table) return;
+
+        this.setupColumnResizing(table);
+        this.applyDefaultColumnWidths(table);
+    }
+
+    applyDefaultColumnWidths(table) {
+        const defaultWidth = 200; // Default max width
+        
+        // Group cells by column and apply width per column
+        const columns = table.querySelectorAll('th[data-column]');
+        columns.forEach(header => {
+            const columnIndex = header.dataset.column;
+            const allCellsInColumn = table.querySelectorAll(`th[data-column="${columnIndex}"], td[data-column="${columnIndex}"]`);
+            
+            allCellsInColumn.forEach(cell => {
+                cell.style.setProperty('width', `${defaultWidth}px`, 'important');
+                cell.style.minWidth = '120px';
+                cell.style.maxWidth = `${defaultWidth}px`;
+                // Force the width to be respected
+                cell.style.boxSizing = 'border-box';
+            });
+        });
+    }
+
+    setupColumnResizing(table) {
+        const resizeHandles = table.querySelectorAll('.column-resize-handle');
+        
+        resizeHandles.forEach(handle => {
+            let isResizing = false;
+            let startX = 0;
+            let startWidth = 0;
+            let column = null;
+
+            handle.addEventListener('mousedown', (e) => {
+                isResizing = true;
+                startX = e.clientX;
+                const columnIndex = handle.dataset.column;
+                column = table.querySelector(`th[data-column="${columnIndex}"]`);
+                
+                // Get the current computed width, not the content width
+                const computedStyle = window.getComputedStyle(column);
+                startWidth = parseInt(computedStyle.width, 10);
+                
+                document.body.style.cursor = 'col-resize';
+                document.body.style.userSelect = 'none';
+                e.preventDefault();
+                e.stopPropagation();
+            });
+
+            document.addEventListener('mousemove', (e) => {
+                if (!isResizing || !column) return;
+
+                const diff = e.clientX - startX;
+                const newWidth = Math.max(50, startWidth + diff); // Minimum width of 50px
+                
+                // Apply width to all cells in this column
+                const columnIndex = column.dataset.column;
+                const allCellsInColumn = table.querySelectorAll(`th[data-column="${columnIndex}"], td[data-column="${columnIndex}"]`);
+                allCellsInColumn.forEach(cell => {
+                    cell.style.setProperty('width', `${newWidth}px`, 'important');
+                    cell.style.minWidth = `${newWidth}px`;
+                    cell.style.maxWidth = 'none'; // Remove max-width constraint when manually resizing
+                    cell.style.boxSizing = 'border-box';
+                });
+            });
+
+            document.addEventListener('mouseup', () => {
+                if (isResizing) {
+                    isResizing = false;
+                    column = null;
+                    document.body.style.cursor = '';
+                    document.body.style.userSelect = '';
+                }
+            });
+        });
+    }
+
+    async copyToClipboard(text, button) {
+        try {
+            await navigator.clipboard.writeText(text);
+            
+            // Visual feedback
+            const originalText = button.innerHTML;
+            button.innerHTML = 'Copied!';
+            button.style.background = 'var(--success-color)';
+            
+            setTimeout(() => {
+                button.innerHTML = originalText;
+                button.style.background = '';
+            }, 1000);
+            
+        } catch (err) {
+            console.error('Failed to copy to clipboard:', err);
+            
+            // Fallback for older browsers
+            const textArea = document.createElement('textarea');
+            textArea.value = text;
+            document.body.appendChild(textArea);
+            textArea.select();
+            document.execCommand('copy');
+            document.body.removeChild(textArea);
+            
+            // Visual feedback
+            const originalText = button.innerHTML;
+            button.innerHTML = 'Copied!';
+            button.style.background = 'var(--success-color)';
+            
+            setTimeout(() => {
+                button.innerHTML = originalText;
+                button.style.background = '';
+            }, 1000);
+        }
     }
 
     updateSchema(schema) {
@@ -709,19 +863,65 @@ class BDWApp extends HTMLElement {
     }
 
     showStatus(message, type = 'info') {
-        const statusArea = document.getElementById('statusArea');
+        // Try to show status in file picker area first
+        const fileDropComponent = this.querySelector('bdw-file-drop');
+        const fileList = fileDropComponent ? fileDropComponent.querySelector('#fileList') : null;
         
-        // Remove any existing status
-        const existingStatus = statusArea.querySelector('.status-message');
+        if (fileList && fileList.children.length > 0) {
+            // Show status below the most recent file
+            const lastFileItem = fileList.lastElementChild;
+            this.showStatusInFileArea(lastFileItem, message, type);
+        } else {
+            // Fallback: show in file drop area itself
+            this.showStatusInDropZone(message, type);
+        }
+    }
+
+    showStatusInFileArea(fileItem, message, type) {
+        // Remove any existing general status
+        const existingStatus = fileItem.querySelector('.general-status');
         if (existingStatus) {
             existingStatus.remove();
         }
 
-        // Add new status
+        // Add new status message below the file
         const statusDiv = document.createElement('div');
-        statusDiv.className = `status-message status-${type}`;
+        statusDiv.className = `general-status status-${type}`;
+        statusDiv.style.cssText = `
+            padding: 0.5rem 1rem;
+            margin-top: 0.5rem;
+            border-radius: 4px;
+            font-size: 0.85rem;
+            font-weight: 500;
+        `;
+        
+        // Set colors based on type
+        switch (type) {
+            case 'success':
+                statusDiv.style.background = 'color-mix(in srgb, var(--success-color) 10%, var(--panel-bg))';
+                statusDiv.style.color = 'var(--success-color)';
+                statusDiv.style.border = '1px solid color-mix(in srgb, var(--success-color) 30%, var(--panel-bg))';
+                break;
+            case 'error':
+                statusDiv.style.background = 'color-mix(in srgb, var(--error-color) 10%, var(--panel-bg))';
+                statusDiv.style.color = 'var(--error-color)';
+                statusDiv.style.border = '1px solid color-mix(in srgb, var(--error-color) 30%, var(--panel-bg))';
+                break;
+            case 'info':
+            default:
+                statusDiv.style.background = 'color-mix(in srgb, var(--info-color) 10%, var(--panel-bg))';
+                statusDiv.style.color = 'var(--info-color)';
+                statusDiv.style.border = '1px solid color-mix(in srgb, var(--info-color) 30%, var(--panel-bg))';
+                break;
+        }
+        
         statusDiv.textContent = message;
-        statusArea.appendChild(statusDiv);
+        
+        // Append to the file item container
+        const container = fileItem.querySelector('div[style*="padding: 1rem"]');
+        if (container) {
+            container.appendChild(statusDiv);
+        }
 
         // Auto-remove success messages after 5 seconds
         if (type === 'success') {
@@ -730,6 +930,110 @@ class BDWApp extends HTMLElement {
                     statusDiv.remove();
                 }
             }, 5000);
+        }
+    }
+
+    showStatusInDropZone(message, type) {
+        const fileDropComponent = this.querySelector('bdw-file-drop');
+        if (!fileDropComponent) return;
+
+        // Remove any existing status in drop zone
+        const existingStatus = fileDropComponent.querySelector('.drop-zone-status');
+        if (existingStatus) {
+            existingStatus.remove();
+        }
+
+        // Add status message to the drop zone
+        const statusDiv = document.createElement('div');
+        statusDiv.className = `drop-zone-status status-${type}`;
+        statusDiv.style.cssText = `
+            padding: 0.75rem 1rem;
+            margin-top: 1rem;
+            border-radius: 4px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            text-align: center;
+        `;
+        
+        // Set colors based on type
+        switch (type) {
+            case 'success':
+                statusDiv.style.background = 'color-mix(in srgb, var(--success-color) 10%, var(--panel-bg))';
+                statusDiv.style.color = 'var(--success-color)';
+                statusDiv.style.border = '1px solid color-mix(in srgb, var(--success-color) 30%, var(--panel-bg))';
+                break;
+            case 'error':
+                statusDiv.style.background = 'color-mix(in srgb, var(--error-color) 10%, var(--panel-bg))';
+                statusDiv.style.color = 'var(--error-color)';
+                statusDiv.style.border = '1px solid color-mix(in srgb, var(--error-color) 30%, var(--panel-bg))';
+                break;
+            case 'info':
+            default:
+                statusDiv.style.background = 'color-mix(in srgb, var(--info-color) 10%, var(--panel-bg))';
+                statusDiv.style.color = 'var(--info-color)';
+                statusDiv.style.border = '1px solid color-mix(in srgb, var(--info-color) 30%, var(--panel-bg))';
+                break;
+        }
+        
+        statusDiv.textContent = message;
+        
+        // Append to the file drop component
+        const dropZone = fileDropComponent.querySelector('#dropZone');
+        if (dropZone) {
+            dropZone.appendChild(statusDiv);
+        }
+
+        // Auto-remove success messages after 5 seconds
+        if (type === 'success') {
+            setTimeout(() => {
+                if (statusDiv.parentNode) {
+                    statusDiv.remove();
+                }
+            }, 5000);
+        }
+    }
+
+    showFileStatus(fileName, message, type = 'info') {
+        // Delegate to the file drop component
+        const fileDropComponent = this.querySelector('bdw-file-drop');
+        if (fileDropComponent && typeof fileDropComponent.updateFileStatus === 'function') {
+            fileDropComponent.updateFileStatus(fileName, message, type);
+        } else {
+            // Fallback to regular status display
+            this.showStatus(message, type);
+        }
+    }
+
+    resetColumnWidths() {
+        const table = document.querySelector('#dataPreview .resizable-table');
+        if (!table) return;
+
+        // Clear any existing custom widths first
+        const allCells = table.querySelectorAll('th, td');
+        allCells.forEach(cell => {
+            cell.style.removeProperty('width');
+            cell.style.removeProperty('min-width');
+            cell.style.removeProperty('max-width');
+        });
+        
+        // Then apply default widths
+        this.applyDefaultColumnWidths(table);
+        
+        // Show feedback
+        this.showStatus('Column widths reset to default', 'success');
+    }
+
+    resetDataGridHeight() {
+        const dataGridContainer = this.querySelector('.data-grid-container');
+        const defaultHeight = '400px';
+        
+        if (dataGridContainer) {
+            dataGridContainer.style.height = defaultHeight;
+            // Clear saved height from localStorage
+            localStorage.removeItem('dataGridHeight');
+            
+            // Show feedback
+            this.showStatus('Data grid height reset to default', 'success');
         }
     }
 }

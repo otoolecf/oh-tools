@@ -397,12 +397,14 @@
 .data-grid-controls {
     display: flex;
     justify-content: center;
+    gap: 0.5rem;
     padding: 0.5rem 0;
     background: var(--panel-bg);
 }
 
-/* Reset Button */
-.resize-reset-btn {
+/* Reset Buttons */
+.resize-reset-btn,
+.column-reset-btn {
     background: var(--input-bg);
     border: 1px solid var(--border-color);
     border-radius: 4px;
@@ -416,13 +418,15 @@
     gap: 0.25rem;
 }
 
-.resize-reset-btn:hover {
+.resize-reset-btn:hover,
+.column-reset-btn:hover {
     background: var(--primary-color);
     color: white;
     border-color: var(--primary-color);
 }
 
-.resize-reset-btn:active {
+.resize-reset-btn:active,
+.column-reset-btn:active {
     transform: scale(0.95);
 }
 
@@ -433,15 +437,30 @@
     font-size: 0.9rem;
 }
 
+.data-grid .resizable-table {
+    table-layout: fixed;
+    width: 100%;
+}
+
 .data-grid th,
 .data-grid td {
     padding: 0.5rem 0.75rem;
     text-align: left;
     border-bottom: 1px solid var(--border-color);
     white-space: nowrap;
+    width: 200px;
+    min-width: 120px;
     max-width: 200px;
     overflow: hidden;
+    position: relative;
+    box-sizing: border-box;
+}
+
+.data-grid td .cell-content {
+    overflow: hidden;
     text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 100%;
 }
 
 .data-grid th {
@@ -449,11 +468,110 @@
     font-weight: 600;
     position: sticky;
     top: 0;
-    z-index: 1;
+    z-index: 2;
+    padding: 0;
 }
 
 .data-grid tr:hover {
     background: color-mix(in srgb, var(--primary-color) 3%, var(--panel-bg));
+}
+
+/* Column Header Layout */
+.column-header {
+    display: flex;
+    align-items: center;
+    height: 100%;
+    padding: 0.5rem 0.75rem;
+    position: relative;
+}
+
+.column-title {
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* Column Resize Handle */
+.column-resize-handle {
+    position: absolute;
+    right: -2px;
+    top: 0;
+    bottom: 0;
+    width: 12px;
+    cursor: col-resize;
+    background: linear-gradient(to right, transparent 30%, var(--border-color) 45%, var(--border-color) 55%, transparent 70%);
+    border-right: 3px solid var(--border-color);
+    transition: all 0.2s;
+    z-index: 3;
+    opacity: 0.6;
+}
+
+.column-resize-handle:hover {
+    border-right-color: var(--primary-color);
+    background: linear-gradient(to right, transparent 20%, var(--primary-color) 40%, var(--primary-color) 60%, transparent 80%);
+    opacity: 1;
+    width: 16px;
+    right: -4px;
+}
+
+.column-resize-handle:active {
+    border-right-color: var(--primary-color);
+    background: var(--primary-color);
+    opacity: 1;
+    width: 16px;
+    right: -4px;
+}
+
+/* Add a visual indicator when hovering over the header */
+.column-header:hover .column-resize-handle {
+    opacity: 0.8;
+}
+
+/* Make the entire header area show the resize cursor near the right edge */
+.column-header {
+    cursor: default;
+}
+
+.column-header:hover {
+    background: color-mix(in srgb, var(--primary-color) 5%, var(--card-bg));
+}
+
+/* Copyable Cell Styles */
+.copyable-cell {
+    position: relative;
+}
+
+.copy-btn {
+    position: absolute;
+    right: 6px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: var(--input-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 3px;
+    padding: 2px 6px;
+    font-size: 0.7rem;
+    cursor: pointer;
+    opacity: 0;
+    transition: opacity 0.2s, background-color 0.2s;
+    z-index: 4;
+    color: var(--text-secondary);
+    white-space: nowrap;
+}
+
+.copyable-cell:hover .copy-btn {
+    opacity: 1;
+}
+
+.copy-btn:hover {
+    background: var(--primary-color);
+    color: white;
+    border-color: var(--primary-color);
+}
+
+.copy-btn:active {
+    transform: translateY(-50%) scale(0.95);
 }
 
 /* Schema Display */

@@ -280,6 +280,9 @@ class BDWFileDrop extends HTMLElement {
             const loadingDiv = fileDiv.querySelector('.loading');
             loadingDiv.innerHTML = 'Loaded';
             loadingDiv.className = 'success';
+            
+            // Add status message area for additional info
+            this.showFileStatus(fileDiv, 'Ready to analyze', 'success');
 
         } catch (error) {
             console.error('Error processing file:', error);
@@ -385,10 +388,13 @@ class BDWFileDrop extends HTMLElement {
                 this.dispatchEvent(event);
             }
 
-            // Update status to success
+            // Update status to success  
             const loadingDiv = urlDiv.querySelector('.loading');
             loadingDiv.innerHTML = 'Loaded';
             loadingDiv.className = 'success';
+            
+            // Add status message area for additional info
+            this.showFileStatus(urlDiv, 'Ready to analyze', 'success');
 
             // Clear URL input
             urlInput.value = '';
@@ -491,6 +497,65 @@ class BDWFileDrop extends HTMLElement {
             </div>
         `;
         fileListElement.appendChild(errorDiv);
+    }
+
+    showFileStatus(fileDiv, message, type = 'info') {
+        // Remove any existing status message
+        const existingStatus = fileDiv.querySelector('.file-status');
+        if (existingStatus) {
+            existingStatus.remove();
+        }
+
+        // Add new status message below the file info
+        const statusDiv = document.createElement('div');
+        statusDiv.className = `file-status file-status-${type}`;
+        statusDiv.style.cssText = `
+            padding: 0.5rem 1rem;
+            margin-top: 0.5rem;
+            border-radius: 4px;
+            font-size: 0.85rem;
+            font-weight: 500;
+        `;
+        
+        // Set colors based on type
+        switch (type) {
+            case 'success':
+                statusDiv.style.background = 'color-mix(in srgb, var(--success-color) 10%, var(--panel-bg))';
+                statusDiv.style.color = 'var(--success-color)';
+                statusDiv.style.border = '1px solid color-mix(in srgb, var(--success-color) 30%, var(--panel-bg))';
+                break;
+            case 'error':
+                statusDiv.style.background = 'color-mix(in srgb, var(--error-color) 10%, var(--panel-bg))';
+                statusDiv.style.color = 'var(--error-color)';
+                statusDiv.style.border = '1px solid color-mix(in srgb, var(--error-color) 30%, var(--panel-bg))';
+                break;
+            case 'info':
+            default:
+                statusDiv.style.background = 'color-mix(in srgb, var(--info-color) 10%, var(--panel-bg))';
+                statusDiv.style.color = 'var(--info-color)';
+                statusDiv.style.border = '1px solid color-mix(in srgb, var(--info-color) 30%, var(--panel-bg))';
+                break;
+        }
+        
+        statusDiv.textContent = message;
+        
+        // Append to the file div
+        const container = fileDiv.querySelector('div[style*="padding: 1rem"]');
+        if (container) {
+            container.appendChild(statusDiv);
+        }
+    }
+
+    updateFileStatus(fileName, message, type = 'info') {
+        // Find the file div by name and update its status
+        const fileItems = this.querySelectorAll('.file-item');
+        for (const item of fileItems) {
+            const fileNameEl = item.querySelector('strong');
+            if (fileNameEl && fileNameEl.textContent === fileName) {
+                this.showFileStatus(item, message, type);
+                break;
+            }
+        }
     }
 }
 
