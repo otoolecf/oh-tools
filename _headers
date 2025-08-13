@@ -10,6 +10,12 @@
   Cross-Origin-Opener-Policy: same-origin
   Cross-Origin-Resource-Policy: cross-origin
 
+# Specific headers for image-editor WASM files
+/image-editor/lib/*.wasm
+  Content-Type: application/wasm
+  Cross-Origin-Resource-Policy: cross-origin
+  Cross-Origin-Embedder-Policy: require-corp
+
 # Allow WASM files globally
 /*.wasm
   Content-Type: application/wasm
