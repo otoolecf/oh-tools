@@ -1,0 +1,6 @@
+# No redirects needed - closed-loop worker will be deployed separately
+# The client-side code will call the worker directly via otpServerUrl
+
+# SPA fallback for any tool directories
+/*/         /*/index.html   200
+/*          /index.html     200

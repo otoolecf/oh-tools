@@ -1,12 +1,8 @@
 /**
  * Cloudflare Worker for OTP-style WebRTC signaling
  * Provides secure, temporary storage for WebRTC offer/answer exchange
+ * Rate limiting handled by Cloudflare dashboard settings
  */
-
-// Rate limiting constants
-const RATE_LIMIT_WINDOW = 60; // 1 minute
-const RATE_LIMIT_MAX_REQUESTS = 10; // 10 requests per minute per IP
-const RATE_LIMIT_MAX_HOURLY = 50; // 50 requests per hour per IP
 
 export default {
   async fetch(request, env, ctx) {
@@ -27,15 +23,6 @@ export default {
       const url = new URL(request.url);
       const path = url.pathname;
       const clientIP = request.headers.get('CF-Connecting-IP') || 'unknown';
-
-      // Rate limiting
-      const rateLimitResult = await checkRateLimit(env.RATE_LIMIT_KV, clientIP);
-      if (!rateLimitResult.allowed) {
-        return jsonResponse({
-          error: 'Rate limit exceeded',
-          retryAfter: rateLimitResult.retryAfter
-        }, 429, corsHeaders);
-      }
 
       // Route handling
       if (path.startsWith('/temp/')) {
@@ -92,7 +79,7 @@ async function handleStore(request, kv, passcode, clientIP, corsHeaders) {
       encryptedData: body.encryptedData,
       type: body.type, // 'offer' or 'answer'
       timestamp: Date.now(),
-      clientIP: hashIP(clientIP), // Store hashed IP for abuse prevention
+      clientIP: hashIP(clientIP), // Store hashed IP for logging
     };
 
     // Store with 15-minute TTL
@@ -125,21 +112,9 @@ async function handleRetrieve(kv, passcode, clientIP, corsHeaders) {
   }
 
   try {
-    // Check for brute force attempts
-    const attempts = await getAttempts(kv, clientIP, passcode);
-    if (attempts >= 3) {
-      // Add delay for suspected brute force
-      await new Promise(resolve => setTimeout(resolve, 5000));
-      return jsonResponse({
-        error: 'Too many failed attempts'
-      }, 429, corsHeaders);
-    }
-
     const stored = await kv.get(passcode);
     
     if (!stored) {
-      // Record failed attempt
-      await recordAttempt(kv, clientIP, passcode);
       return jsonResponse({
         error: 'Passcode not found or expired'
       }, 404, corsHeaders);
@@ -149,9 +124,6 @@ async function handleRetrieve(kv, passcode, clientIP, corsHeaders) {
     
     // Delete the data (one-time use)
     await kv.delete(passcode);
-    
-    // Clean up attempt tracking
-    await kv.delete(`attempts:${clientIP}:${passcode}`);
 
     return jsonResponse({
       encryptedData: data.encryptedData,
@@ -176,55 +148,6 @@ function isValidPasscode(passcode) {
   return pattern.test(passcode) && passcode.length >= 8 && passcode.length <= 50;
 }
 
-/**
- * Rate limiting implementation
- */
-async function checkRateLimit(kv, clientIP) {
-  const now = Math.floor(Date.now() / 1000);
-  const windowStart = now - RATE_LIMIT_WINDOW;
-  const hourStart = now - 3600;
-  
-  // Get current counters
-  const minuteKey = `rate:${clientIP}:${Math.floor(now / 60)}`;
-  const hourKey = `rate:${clientIP}:${Math.floor(now / 3600)}`;
-  
-  const [minuteCount, hourCount] = await Promise.all([
-    kv.get(minuteKey).then(val => parseInt(val) || 0),
-    kv.get(hourKey).then(val => parseInt(val) || 0)
-  ]);
-
-  // Check limits
-  if (minuteCount >= RATE_LIMIT_MAX_REQUESTS) {
-    return { allowed: false, retryAfter: 60 };
-  }
-  
-  if (hourCount >= RATE_LIMIT_MAX_HOURLY) {
-    return { allowed: false, retryAfter: 3600 };
-  }
-
-  // Increment counters
-  await Promise.all([
-    kv.put(minuteKey, (minuteCount + 1).toString(), { expirationTtl: 120 }),
-    kv.put(hourKey, (hourCount + 1).toString(), { expirationTtl: 7200 })
-  ]);
-
-  return { allowed: true };
-}
-
-/**
- * Track failed passcode attempts to prevent brute force
- */
-async function getAttempts(kv, clientIP, passcode) {
-  const key = `attempts:${clientIP}:${passcode}`;
-  const attempts = await kv.get(key);
-  return parseInt(attempts) || 0;
-}
-
-async function recordAttempt(kv, clientIP, passcode) {
-  const key = `attempts:${clientIP}:${passcode}`;
-  const attempts = await getAttempts(kv, clientIP, passcode);
-  await kv.put(key, (attempts + 1).toString(), { expirationTtl: 3600 }); // 1 hour
-}
 
 /**
  * Hash IP address for privacy (one-way hash)

@@ -3,16 +3,11 @@ name = "otoolebox-signaling"
 main = "cloudflare-worker.js"
 compatibility_date = "2024-01-15"
 
-# KV namespaces for temporary storage and rate limiting
+# KV namespace for temporary storage
 [[kv_namespaces]]
 binding = "TEMP_STORAGE_KV"
-id = "your-temp-storage-namespace-id"
-preview_id = "your-temp-storage-preview-id"
-
-[[kv_namespaces]]
-binding = "RATE_LIMIT_KV"
-id = "your-rate-limit-namespace-id"
-preview_id = "your-rate-limit-preview-id"
+id = "1d68edf02f10466caf758b5a8306f0f1"
+preview_id = "1b3a8a27be9c4f6db733dc1a9bafa843"
 
 # Environment variables (optional)
 [vars]

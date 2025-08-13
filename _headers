@@ -1,0 +1,20 @@
+# Default headers for all pages
+/*
+  X-Frame-Options: DENY
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+
+# Special headers for image-editor to enable SharedArrayBuffer/WASM
+/image-editor/*
+  Cross-Origin-Embedder-Policy: require-corp
+  Cross-Origin-Opener-Policy: same-origin
+  Cross-Origin-Resource-Policy: cross-origin
+
+# Allow WASM files
+*.wasm
+  Content-Type: application/wasm
+  Cross-Origin-Resource-Policy: cross-origin
+
+# Allow JS modules
+*.js
+  Cross-Origin-Resource-Policy: cross-origin
