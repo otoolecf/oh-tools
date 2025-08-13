@@ -13,7 +13,7 @@ class BDWSQLConsole extends HTMLElement {
                 <div style="margin-bottom: 1rem; flex: 1; display: flex; flex-direction: column;">
                     <textarea id="sqlTextarea" 
                               class="sql-textarea" 
-                              placeholder="Enter SQL query here... (e.g., SELECT * FROM input_data LIMIT 10)"
+                              placeholder="Enter DuckDB SQL query here... (e.g., SELECT * FROM input_data LIMIT 10)"
                               rows="8"></textarea>
                 </div>
                 
@@ -167,6 +167,25 @@ class BDWSQLConsole extends HTMLElement {
             
             examplesGrid.appendChild(exampleDiv);
         });
+        
+        // Add DuckDB documentation link
+        const docLink = document.createElement('div');
+        docLink.style.cssText = `
+            margin-top: 1rem;
+            padding: 0.75rem;
+            background: var(--bg-secondary);
+            border-radius: 4px;
+            text-align: center;
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        `;
+        docLink.innerHTML = `
+            For advanced SQL syntax and functions, see the 
+            <a href="https://duckdb.org/docs/stable/" target="_blank" style="color: var(--link-color);">
+                DuckDB Documentation
+            </a>
+        `;
+        examplesGrid.appendChild(docLink);
     }
 
     async executeSQL() {

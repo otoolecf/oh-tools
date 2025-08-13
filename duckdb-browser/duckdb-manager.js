@@ -85,7 +85,7 @@ class DuckDBManager {
     }
 
     const coreExtensions = ["fts", "json", "parquet"]; // Remove excel for now
-    const communityExtensions = ["zipfs"];
+    const communityExtensions = [];
     const loadedExtensions = [];
 
     for (const ext of coreExtensions) {
@@ -395,20 +395,6 @@ class DuckDBManager {
         break;
       case "xlsx":
         viewQuery = `CREATE OR REPLACE TEMP VIEW ${tableName} AS FROM read_xlsx('${fileName}'${ignoreErrors ? ', ignore_errors=true' : ''})`;
-        break;
-      case "xls":
-        throw new Error(".xls is not supported; please convert to .xlsx");
-      case "zip":
-        // ZIP files need special handling - we'll create a view that shows available files
-        console.log(`Processing ZIP file: ${fileName}`);
-        console.log(`ZIP file registered for zipfs extension usage`);
-        console.log(`Use syntax: SELECT * FROM 'zip://${fileName}/path/to/file' to query files within the archive`);
-        viewQuery = `CREATE OR REPLACE TEMP VIEW ${tableName} AS 
-          SELECT 'ZIP file loaded. Use zip://filename.zip/path/to/file syntax to query specific files within the archive.' as info,
-                 '${fileName}' as zip_file_name,
-                 'Examples:' as usage_examples,
-                 'SELECT * FROM ''zip://${fileName}/data.csv''' as example_1,
-                 'SELECT * FROM ''zip://${fileName}/*.csv''' as example_2`;
         break;
       default:
         throw new Error(`Unsupported file type: ${extension}`);

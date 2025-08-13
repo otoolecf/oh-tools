@@ -3,7 +3,7 @@
 class BDWFileDrop extends HTMLElement {
     constructor() {
         super();
-        this.acceptedTypes = ['.csv', '.json', '.jsonl', '.ndjson', '.parquet', '.xlsx', '.xls', '.zip'];
+        this.acceptedTypes = ['.csv', '.json', '.jsonl', '.ndjson', '.parquet', '.xlsx'];
     }
 
     connectedCallback() {
@@ -12,7 +12,7 @@ class BDWFileDrop extends HTMLElement {
                 <div class="drop-text">
                     <strong>Drop your data files here</strong><br>
                     or choose files to upload<br>
-                    <small>Supports: CSV, JSON, JSONL, Parquet, Excel, ZIP</small>
+                    <small>Supports: CSV, JSON, JSONL, Parquet, Excel</small>
                 </div>
                 
                 <div class="drop-actions">
@@ -48,8 +48,13 @@ class BDWFileDrop extends HTMLElement {
                     </div>
                 </div>
                 
-                <div class="url-auth-info" style="margin-top: 0.5rem; padding: 0.5rem; background: var(--bg-secondary); border-radius: 4px; font-size: 0.85rem; color: var(--text-secondary);">
-                    <strong>For authenticated URLs:</strong> Open the full interface and use the SQL Console to set up credentials first (e.g., <code>SET s3_access_key_id='...';</code>). Check the DuckDB documentation for specific authentication settings for your cloud provider.
+                <div class="url-info" style="margin-top: 0.5rem; padding: 0.5rem; background: var(--bg-secondary); border-radius: 4px; font-size: 0.85rem; color: var(--text-secondary);">
+                    <div style="margin-bottom: 0.5rem;">
+                        <strong>CORS Notice:</strong> Some URLs may fail due to cross-origin restrictions. Services like HuggingFace, AWS S3, and Google Cloud Storage typically work well. GitHub raw files and many other services block cross-origin requests.
+                    </div>
+                    <div>
+                        <strong>For authenticated URLs:</strong> Open the full interface and use the SQL Console to set up credentials first (e.g., <code>SET s3_access_key_id='...';</code>). Check the DuckDB documentation for specific authentication settings for your cloud provider.
+                    </div>
                 </div>
             </div>
             
@@ -101,7 +106,7 @@ class BDWFileDrop extends HTMLElement {
         });
 
         // Make loadFromURL method available to inline onclick
-        dropZone.__loadFromURL = () => this.loadFromURL();
+        this.__loadFromURL = () => this.loadFromURL();
     }
 
     setupIgnoreErrorsChangeListener() {
@@ -200,7 +205,7 @@ class BDWFileDrop extends HTMLElement {
     }
     
     getSupportedTypesText() {
-        const types = ['CSV', 'JSON', 'JSONL', 'Parquet', 'Excel', 'ZIP'];
+        const types = ['CSV', 'JSON', 'JSONL', 'Parquet', 'Excel'];
         return `Supports: ${types.join(', ')}`;
     }
 
@@ -418,8 +423,7 @@ class BDWFileDrop extends HTMLElement {
         if (name.endsWith('.json')) return 'JSON';
         if (name.endsWith('.jsonl') || name.endsWith('.ndjson')) return 'JSON Lines';
         if (name.endsWith('.parquet')) return 'Parquet';
-        if (name.endsWith('.xlsx') || name.endsWith('.xls')) return 'Excel';
-        if (name.endsWith('.zip')) return 'ZIP Archive';
+        if (name.endsWith('.xlsx')) return 'Excel';
         return 'Unknown';
     }
 
@@ -429,8 +433,7 @@ class BDWFileDrop extends HTMLElement {
         if (path.endsWith('.json')) return 'JSON';
         if (path.endsWith('.jsonl') || path.endsWith('.ndjson')) return 'JSON Lines';
         if (path.endsWith('.parquet')) return 'Parquet';
-        if (path.endsWith('.xlsx') || path.endsWith('.xls')) return 'Excel';
-        if (path.endsWith('.zip')) return 'ZIP Archive';
+        if (path.endsWith('.xlsx')) return 'Excel';
         return 'Unknown';
     }
 

@@ -87,7 +87,7 @@
     },
     {
       "name": "Data Workbench",
-      "description": "Browser-based BI tool for CSV, JSON, Parquet, and Excel files. Convert between formats, run SQL queries, and analyze data entirely in your browser. All processing happens locally - no data leaves your browser.",
+      "description": "Browser-based BI tool powered by DuckDB for CSV, JSON, Parquet, and Excel files. Convert between formats, run SQL queries, and analyze data entirely in your browser. All processing happens locally - no data leaves your browser.",
       "path": "/duckdb-browser/",
       "status": "active",
       "poweredBy": [
@@ -96,7 +96,7 @@
           "url": "https://duckdb.org/docs/api/wasm/overview"
         }
       ],
-      "heroExtra": "<p style=\"font-size: 0.9rem; color: var(--text-secondary); margin-top: 0.5rem;\">Supports <strong>CSV ⇄ JSON ⇄ Parquet ⇄ Excel</strong> conversions with advanced SQL analytics. Features auto-schema detection, statistics generation, full-text search, and a complete SQL console for complex queries. Powered by DuckDB extensions: excel, fts, json, parquet.</p>"
+      "heroExtra": "<p style=\"font-size: 0.9rem; color: var(--text-secondary); margin-top: 0.5rem;\">Supports <strong>CSV ⇄ JSON ⇄ Parquet ⇄ Excel</strong> conversions with advanced SQL analytics. Features auto-schema detection, statistics generation, full-text search, and a complete SQL console for complex queries. Powered by DuckDB extensions: excel, fts, json, parquet.</p><p style=\"font-size: 0.85rem; color: var(--text-secondary); margin-top: 0.75rem;\">For SQL help and advanced queries, see the <a href=\"https://duckdb.org/docs/stable/\" target=\"_blank\" style=\"color: var(--link-color);\">DuckDB documentation</a>.</p>"
     },
     {
       "name": "Closed Loop",

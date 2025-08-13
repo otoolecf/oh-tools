@@ -394,7 +394,7 @@ class BDWApp extends HTMLElement {
 
     async handleDirectURLFile(fileData) {
         const fileName = fileData.fileName; // For direct URLs, we use the registered filename as-is
-        const extension = fileData.fileType || fileName.split('.').pop().toLowerCase();
+        const extension = (fileData.fileType || fileName.split('.').pop()).toLowerCase();
         const ignoreErrors = fileData.ignoreErrors || false;
         
         // For direct URLs, we can't change the filename since it's already registered
@@ -420,7 +420,6 @@ class BDWApp extends HTMLElement {
                 viewQuery = `CREATE OR REPLACE TEMP VIEW ${tableName} AS FROM read_parquet('${fileName}')`;
                 break;
             case 'xlsx':
-            case 'xls':
                 viewQuery = `CREATE OR REPLACE TEMP VIEW ${tableName} AS FROM read_excel('${fileName}'${ignoreErrors ? ', ignore_errors=true' : ''})`;
                 break;
             default:
