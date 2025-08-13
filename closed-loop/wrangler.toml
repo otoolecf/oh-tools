@@ -9,6 +9,13 @@ binding = "TEMP_STORAGE_KV"
 id = "1d68edf02f10466caf758b5a8306f0f1"
 preview_id = "1b3a8a27be9c4f6db733dc1a9bafa843"
 
+# Rate limiting - 10 requests per minute per IP
+[[unsafe.bindings]]
+name = "RATE_LIMITER"
+type = "ratelimit"
+namespace_id = "101"
+simple = { limit = 10, period = 60 }
+
 # Environment variables (optional)
 [vars]
 # Add any environment-specific variables here

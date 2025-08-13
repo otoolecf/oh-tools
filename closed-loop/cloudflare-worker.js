@@ -1,7 +1,7 @@
 /**
  * Cloudflare Worker for OTP-style WebRTC signaling
  * Provides secure, temporary storage for WebRTC offer/answer exchange
- * Rate limiting handled by Cloudflare dashboard settings
+ * With built-in rate limiting using Cloudflare Rate Limiting API
  */
 
 export default {
@@ -23,6 +23,15 @@ export default {
       const url = new URL(request.url);
       const path = url.pathname;
       const clientIP = request.headers.get('CF-Connecting-IP') || 'unknown';
+
+      // Rate limiting using Cloudflare Rate Limiting API
+      const rateLimitResult = await checkRateLimit(request, env, ctx, clientIP);
+      if (!rateLimitResult.success) {
+        return jsonResponse({
+          error: 'Rate limit exceeded',
+          retryAfter: rateLimitResult.retryAfter
+        }, 429, corsHeaders);
+      }
 
       // Route handling
       if (path.startsWith('/temp/')) {
@@ -146,6 +155,38 @@ function isValidPasscode(passcode) {
   // Human-id format: word-word-word (3-4 words, hyphen separated)
   const pattern = /^[a-z]+(-[a-z]+){2,3}$/;
   return pattern.test(passcode) && passcode.length >= 8 && passcode.length <= 50;
+}
+
+/**
+ * Rate limiting using Cloudflare's Rate Limiting API
+ */
+async function checkRateLimit(request, env, ctx, clientIP) {
+  // Skip rate limiting if no rate limiter is configured
+  if (!env.RATE_LIMITER) {
+    return { success: true };
+  }
+
+  try {
+    // Create a unique identifier for rate limiting (by IP)
+    const identifier = `ip:${clientIP}`;
+    
+    // Check rate limit - 10 requests per minute per IP
+    const { success } = await env.RATE_LIMITER.limit({ key: identifier });
+    
+    if (!success) {
+      return { 
+        success: false, 
+        retryAfter: 60 // Retry after 60 seconds
+      };
+    }
+    
+    return { success: true };
+    
+  } catch (error) {
+    console.error('Rate limiting error:', error);
+    // On rate limiter error, allow request through (fail open)
+    return { success: true };
+  }
 }
 
 
