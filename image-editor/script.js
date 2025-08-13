@@ -386,7 +386,7 @@ class ImageEditor {
             // Initialize VIPS with HEIF and SVG support
             console.log('Attempting Vips initialization with HEIF and SVG support...');
             this.vips = await Vips({
-                locateFile: (path) => `node_modules/wasm-vips/lib/${path}`,
+                locateFile: (path) => `lib/${path}`,
                 dynamicLibraries: ['vips-heif.wasm', 'vips-resvg.wasm'],   // Load HEIF and SVG plugins
             });
             console.log('Vips initialized successfully:', this.vips);

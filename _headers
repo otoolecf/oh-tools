@@ -4,6 +4,10 @@
   X-Content-Type-Options: nosniff
   Referrer-Policy: strict-origin-when-cross-origin
 
+# Block access to node_modules
+/*/node_modules/*
+  X-Robots-Tag: noindex, nofollow
+  
 # Special headers for image-editor to enable SharedArrayBuffer/WASM
 /image-editor/*
   Cross-Origin-Embedder-Policy: require-corp
