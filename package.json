@@ -5,7 +5,7 @@
   "main": "dev-server.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "cd image-editor && npm install && cd ../barcode-generator && npm install && cd ../hash-generator && npm install && cd ../json-utilities && npm install && cd ../diff-utilities && npm install && cd ../passphrase-generator && npm install && cd ../duckdb-browser && npm install && cd ../closed-loop && npm install"
+    "build": "cd image-editor && npm install && cp node_modules/wasm-vips/lib/vips.js lib/ && cp node_modules/wasm-vips/lib/vips.wasm lib/ && cp node_modules/heic-to/dist/iife/heic-to.js lib/ && cp node_modules/exifreader/dist/exif-reader.js lib/ && cd ../barcode-generator && npm install && cd ../hash-generator && npm install && cd ../json-utilities && npm install && cd ../diff-utilities && npm install && cd ../passphrase-generator && npm install && cd ../duckdb-browser && npm install && cd ../closed-loop && npm install"
   },
   "repository": {
     "type": "git",
