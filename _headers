@@ -27,3 +27,18 @@
 # Allow nested JS files
 /*/*.js
   Cross-Origin-Resource-Policy: cross-origin
+
+# Force correct MIME types for node_modules JS files
+*/node_modules/*.js
+  Content-Type: application/javascript
+  Cross-Origin-Resource-Policy: cross-origin
+
+# Nested node_modules JS files
+*/node_modules/*/*.js
+  Content-Type: application/javascript
+  Cross-Origin-Resource-Policy: cross-origin
+
+# Deep nested node_modules JS files
+*/node_modules/*/*/*.js
+  Content-Type: application/javascript
+  Cross-Origin-Resource-Policy: cross-origin
