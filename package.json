@@ -4,7 +4,8 @@
   "description": "A collection of client-side web tools that run entirely in the browser. No data is sent to servers, ensuring privacy and security for all operations.",
   "main": "dev-server.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "cd image-editor && npm install && cd ../barcode-generator && npm install && cd ../hash-generator && npm install && cd ../json-utilities && npm install && cd ../diff-utilities && npm install && cd ../passphrase-generator && npm install && cd ../duckdb-browser && npm install && cd ../closed-loop && npm install"
   },
   "repository": {
     "type": "git",
