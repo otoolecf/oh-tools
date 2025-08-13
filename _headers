@@ -20,14 +20,12 @@
   X-Content-Type-Options: nosniff
   Referrer-Policy: strict-origin-when-cross-origin
 
-# Allow WASM files globally
+# Allow WASM files globally (content-type handled by specific rules above)
 /*.wasm
-  Content-Type: application/wasm
   Cross-Origin-Resource-Policy: cross-origin
 
-# Allow nested WASM files
+# Allow nested WASM files (content-type handled by specific rules above)
 /*/*.wasm
-  Content-Type: application/wasm
   Cross-Origin-Resource-Policy: cross-origin
 
 # Allow JS modules globally
@@ -41,8 +39,4 @@
 # Force correct MIME types for all lib directories
 /*/lib/*.js
   Content-Type: application/javascript
-  Cross-Origin-Resource-Policy: cross-origin
-
-/*/lib/*.wasm
-  Content-Type: application/wasm
   Cross-Origin-Resource-Policy: cross-origin
