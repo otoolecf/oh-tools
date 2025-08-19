@@ -4,13 +4,20 @@ A collection of client-side web tools that run entirely in the browser. No data 
 
 ## Development Server
 
-To run the development server locally:
+To run the development server locally with proper headers for SharedArrayBuffer support (required for some tools like image-editor):
 
+```bash
+node dev-server.js
+```
+
+Then open `http://localhost:8000` in your browser.
+
+**Alternative (basic server without SharedArrayBuffer support):**
 ```bash
 npx serve . --listen 8000
 ```
 
-Then open `http://localhost:8000` in your browser.
+**Note:** Some tools (like the image-editor) require SharedArrayBuffer and need the proper CORS headers that the dev-server.js provides. If you get errors about SharedArrayBuffer not being available, use the dev-server.js instead of the basic serve command.
 
 ## Project Structure
 

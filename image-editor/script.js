@@ -347,6 +347,12 @@ class ImageEditor {
             this.updateOperationList();
             this.resetBtn.disabled = false;
             
+            // Update export operator with new image
+            const exportOperator = document.getElementById('exportOperator');
+            if (exportOperator) {
+                exportOperator.setImage(this.currentImage, this.vips);
+            }
+            
             this.showStatus(`${detail.description} applied successfully!`, 'success');
             
         } catch (error) {

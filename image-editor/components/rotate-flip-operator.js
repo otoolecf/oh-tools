@@ -117,6 +117,8 @@ class RotateFlipOperator extends HTMLElement {
                     font-weight: 500;
                     transition: all 0.2s ease;
                     box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+                    min-height: 40px;
+                    white-space: nowrap;
                 }
                 
                 .btn-enhanced:hover:not(:disabled) {
@@ -134,12 +136,18 @@ class RotateFlipOperator extends HTMLElement {
                 }
                 
                 .hidden {
-                    display: none;
+                    display: none !important;
                 }
                 
-                .flip-buttons {
+                .action-buttons {
                     display: flex;
                     gap: 0.5rem;
+                    flex-wrap: wrap;
+                }
+                
+                .action-buttons .btn-enhanced {
+                    flex: 1;
+                    min-width: 120px;
                 }
                 
                 @media (max-width: 768px) {
@@ -151,7 +159,7 @@ class RotateFlipOperator extends HTMLElement {
                         min-width: unset;
                     }
                     
-                    .flip-buttons {
+                    .action-buttons {
                         flex-direction: column;
                     }
                 }
@@ -180,11 +188,8 @@ class RotateFlipOperator extends HTMLElement {
                     </div>
                     
                     <div class="control-group">
-                        <button id="applyRotateBtn" class="btn-enhanced">Apply Rotation</button>
-                    </div>
-                    
-                    <div class="control-group">
-                        <div class="flip-buttons">
+                        <div class="action-buttons">
+                            <button id="applyRotateBtn" class="btn-enhanced">Apply Rotation</button>
                             <button id="flipHBtn" class="btn-enhanced">Flip Horizontal</button>
                             <button id="flipVBtn" class="btn-enhanced">Flip Vertical</button>
                         </div>

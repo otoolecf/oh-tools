@@ -599,12 +599,8 @@ class TintGrayscaleOperator extends HTMLElement {
       const g = parseInt(color.substr(3, 2), 16);
       const b = parseInt(color.substr(5, 2), 16);
 
-      // Apply tint using VIPS LAB-based tinting (same logic as original)
-      const tintedImage =
-        this.currentImage
-          .colourspace("srgb")
-          .call("tint_lab", [r, g, b, opacity]) ||
-        (await this.applyTintFallback(this.currentImage, r, g, b, opacity));
+      // Apply tint using LAB-based tinting fallback method
+      const tintedImage = await this.applyTintFallback(this.currentImage, r, g, b, opacity);
 
       // Emit custom event with the result
       this.dispatchEvent(
@@ -686,9 +682,22 @@ class TintGrayscaleOperator extends HTMLElement {
 
     // Blend based on opacity
     if (opacity < 1.0) {
-      result = image
-        .linear([1 - opacity], [0])
-        .add(result.linear([opacity], [0]));
+      if (image.hasAlpha()) {
+        // Handle alpha channel separately during blending
+        const originalWithoutAlpha = image.extractBand(0, { n: image.bands - 1 });
+        const resultWithoutAlpha = result.extractBand(0, { n: result.bands - 1 });
+        const alpha = image.extractBand(image.bands - 1);
+        
+        const blended = originalWithoutAlpha
+          .linear([1 - opacity], [0])
+          .add(resultWithoutAlpha.linear([opacity], [0]))
+          .bandjoin(alpha);
+        result = blended;
+      } else {
+        result = image
+          .linear([1 - opacity], [0])
+          .add(result.linear([opacity], [0]));
+      }
     }
 
     return result;

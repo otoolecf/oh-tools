@@ -634,19 +634,19 @@ class ExportOperator extends HTMLElement {
             
             switch (this.selectedFormat) {
                 case 'jpeg':
-                    exportedBuffer = this.currentImage.jpegsave_buffer({ Q: this.quality });
+                    exportedBuffer = this.currentImage.writeToBuffer('.jpg', { Q: this.quality });
                     filename = `image_export.jpg`;
                     break;
                 case 'png':
-                    exportedBuffer = this.currentImage.pngsave_buffer();
+                    exportedBuffer = this.currentImage.writeToBuffer('.png');
                     filename = `image_export.png`;
                     break;
                 case 'webp':
-                    exportedBuffer = this.currentImage.webpsave_buffer({ Q: this.quality });
+                    exportedBuffer = this.currentImage.writeToBuffer('.webp', { Q: this.quality });
                     filename = `image_export.webp`;
                     break;
                 case 'tiff':
-                    exportedBuffer = this.currentImage.tiffsave_buffer();
+                    exportedBuffer = this.currentImage.writeToBuffer('.tiff');
                     filename = `image_export.tiff`;
                     break;
                 default:

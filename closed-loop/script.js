@@ -30,7 +30,7 @@ class ClosedLoop {
     }
 
     // Production - update this with your actual worker URL
-    if (hostname.includes("yourdomain.com")) {
+    if (hostname.includes("otoolebox.pages.dev")) {
       return "https://otoolebox-signaling.otoolecf.workers.dev";
     }
 

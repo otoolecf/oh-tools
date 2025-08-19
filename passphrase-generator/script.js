@@ -165,11 +165,19 @@ class PassphraseGenerator {
         // Use passhelp to generate a 3-word passphrase
         const wordCount = this.includeAdverb.checked ? 4 : 3;
         const useEnhancements = false; // We'll add enhancements separately
-        const sep = separator || '';
+        
+        // Handle separator: for "None", we need to generate with a temp separator then remove it
+        let sep;
+        if (separator === '') {
+            // When user selects "None", use a simple temp separator that we'll remove later
+            sep = '~';
+        } else {
+            sep = separator;
+        }
         
         let phrase = passhelp.phrase(wordCount, useEnhancements, sep);
         
-        // Apply case transformation if needed
+        // Apply case transformation if needed (before removing temp separator)
         switch (caseOption) {
             case 'uppercase':
                 phrase = phrase.toUpperCase();
@@ -179,17 +187,18 @@ class PassphraseGenerator {
                 break;
             case 'capitalize':
                 // Capitalize first letter of each word
-                if (separator) {
-                    phrase = phrase.split(separator).map(word => 
-                        word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
-                    ).join(separator);
-                } else {
-                    // For no separator case, just capitalize the first letter
-                    phrase = phrase.charAt(0).toUpperCase() + phrase.slice(1).toLowerCase();
-                }
+                const actualSeparator = separator === '' ? '~' : separator;
+                phrase = phrase.split(actualSeparator).map(word => 
+                    word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
+                ).join(actualSeparator);
                 break;
             default:
                 break;
+        }
+        
+        // If we used a temp separator, remove it to get concatenated words
+        if (separator === '') {
+            phrase = phrase.replace(/~/g, '');
         }
         
         return phrase;
@@ -269,7 +278,7 @@ class PassphraseGenerator {
         // Smart replacement approach
         if (separator) {
             // Replace separators with random choice between enhancement, separator, or both
-            return this.replaceSeperatorsWithEnhancements(passphrase, separator, allEnhancements);
+            return this.replaceSeparatorsWithEnhancements(passphrase, separator, allEnhancements);
         } else {
             // For no separator case, we used temp separator during generation and removed it
             // Add enhancements at random positions, but intelligently
@@ -277,7 +286,7 @@ class PassphraseGenerator {
         }
     }
     
-    replaceSeperatorsWithEnhancements(passphrase, separator, enhancements) {
+    replaceSeparatorsWithEnhancements(passphrase, separator, enhancements) {
         const parts = passphrase.split(separator);
         const result = [parts[0]]; // Start with first word
         

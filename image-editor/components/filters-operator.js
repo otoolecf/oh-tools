@@ -206,21 +206,29 @@ class FiltersOperator extends HTMLElement {
 
             console.log('Applying sepia filter');
 
-            // Apply sepia using LAB color space manipulation
-            const sepiaImage = this.currentImage
-                .colourspace('srgb')
-                .bandsplit()
-                .then(bands => {
-                    // Convert to sepia using the standard sepia matrix
-                    // R = 0.393*R + 0.769*G + 0.189*B
-                    // G = 0.349*R + 0.686*G + 0.168*B  
-                    // B = 0.272*R + 0.534*G + 0.131*B
-                    const r = bands[0].multiply(0.393).add(bands[1].multiply(0.769)).add(bands[2].multiply(0.189));
-                    const g = bands[0].multiply(0.349).add(bands[1].multiply(0.686)).add(bands[2].multiply(0.168));
-                    const b = bands[0].multiply(0.272).add(bands[1].multiply(0.534)).add(bands[2].multiply(0.131));
-                    
-                    return r.bandjoin([g, b]);
-                });
+            // Apply sepia using matrix transformation with alpha channel handling
+            const sepiaMatrix = [
+                [0.393, 0.769, 0.189],
+                [0.349, 0.686, 0.168], 
+                [0.272, 0.534, 0.131]
+            ];
+            
+            let sepiaImage;
+            if (this.currentImage.hasAlpha()) {
+                // Separate alpha channel
+                const withoutAlpha = this.currentImage.extractBand(0, { n: this.currentImage.bands - 1 });
+                const alpha = this.currentImage.extractBand(this.currentImage.bands - 1);
+                sepiaImage = withoutAlpha
+                    .colourspace('srgb')
+                    .recomb(sepiaMatrix)
+                    .cast(this.vips.BandFormat.uchar)
+                    .bandjoin(alpha);
+            } else {
+                sepiaImage = this.currentImage
+                    .colourspace('srgb')
+                    .recomb(sepiaMatrix)
+                    .cast(this.vips.BandFormat.uchar);
+            }
             
             // Emit custom event with the result
             this.dispatchEvent(new CustomEvent('operation-applied', {
@@ -268,11 +276,24 @@ class FiltersOperator extends HTMLElement {
             console.log('Applying vintage filter');
 
             // Apply vintage effect: reduce saturation, add warm tone, slight fade
-            const vintageImage = this.currentImage
-                .colourspace('srgb')
-                .linear([0.9, 1.1, 0.8], [10, -5, 15]) // Warm tone adjustment
-                .multiply(0.85) // Fade effect
-                .add(20); // Lift shadows slightly
+            let vintageImage;
+            if (this.currentImage.hasAlpha()) {
+                // Separate alpha channel
+                const withoutAlpha = this.currentImage.extractBand(0, { n: this.currentImage.bands - 1 });
+                const alpha = this.currentImage.extractBand(this.currentImage.bands - 1);
+                vintageImage = withoutAlpha
+                    .colourspace('srgb')
+                    .linear([0.9, 1.1, 0.8], [10, -5, 15]) // Warm tone adjustment
+                    .multiply(0.85) // Fade effect
+                    .add(20) // Lift shadows slightly
+                    .bandjoin(alpha);
+            } else {
+                vintageImage = this.currentImage
+                    .colourspace('srgb')
+                    .linear([0.9, 1.1, 0.8], [10, -5, 15]) // Warm tone adjustment
+                    .multiply(0.85) // Fade effect
+                    .add(20); // Lift shadows slightly
+            }
             
             // Emit custom event with the result
             this.dispatchEvent(new CustomEvent('operation-applied', {
@@ -320,9 +341,20 @@ class FiltersOperator extends HTMLElement {
             console.log('Applying warm filter');
 
             // Apply warm filter: enhance reds/yellows, reduce blues
-            const warmImage = this.currentImage
-                .colourspace('srgb')
-                .linear([1.15, 1.05, 0.9], [5, 2, -3]); // Boost warm tones, reduce cool
+            let warmImage;
+            if (this.currentImage.hasAlpha()) {
+                // Separate alpha channel
+                const withoutAlpha = this.currentImage.extractBand(0, { n: this.currentImage.bands - 1 });
+                const alpha = this.currentImage.extractBand(this.currentImage.bands - 1);
+                warmImage = withoutAlpha
+                    .colourspace('srgb')
+                    .linear([1.15, 1.05, 0.9], [5, 2, -3]) // Boost warm tones, reduce cool
+                    .bandjoin(alpha);
+            } else {
+                warmImage = this.currentImage
+                    .colourspace('srgb')
+                    .linear([1.15, 1.05, 0.9], [5, 2, -3]); // Boost warm tones, reduce cool
+            }
             
             // Emit custom event with the result
             this.dispatchEvent(new CustomEvent('operation-applied', {
@@ -370,9 +402,20 @@ class FiltersOperator extends HTMLElement {
             console.log('Applying cool filter');
 
             // Apply cool filter: enhance blues/cyans, reduce warm tones
-            const coolImage = this.currentImage
-                .colourspace('srgb')
-                .linear([0.9, 1.05, 1.15], [-3, 2, 5]); // Reduce warm tones, boost cool
+            let coolImage;
+            if (this.currentImage.hasAlpha()) {
+                // Separate alpha channel
+                const withoutAlpha = this.currentImage.extractBand(0, { n: this.currentImage.bands - 1 });
+                const alpha = this.currentImage.extractBand(this.currentImage.bands - 1);
+                coolImage = withoutAlpha
+                    .colourspace('srgb')
+                    .linear([0.9, 1.05, 1.15], [-3, 2, 5]) // Reduce warm tones, boost cool
+                    .bandjoin(alpha);
+            } else {
+                coolImage = this.currentImage
+                    .colourspace('srgb')
+                    .linear([0.9, 1.05, 1.15], [-3, 2, 5]); // Reduce warm tones, boost cool
+            }
             
             // Emit custom event with the result
             this.dispatchEvent(new CustomEvent('operation-applied', {

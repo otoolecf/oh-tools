@@ -23,13 +23,15 @@ document.addEventListener('DOMContentLoaded', function() {
     
     document.documentElement.setAttribute('data-theme', currentTheme);
     
-    themeToggle.addEventListener('click', () => {
-        const theme = document.documentElement.getAttribute('data-theme');
-        const newTheme = theme === 'dark' ? 'light' : 'dark';
-        
-        document.documentElement.setAttribute('data-theme', newTheme);
-        localStorage.setItem('theme', newTheme);
-    });
+    if (themeToggle) {
+        themeToggle.addEventListener('click', () => {
+            const theme = document.documentElement.getAttribute('data-theme');
+            const newTheme = theme === 'dark' ? 'light' : 'dark';
+            
+            document.documentElement.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+        });
+    }
 
     // Text diff functionality
     document.getElementById('compareText').addEventListener('click', compareText);
@@ -194,8 +196,8 @@ function compareArray() {
 
     try {
         // Parse arrays from JSON
-        const arr1 = array1Text ? JSON.parse(array1Text) : [];
-        const arr2 = array2Text ? JSON.parse(array2Text) : [];
+        const arr1 = array1Text.trim() ? JSON.parse(array1Text) : [];
+        const arr2 = array2Text.trim() ? JSON.parse(array2Text) : [];
         
         // Validate that inputs are arrays
         if (!Array.isArray(arr1) || !Array.isArray(arr2)) {
@@ -203,12 +205,12 @@ function compareArray() {
             return;
         }
 
-        // Use array-specific diff
-        const diff = Diff.diffArrays(arr1, arr2);
-        
-        // Format arrays for display
+        // Use line-based diff for arrays (convert to formatted strings first)
         const formatted1 = JSON.stringify(arr1, null, 2);
         const formatted2 = JSON.stringify(arr2, null, 2);
+        
+        // Use line-based diff for better visual comparison
+        const diff = Diff.diffLines(formatted1, formatted2);
         
         generateSideBySideDiff(diff, formatted1, formatted2, resultDiv, 'Original Array', 'Modified Array');
 
@@ -217,22 +219,27 @@ function compareArray() {
         
         // Try to identify which array is invalid
         try {
-            const test1 = JSON.parse(array1Text);
-            if (!Array.isArray(test1)) {
-                errorMessage += 'Original input is not an array. ';
+            if (array1Text.trim()) {
+                const test1 = JSON.parse(array1Text);
+                if (!Array.isArray(test1)) {
+                    errorMessage += 'Original input is not an array. ';
+                }
             }
         } catch (e1) {
             errorMessage += 'Error in original array: ' + e1.message + ' ';
         }
         
         try {
-            const test2 = JSON.parse(array2Text);
-            if (!Array.isArray(test2)) {
-                errorMessage += 'Modified input is not an array.';
+            if (array2Text.trim()) {
+                const test2 = JSON.parse(array2Text);
+                if (!Array.isArray(test2)) {
+                    errorMessage += 'Modified input is not an array.';
+                }
             }
         } catch (e2) {
             errorMessage += 'Error in modified array: ' + e2.message;
         }
+
 
         resultDiv.innerHTML = `<div class="json-error">${errorMessage}</div>`;
     }

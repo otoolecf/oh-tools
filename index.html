@@ -29,6 +29,9 @@
         border-radius: 8px;
         padding: 1.5rem;
         transition: transform 0.2s, box-shadow 0.2s;
+        display: flex;
+        flex-direction: column;
+        min-height: 200px;
       }
 
       .tool-card:hover {
@@ -38,12 +41,15 @@
       .tool-card h3 {
         margin: 0 0 0.5rem 0;
         color: var(--primary-color);
+        text-align: center;
       }
 
       .tool-card p {
         color: var(--text-secondary);
         margin: 0 0 1rem 0;
         line-height: 1.6;
+        flex-grow: 1;
+        text-align: center;
       }
 
       .tool-link {
@@ -55,6 +61,8 @@
         border-radius: 4px;
         transition: background-color 0.2s;
         font-weight: 500;
+        align-self: center;
+        margin-top: auto;
       }
 
       .tool-link:hover {
