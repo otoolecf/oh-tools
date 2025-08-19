@@ -181,11 +181,11 @@ For easy local testing without setting up Cloudflare:
 The mock server will show logs like:
 
 ```
-🚀 Mock OTP server running on http://localhost:3001
-📦 Stored data for passcode: happy-tiger-runs
-📤 Retrieved and deleted data for passcode: happy-tiger-runs
-📦 Stored data for passcode: clever-bird-soars
-📤 Retrieved and deleted data for passcode: clever-bird-soars
+Mock OTP server running on http://localhost:3001
+Stored data for passcode: happy-tiger-runs
+Retrieved and deleted data for passcode: happy-tiger-runs
+Stored data for passcode: clever-bird-soars
+Retrieved and deleted data for passcode: clever-bird-soars
 ```
 
 ### Option 2: Test with Real Cloudflare Worker

@@ -10,7 +10,7 @@ class ClosedLoop {
     this.currentAnswerData = null; // Store current answer data for theme change regeneration
 
     // OTP mode properties
-    this.connectionMethod = "direct"; // 'direct' or 'otp'
+    this.connectionMethod = "otp"; // 'direct' or 'otp'
     this.otpServerUrl = this.getOtpServerUrl();
     this.currentOtpCode = null;
     this.currentAnswerOtp = null;
@@ -18,6 +18,7 @@ class ClosedLoop {
     this.initializeElements();
     this.setupEventListeners();
     this.setupThemeChangeListener();
+    this.initializeDefaultState();
     this.checkForOfferInUrl();
   }
 
@@ -230,6 +231,20 @@ class ClosedLoop {
       attributes: true,
       attributeFilter: ["data-theme"],
     });
+  }
+
+  initializeDefaultState() {
+    // Set default connection method description text for OTP mode
+    const descriptionElement = document.getElementById('method-description-text');
+    if (descriptionElement) {
+      descriptionElement.textContent = 'Share simple 6-digit codes through a secure server. Easy to type and remember.';
+    }
+    
+    // Hide connection type group for OTP mode by default
+    const connectionTypeGroup = document.getElementById('connection-type-group');
+    if (connectionTypeGroup) {
+      connectionTypeGroup.style.display = 'none';
+    }
   }
 
   async regenerateQRCodesForTheme() {
@@ -602,6 +617,7 @@ class ClosedLoop {
     this.showSessionUI("Share Invitation");
     await this.generateQRCode(this.pc.localDescription);
 
+
     this.updateStatus(
       "Share the invitation with the other device",
       "connecting"
@@ -667,6 +683,7 @@ class ClosedLoop {
         "connecting"
       );
 
+
       // Show answer input immediately - user will need it when they get the second code
       setTimeout(() => {
         this.showOtpAnswerUI();
@@ -718,6 +735,11 @@ class ClosedLoop {
   }
 
   showOtpCreateUI() {
+    // Ensure we have a valid OTP code
+    if (!this.currentOtpCode) {
+      console.error("No OTP code available when showing UI");
+      return;
+    }
     console.log("Showing OTP create UI with code:", this.currentOtpCode);
 
     this.connectionSetupSection.style.display = "none";
@@ -1386,6 +1408,7 @@ class ClosedLoop {
     // Update progress to final step
     this.updateProgress("connected");
 
+
     // Hide session sections and show communication
     this.sessionSection.style.display = "none";
     this.otpConnectionSection.style.display = "none"; // Hide OTP section too
@@ -1398,6 +1421,8 @@ class ClosedLoop {
   onDisconnected() {
     this.connectionState = "disconnected";
     this.updateStatus("Disconnected", "error");
+    
+    
     this.resetUI();
   }
 
@@ -1544,16 +1569,7 @@ class ClosedLoop {
           transfer.type
         );
 
-        // Auto-download
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = transfer.name;
-        a.style.display = "none";
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
+        // File is now available in the message feed - no auto-download
       };
       reader.readAsDataURL(blob);
 
@@ -1783,8 +1799,22 @@ class ClosedLoop {
         ? `<div class="file-mime">${displayMimeType}</div>`
         : "";
 
+    // Check if this is an image for preview
+    const isImage = displayMimeType.startsWith('image/');
+    const imagePreview = (fileData && isImage) 
+      ? `<div class="image-preview">
+           <img src="data:${displayMimeType};base64,${fileData}" 
+                alt="${filename}" 
+                style="max-width: 300px; max-height: 200px; border-radius: 8px; cursor: pointer;"
+                onclick="this.style.maxWidth = this.style.maxWidth === '300px' ? '100%' : '300px'">
+           <div class="image-actions">
+             <button class="btn-copy" onclick="closedLoop.saveImageToDevice('${filename}', '${fileData}', '${displayMimeType}')">Save to Device</button>
+           </div>
+         </div>` 
+      : "";
+
     // Create download button if we have file data (for received files)
-    const downloadButton = fileData
+    const downloadButton = fileData && !isImage
       ? `<button class="btn-copy" onclick="closedLoop.downloadFile('${filename}', '${fileData}', '${displayMimeType}')">Download</button>`
       : "";
 
@@ -1804,6 +1834,7 @@ class ClosedLoop {
                     ${downloadButton}
                 </div>
             </div>
+            ${imagePreview}
         `;
 
     // Insert at the top for reverse chronological order (newest first)
@@ -1877,6 +1908,33 @@ class ClosedLoop {
     } catch (error) {
       console.error("Error downloading file:", error);
       alert("Failed to download file");
+    }
+  }
+
+  saveImageToDevice(filename, base64Data, mimeType) {
+    try {
+      // Convert base64 to blob
+      const byteCharacters = atob(base64Data);
+      const byteNumbers = new Array(byteCharacters.length);
+      for (let i = 0; i < byteCharacters.length; i++) {
+        byteNumbers[i] = byteCharacters.charCodeAt(i);
+      }
+      const byteArray = new Uint8Array(byteNumbers);
+      const blob = new Blob([byteArray], { type: mimeType });
+
+      // Create download link for image
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = filename;
+      a.style.display = "none";
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error("Error saving image:", error);
+      alert("Failed to save image");
     }
   }
 

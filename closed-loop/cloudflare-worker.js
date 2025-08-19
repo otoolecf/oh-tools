@@ -149,12 +149,20 @@ async function handleRetrieve(kv, passcode, clientIP, corsHeaders) {
 }
 
 /**
- * Check if passcode follows human-readable format
+ * Check if passcode follows valid format
  */
 function isValidPasscode(passcode) {
-  // Human-id format: word-word-word (3-4 words, hyphen separated)
-  const pattern = /^[a-z]+(-[a-z]+){2,3}$/;
-  return pattern.test(passcode) && passcode.length >= 8 && passcode.length <= 50;
+  // Accept either:
+  // 1. 6-digit numeric codes: 123456
+  // 2. Human-id format: word-word-word (3-4 words, hyphen separated)
+  const numericPattern = /^\d{6}$/;
+  const wordPattern = /^[a-z]+(-[a-z]+){2,3}$/;
+  
+  if (numericPattern.test(passcode)) {
+    return true;
+  }
+  
+  return wordPattern.test(passcode) && passcode.length >= 8 && passcode.length <= 50;
 }
 
 /**
