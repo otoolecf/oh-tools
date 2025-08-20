@@ -3,7 +3,50 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>OToolebox - Client-Side Tools Collection</title>
+    <title>
+      Free Online Tools | JSON Editor, Image Editor, QR Generator, Hash
+      Generator | Oh! Tools
+    </title>
+    <meta
+      name="description"
+      content="Free privacy-focused online tools that run entirely in your browser. JSON formatter, image editor, QR code generator, hash generator, UUID generator, and more. No uploads, no tracking."
+    />
+    <meta
+      name="keywords"
+      content="online tools, JSON formatter, image editor, QR code generator, hash generator, UUID generator, barcode generator, diff tool, free tools, browser tools, privacy tools"
+    />
+    <meta name="author" content="Oh! Tools" />
+    <meta name="robots" content="index, follow" />
+    <link rel="canonical" href="https://oh-tools.net/" />
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://oh-tools.net/" />
+    <meta
+      property="og:title"
+      content="Free Online Tools | JSON Editor, Image Editor, QR Generator | Oh! Tools"
+    />
+    <meta
+      property="og:description"
+      content="Free privacy-focused online tools that run entirely in your browser. JSON formatter, image editor, QR code generator, and more. No uploads, no tracking."
+    />
+    <meta property="og:image" content="https://oh-tools.net/og-image.png" />
+
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image" />
+    <meta property="twitter:url" content="https://oh-tools.net/" />
+    <meta
+      property="twitter:title"
+      content="Free Online Tools | JSON Editor, Image Editor, QR Generator | Oh! Tools"
+    />
+    <meta
+      property="twitter:description"
+      content="Free privacy-focused online tools that run entirely in your browser. JSON formatter, image editor, QR code generator, and more. No uploads, no tracking."
+    />
+    <meta
+      property="twitter:image"
+      content="https://oh-tools.net/og-image.png"
+    />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -39,21 +82,21 @@
       }
 
       .tool-card h3 {
-        margin: 0 0 0.5rem 0;
+        margin: 0 1rem 0.5rem 1rem;
         color: var(--primary-color);
-        text-align: center;
+        text-align: left;
       }
 
       .tool-card p {
         color: var(--text-secondary);
-        margin: 0 0 1rem 0;
+        margin: 0 1rem 1rem 1rem;
         line-height: 1.6;
         flex-grow: 1;
-        text-align: center;
+        text-align: left;
       }
 
       .tool-link {
-        display: inline-block;
+        display: block;
         padding: 0.5rem 1rem;
         background: var(--button-bg);
         color: var(--button-text);
@@ -61,8 +104,8 @@
         border-radius: 4px;
         transition: background-color 0.2s;
         font-weight: 500;
-        align-self: center;
-        margin-top: auto;
+        margin: auto 1rem 0 1rem;
+        text-align: center;
       }
 
       .tool-link:hover {
@@ -79,9 +122,24 @@
       }
 
       .hero h1 {
-        margin: 0 0 1rem 0;
-        font-size: 2.5rem;
+        margin: 0 auto 1.5rem auto;
+        font-size: 2.8rem;
         color: var(--primary-color);
+        display: flex;
+        flex-direction: column;
+        line-height: 1.2;
+        align-items: flex-start;
+        max-width: 600px;
+        width: 100%;
+      }
+
+      .hero-tagline {
+        font-size: 1.0rem;
+        font-weight: 400;
+        color: var(--text-secondary);
+        opacity: 0.8;
+        margin-top: -4px;
+        font-style: normal;
       }
 
       .hero p {
@@ -89,6 +147,34 @@
         color: var(--text-secondary);
         max-width: 600px;
         margin: 0 auto;
+        text-align: justify;
+      }
+
+      .content-section {
+        max-width: 700px;
+        margin: 4rem auto 2rem;
+        text-align: left;
+      }
+
+      .content-section h2 {
+        color: var(--primary-color);
+        margin-bottom: 1rem;
+        font-size: 1.5rem;
+      }
+
+      .content-section p {
+        color: var(--text-secondary);
+        line-height: 1.6;
+        margin-bottom: 1rem;
+        font-size: 1rem;
+      }
+
+      .footnote {
+        font-size: 0.85rem !important;
+        font-style: italic;
+        color: var(--text-secondary);
+        opacity: 0.8;
+        margin-top: 0.5rem;
       }
     </style>
   </head>
@@ -97,10 +183,14 @@
 
     <div class="container">
       <div class="hero">
-        <h1>OToolebox</h1>
+        <h1>
+          Oh! Tools
+          <span class="hero-tagline">mildly interesting, mildly helpful tools</span>
+        </h1>
         <p>
-          A collection of useful client-side tools that run entirely in your
-          browser. No data leaves your device.
+          A collection of <strong>free</strong> tools that run entirely in your web browser. No downloads, no
+          servers, no subscriptions. Built with open source technology - simple,
+          fast, and your data stays on your device.
         </p>
       </div>
 
@@ -109,6 +199,60 @@
           <!-- Tools will be loaded dynamically from tools.json -->
         </div>
       </main>
+
+      <!-- Content sections -->
+      <section class="content-section">
+        <h2>Why I Built This</h2>
+        <p>
+          I wanted a UI for some open source libraries I find genuinely useful,
+          and figured it'd be a fun excuse to experiment with newer browser
+          features (custom elements, WASM support, WebRTC, and more) while I was
+          at it.
+        </p>
+        <p>
+          Plus, I got tired of running into paywalls or daily limits while
+          trying to use simple, quick tools online, or needing to download
+          full-blown clunky apps for only a small subset of features. Most of
+          these utilities are just wrappers around free libraries anyway, so why
+          not make them actually free?
+        </p>
+      </section>
+
+      <section class="content-section">
+        <h2>The Technical Bit</h2>
+        <p>
+          Everything runs in your browser using HTML, JavaScript, CSS,
+          WebAssembly, and standard Web APIs. No frameworks. No telemetry, no
+          servers*. Since everything runs in the browser, everything stays
+          simple, fast, and cheap. As a nice side effect, your data stays with
+          you and you don't have to trust random servers with your files.
+        </p>
+        <p>
+          Each tool shows what libraries or technologies are powering it
+          underneath, so you can check out the actual libraries if you're
+          curious. Nothing fancy, just mildly interesting, mildly helpful tools.
+        </p>
+        <p class="footnote">
+          *OK fine, there's technically one tiny server for Browser Bridge's
+          "Simple Codes" mode that temporarily stores encrypted connection
+          strings using 6-digit passcodes. The server never decrypts anything -
+          it just makes it easier for browsers to exchange encrypted data
+          instead of scanning QR codes. Also, Cloudflare is hosting this whole
+          site on servers somewhere (and probably has some built-in analytics),
+          but that doesn't count because those are someone else's computers and
+          code and therefore not my problem.
+        </p>
+      </section>
+
+      <section class="content-section">
+        <h2>Why "Oh! Tools"?</h2>
+        <p>
+          It's the sound you make when you stumble across a mildly interesting 
+          tool that actually does what you need it to do. Total coincidence that 
+          it's also a pun on the creator's last name (O'Toole). Now it's the 
+          sound you make when you discover both a useful tool AND questionable humor.
+        </p>
+      </section>
 
       <otoolebox-footer></otoolebox-footer>
     </div>
@@ -145,7 +289,7 @@
       // Load tools when page loads
       document.addEventListener("DOMContentLoaded", loadTools);
     </script>
-    
+
     <!-- Load web components -->
     <script src="components/otoolebox-header.js"></script>
     <script src="components/otoolebox-footer.js"></script>

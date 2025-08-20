@@ -30,13 +30,17 @@ class ClosedLoop {
       return "http://localhost:3001";
     }
 
-    // Production - update this with your actual worker URL
+    // Production with custom domain
+    if (hostname === "oh-tools.net" || hostname === "www.oh-tools.net") {
+      return "https://signaling.oh-tools.net";
+    }
+
+    // Fallback to .pages.dev domain
     if (hostname.includes("otoolebox.pages.dev")) {
       return "https://otoolebox-signaling.otoolecf.workers.dev";
     }
 
-    // Default to Cloudflare Pages dev with workers.dev subdomain
-    // Update with your actual worker URL after deployment
+    // Default fallback
     return "https://otoolebox-signaling.otoolecf.workers.dev";
   }
 

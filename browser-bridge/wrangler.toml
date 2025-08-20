@@ -25,7 +25,7 @@ simple = { limit = 10, period = 60 }
 command = ""
 
 # Route configuration (set this to your domain)
-# route = "signaling.yourdomain.com/*"
+# route = "signaling.oh-tools.net/*"
 
 # For development, you can use workers.dev subdomain
 # The worker will be available at: otoolebox-signaling.your-subdomain.workers.dev

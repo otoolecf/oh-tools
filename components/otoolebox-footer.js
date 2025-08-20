@@ -45,13 +45,31 @@ class OToolboxFooter extends HTMLElement {
           transform: translateY(-1px);
         }
 
+        .contact-info {
+          margin-top: 1rem;
+          font-size: 0.9rem;
+          color: var(--text-secondary);
+        }
+
+        .contact-info a {
+          color: var(--primary-color);
+          text-decoration: none;
+        }
+
+        .contact-info a:hover {
+          text-decoration: underline;
+        }
+
         .kofi-container {
           margin-top: 1rem;
         }
       </style>
       
       <footer class="main-footer">
-        <p>&copy; 2025 OToolebox. All tools run locally in your browser.</p>
+        <p>2025 Oh! Tools. Simple tools, no servers, no nonsense.</p>
+        <div class="contact-info">
+          Issues, feedback, or anything else? <a href="mailto:help@oh-tools.net">help@oh-tools.net</a>
+        </div>
         <div class="kofi-container">
           <a 
             href="https://ko-fi.com/otoolecf" 

@@ -41,6 +41,17 @@ class OToolboxHeader extends HTMLElement {
           color: var(--primary-color);
           text-decoration: none;
           transition: color 0.2s;
+          display: flex;
+          flex-direction: column;
+          line-height: 1.2;
+        }
+
+        .nav-brand-tagline {
+          font-size: 0.75rem;
+          font-weight: 400;
+          color: var(--text-secondary);
+          opacity: 0.8;
+          margin-top: -2px;
         }
 
         .nav-brand:hover {
@@ -137,7 +148,10 @@ class OToolboxHeader extends HTMLElement {
       <header class="main-header">
         <div class="container">
           <nav class="nav">
-            <a href="/" class="nav-brand">OToolebox</a>
+            <a href="/" class="nav-brand">
+              Oh! Tools
+              <span class="nav-brand-tagline">mildly interesting, mildly helpful tools</span>
+            </a>
             <div class="nav-links">
               <button id="themeToggle" class="theme-toggle" title="Toggle theme"></button>
               <a href="/" class="nav-link ${currentPath === '/' ? 'active' : ''}">

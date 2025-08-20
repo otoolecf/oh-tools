@@ -1,22 +1,21 @@
 {
   "tools": [
     {
-      "name": "JSON Utilities",
-      "description": "Clean, format, validate, and diff JSON data. All processing happens in your browser - no data is sent to any server.",
-      "path": "/json-utilities/",
+      "name": "Browser Bridge",
+      "description": "Share clipboards, files, and messages directly between devices through your browser. No downloads, no accounts - just secure peer-to-peer connections using WebRTC technology.",
+      "path": "/browser-bridge/",
       "status": "active",
       "poweredBy": [
         {
-          "name": "jsonrepair",
-          "url": "https://github.com/josdejong/jsonrepair"
-        },
-        { "name": "JSON5", "url": "https://github.com/json5/json5" }
+          "name": "Browser WebRTC API",
+          "url": "https://developer.mozilla.org/en-US/docs/Web/API/WebRTC_API"
+        }
       ],
-      "heroExtra": "<p style=\"font-size: 0.9rem; color: var(--text-secondary); margin-top: 0.5rem;\"><strong>Clean</strong> removes comments, fixes quotes, handles MongoDB syntax, and repairs malformed JSON. If validation or formatting fails, try using <strong>Clean</strong> first to fix syntax errors.</p>"
+      "heroExtra": ""
     },
     {
       "name": "Image Editor",
-      "description": "Powerful image manipulation tool with resize, crop, rotate, effects, and format conversion. All processing happens in your browser - no data is sent to any server. Supports various import and export formats listed below, with full metadata support for EXIF, IPTC, XMP, and ICC profiles.",
+      "description": "Fast and lightweight image manipulation tool with resize, crop, rotate, effects, and format conversion. All processing happens in your browser - no data is sent to any server. Supports various import and export formats and metadata inspection (EXIF, IPTC, XMP, ICC).",
       "path": "/image-editor/",
       "status": "active",
       "poweredBy": [
@@ -33,18 +32,55 @@
       "heroExtra": "<p style=\"font-size: 0.95rem; font-weight: 500; color: var(--text-primary); margin-top: 1rem;\">Wide format browser or tablet recommended for best editing experience.</p>"
     },
     {
-      "name": "Hash Generator",
-      "description": "Generate cryptographic hashes and checksums from text or data using popular algorithms like SHA-256, MD5, SHA-3, and more. All processing happens in your browser - no data is sent to any server.",
-      "path": "/hash-generator/",
+      "name": "Barcode Generator",
+      "description": "Generate QR codes, barcodes, and 2D codes with customization options. Adjust colors, transparencies, sizes, and save to common file formats like PNG or SVG. Supports popular formats including Code 128, Data Matrix, and postal codes.",
+      "path": "/barcode-generator/",
       "status": "active",
       "poweredBy": [
-        { "name": "CryptoJS", "url": "https://github.com/brix/crypto-js" }
+        { "name": "bwip-js", "url": "https://github.com/metafloor/bwip-js" }
+      ],
+      "heroExtra": ""
+    },
+    {
+      "name": "Data Workbench",
+      "description": "Browser-based BI tool powered by DuckDB for CSV, JSON, Parquet, and Excel files. Convert between formats, adjust delimiters, run SQL queries, and analyze data entirely in your browser. All processing happens locally - no data leaves your browser.",
+      "path": "/data-workbench/",
+      "status": "active",
+      "poweredBy": [
+        {
+          "name": "DuckDB-WASM",
+          "url": "https://duckdb.org/docs/api/wasm/overview"
+        }
+      ],
+      "heroExtra": "<p style=\"font-size: 0.9rem; color: var(--text-secondary); margin-top: 0.5rem;\">Supports <strong>CSV ⇄ JSON ⇄ Parquet ⇄ Excel</strong> conversions with advanced SQL analytics. Features auto-schema detection, statistics generation, full-text search, and a complete SQL console for complex queries. Powered by DuckDB extensions: excel, fts, json, parquet.</p><p style=\"font-size: 0.85rem; color: var(--text-secondary); margin-top: 0.75rem;\">For SQL help and advanced queries, see the <a href=\"https://duckdb.org/docs/stable/\" target=\"_blank\" style=\"color: var(--link-color);\">DuckDB documentation</a>.</p>"
+    },
+    {
+      "name": "JSON Utilities",
+      "description": "Clean, format, validate, and compare JSON data with intelligent processing. Repairs malformed JSON, removes comments and fixes quotes, prettifies formatting, and diffs by semantic content rather than string comparison.",
+      "path": "/json-utilities/",
+      "status": "active",
+      "poweredBy": [
+        {
+          "name": "jsonrepair",
+          "url": "https://github.com/josdejong/jsonrepair"
+        },
+        { "name": "JSON5", "url": "https://github.com/json5/json5" }
+      ],
+      "heroExtra": "<p style=\"font-size: 0.9rem; color: var(--text-secondary); margin-top: 0.5rem;\"><strong>Clean</strong> removes comments, fixes quotes, handles MongoDB syntax, and repairs malformed JSON. If validation or formatting fails, try using <strong>Clean</strong> first to fix syntax errors.</p>"
+    },
+    {
+      "name": "Diff Utilities",
+      "description": "Compare two sets of text, JSON, CSS, and array data with visual diff highlighting. See additions, deletions, and changes side-by-side with intelligent semantic comparison.",
+      "path": "/diff-utilities/",
+      "status": "active",
+      "poweredBy": [
+        { "name": "diff", "url": "https://github.com/kpdecker/jsdiff" }
       ],
       "heroExtra": ""
     },
     {
       "name": "UUID Generator",
-      "description": "Generate unique identifiers (UUIDs) instantly. All generation happens in your browser - no data is sent to any server.",
+      "description": "Generate secure UUIDs and unique identifiers instantly using browser crypto APIs. Perfect for developers needing fast database keys, session IDs, or unique reference numbers.",
       "path": "/uuid-generator/",
       "status": "active",
       "poweredBy": [
@@ -56,18 +92,8 @@
       "heroExtra": ""
     },
     {
-      "name": "Barcode Generator",
-      "description": "Generate various types of barcodes and QR codes for different use cases.",
-      "path": "/barcode-generator/",
-      "status": "active",
-      "poweredBy": [
-        { "name": "bwip-js", "url": "https://github.com/metafloor/bwip-js" }
-      ],
-      "heroExtra": ""
-    },
-    {
       "name": "Passphrase Generator",
-      "description": "Generate human memorable natural language or secure random passphrases.",
+      "description": "Create memorable yet secure passphrases using natural language patterns or random character sequences. Customizable length and complexity for any security requirement. Fast and simple.",
       "path": "/passphrase-generator/",
       "status": "active",
       "poweredBy": [
@@ -76,38 +102,12 @@
       "heroExtra": ""
     },
     {
-      "name": "Diff Utilities",
-      "description": "Compare text, JSON, CSS, and array data with visual diff highlighting.",
-      "path": "/diff-utilities/",
+      "name": "Hash Generator",
+      "description": "Generate cryptographic hashes and checksums using algorithms like SHA-256, MD5, SHA-3, and more. Perfect for data integrity verification, quick troubleshooting, and security applications.",
+      "path": "/hash-generator/",
       "status": "active",
       "poweredBy": [
-        { "name": "diff", "url": "https://github.com/kpdecker/jsdiff" }
-      ],
-      "heroExtra": ""
-    },
-    {
-      "name": "Data Workbench",
-      "description": "Browser-based BI tool powered by DuckDB for CSV, JSON, Parquet, and Excel files. Convert between formats, run SQL queries, and analyze data entirely in your browser. All processing happens locally - no data leaves your browser.",
-      "path": "/duckdb-browser/",
-      "status": "active",
-      "poweredBy": [
-        {
-          "name": "DuckDB-WASM",
-          "url": "https://duckdb.org/docs/api/wasm/overview"
-        }
-      ],
-      "heroExtra": "<p style=\"font-size: 0.9rem; color: var(--text-secondary); margin-top: 0.5rem;\">Supports <strong>CSV ⇄ JSON ⇄ Parquet ⇄ Excel</strong> conversions with advanced SQL analytics. Features auto-schema detection, statistics generation, full-text search, and a complete SQL console for complex queries. Powered by DuckDB extensions: excel, fts, json, parquet.</p><p style=\"font-size: 0.85rem; color: var(--text-secondary); margin-top: 0.75rem;\">For SQL help and advanced queries, see the <a href=\"https://duckdb.org/docs/stable/\" target=\"_blank\" style=\"color: var(--link-color);\">DuckDB documentation</a>.</p>"
-    },
-    {
-      "name": "Closed Loop",
-      "description": "Secure private connection for sharing files and text between devices using WebRTC.",
-      "path": "/closed-loop/",
-      "status": "active",
-      "poweredBy": [
-        {
-          "name": "Browser WebRTC API",
-          "url": "https://developer.mozilla.org/en-US/docs/Web/API/WebRTC_API"
-        }
+        { "name": "CryptoJS", "url": "https://github.com/brix/crypto-js" }
       ],
       "heroExtra": ""
     }
