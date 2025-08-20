@@ -157,7 +157,7 @@ For easy local testing without setting up Cloudflare:
 1. **Start the mock server:**
 
    ```bash
-   cd /closed-loop
+   cd /browser-bridge
    node mock-server.js
    ```
 
@@ -172,7 +172,7 @@ For easy local testing without setting up Cloudflare:
    ```
 
 3. **Test the flow:**
-   - Open two browser tabs to `http://localhost:8000/closed-loop/`
+   - Open two browser tabs to `http://localhost:8000/browser-bridge/`
    - In both tabs, select "Simple Codes (human-memorable)" mode
    - Tab 1: Create Session → get first code (e.g., `happy-tiger-runs`)
    - Tab 2: Join Session → enter first code → get second code (e.g., `clever-bird-soars`)
@@ -193,7 +193,7 @@ Retrieved and deleted data for passcode: clever-bird-soars
 To test with the actual Cloudflare infrastructure:
 
 ```bash
-cd /path/to/closed-loop
+cd /path/to/browser-bridge
 wrangler dev
 ```
 
