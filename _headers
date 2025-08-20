@@ -40,3 +40,8 @@
 /*/lib/*.js
   Content-Type: application/javascript
   Cross-Origin-Resource-Policy: cross-origin
+
+# Force correct MIME types for node_modules JS files
+/*/node_modules/*/*.js
+  Content-Type: application/javascript
+  Cross-Origin-Resource-Policy: cross-origin
