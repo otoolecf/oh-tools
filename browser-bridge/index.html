@@ -81,19 +81,19 @@
             <div class="flex-group method-selection">
               <input
                 type="radio"
-                id="direct-mode"
-                name="connection-method"
-                value="direct"
-              />
-              <label for="direct-mode">Direct Sharing (QR/Links)</label>
-              <input
-                type="radio"
                 id="otp-mode"
                 name="connection-method"
                 value="otp"
                 checked
               />
               <label for="otp-mode">Simple Codes</label>
+              <input
+                type="radio"
+                id="direct-mode"
+                name="connection-method"
+                value="direct"
+              />
+              <label for="direct-mode">Direct Sharing (QR/Links)</label>
             </div>
             <div class="method-description">
               <span id="method-description-text"
@@ -181,7 +181,7 @@
               </p>
               <p><strong>On the other device:</strong></p>
               <ol>
-                <li>Open this same webpage</li>
+                <li>Open https://oh-tools.net/browser-bridge/ in their browser</li>
                 <li>Choose "Simple Codes" connection method</li>
                 <li>Click "Join Session" and enter this code</li>
               </ol>

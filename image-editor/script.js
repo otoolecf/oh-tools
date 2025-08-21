@@ -347,11 +347,29 @@ class ImageEditor {
             this.updateOperationList();
             this.resetBtn.disabled = false;
             
-            // Update export operator with new image
-            const exportOperator = document.getElementById('exportOperator');
-            if (exportOperator) {
-                exportOperator.setImage(this.currentImage, this.vips);
-            }
+            // Update all operators with new image so operations chain properly
+            const operators = [
+                'rotateFlipOperator',
+                'cropOperator', 
+                'resizeOperator',
+                'blurSharpenOperator',
+                'tintGrayscaleOperator',
+                'metadataOperator',
+                'filtersOperator',
+                'edgeDetectionOperator',
+                'exportOperator'
+            ];
+            
+            operators.forEach(operatorId => {
+                const operator = document.getElementById(operatorId);
+                if (operator) {
+                    if (operatorId === 'metadataOperator' && this.originalFileBuffer) {
+                        operator.setImageWithBuffer(this.currentImage, this.vips, this.originalFileBuffer);
+                    } else {
+                        operator.setImage(this.currentImage, this.vips);
+                    }
+                }
+            });
             
             this.showStatus(`${detail.description} applied successfully!`, 'success');
             
