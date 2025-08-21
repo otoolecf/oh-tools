@@ -14,6 +14,9 @@ class ClosedLoop {
     this.otpServerUrl = this.getOtpServerUrl();
     this.currentOtpCode = null;
     this.currentAnswerOtp = null;
+    this.otpFlowState = null; // 'creating', 'joining', 'waiting-for-answer', 'complete'
+    this.expirationTimer = null; // Timer for code expiration countdown
+    this.otpAnswerProcessed = false; // Flag for primary who processed final answer
 
     this.initializeElements();
     this.setupEventListeners();
@@ -634,6 +637,9 @@ class ClosedLoop {
   }
 
   async createOtpSession() {
+    // Set OTP flow state
+    this.otpFlowState = "creating";
+    
     // Create peer connection
     const iceConfig = this.getIceConfiguration();
     this.pc = new RTCPeerConnection(iceConfig);
@@ -662,7 +668,7 @@ class ClosedLoop {
     );
 
     try {
-      const response = await fetch(
+      const response = await this.makeRequestWithRetry(
         `${this.otpServerUrl}/temp/${this.currentOtpCode}`,
         {
           method: "POST",
@@ -675,10 +681,6 @@ class ClosedLoop {
           }),
         }
       );
-
-      if (!response.ok) {
-        throw new Error(`Server responded with ${response.status}`);
-      }
 
       // Show OTP UI
       this.showOtpCreateUI();
@@ -762,6 +764,9 @@ class ClosedLoop {
     // Show progress tracker
     this.showProgressTracker();
     this.updateProgress("share");
+    
+    // Start expiration timer
+    this.startExpirationTimer(15 * 60); // 15 minutes
 
     console.log("OTP UI elements:", {
       otpConnectionSection: this.otpConnectionSection.style.display,
@@ -795,21 +800,20 @@ class ClosedLoop {
       return;
     }
 
+    // Add loading state
+    this.joinWithOtpBtn.disabled = true;
+    this.joinWithOtpBtn.textContent = "Connecting...";
+
     try {
+      // Set OTP flow state
+      this.otpFlowState = "joining";
+      
       this.updateStatus("Retrieving connection data...", "connecting");
 
-      // Fetch the offer from server
-      const response = await fetch(`${this.otpServerUrl}/temp/${code}`, {
+      // Fetch the offer from server with retry
+      const response = await this.makeRequestWithRetry(`${this.otpServerUrl}/temp/${code}`, {
         method: "GET",
       });
-
-      if (!response.ok) {
-        if (response.status === 404) {
-          throw new Error("Connection code not found or expired");
-        } else {
-          throw new Error(`Server error: ${response.status}`);
-        }
-      }
 
       const data = await response.json();
 
@@ -838,7 +842,7 @@ class ClosedLoop {
         this.currentAnswerOtp
       );
 
-      const storeResponse = await fetch(
+      const storeResponse = await this.makeRequestWithRetry(
         `${this.otpServerUrl}/temp/${this.currentAnswerOtp}`,
         {
           method: "POST",
@@ -852,10 +856,6 @@ class ClosedLoop {
         }
       );
 
-      if (!storeResponse.ok) {
-        throw new Error("Failed to store answer");
-      }
-
       // Show final code display
       this.showOtpFinalUI();
       this.updateStatus(
@@ -866,11 +866,31 @@ class ClosedLoop {
       this.updateProgress("connect");
     } catch (error) {
       console.error("Failed to join with OTP code:", error);
-      this.updateStatus(`Failed to join: ${error.message}`, "error");
+      
+      // Enhanced error handling
+      let userMessage = "Failed to join: ";
+      if (error.message.includes("not found") || error.message.includes("expired")) {
+        userMessage += "Code not found or expired. Please check the code or ask for a new one.";
+      } else if (error.message.includes("Server error")) {
+        userMessage += "Server error. Please try again in a moment.";
+      } else if (error.message.includes("network") || error.message.includes("fetch")) {
+        userMessage += "Network error. Check your connection and try again.";
+      } else {
+        userMessage += error.message;
+      }
+      
+      this.updateStatus(userMessage, "error");
+    } finally {
+      // Restore button state
+      this.joinWithOtpBtn.disabled = false;
+      this.joinWithOtpBtn.textContent = "Connect";
     }
   }
 
   showOtpFinalUI() {
+    // Set state to waiting for answer
+    this.otpFlowState = "waiting-for-answer";
+    
     this.otpFinalDisplay.style.display = "block";
     this.otpFinalCodeText.textContent = this.currentAnswerOtp;
 
@@ -902,14 +922,10 @@ class ClosedLoop {
     try {
       this.updateStatus("Completing connection...", "connecting");
 
-      // Fetch the answer from server
-      const response = await fetch(`${this.otpServerUrl}/temp/${code}`, {
+      // Fetch the answer from server with retry
+      const response = await this.makeRequestWithRetry(`${this.otpServerUrl}/temp/${code}`, {
         method: "GET",
       });
-
-      if (!response.ok) {
-        throw new Error("Final code not found or invalid");
-      }
 
       const data = await response.json();
 
@@ -920,11 +936,133 @@ class ClosedLoop {
       // Set remote description (answer)
       await this.pc.setRemoteDescription(answer);
 
+      // Mark that we've processed the final code but don't complete flow yet
+      this.otpAnswerProcessed = true;
+      
+      // Try to send completion message if data channel is ready
+      if (this.dataChannel && this.dataChannel.readyState === "open") {
+        console.log("Sending otp-completed message to joiner");
+        this.sendMessage({
+          kind: "otp-completed",
+          timestamp: Date.now()
+        });
+        this.completeOtpFlow();
+      } else {
+        console.log("Data channel not ready, will send when connected");
+      }
+      
       this.updateStatus("Connection established!", "connected");
-      this.updateProgress("connected");
     } catch (error) {
       console.error("Failed to complete OTP connection:", error);
-      this.updateStatus(`Connection failed: ${error.message}`, "error");
+      
+      // Enhanced error handling with specific messages
+      let userMessage = "Connection failed: ";
+      if (error.message.includes("not found") || error.message.includes("invalid")) {
+        userMessage += "Code expired or already used. Please restart the connection process.";
+      } else if (error.message.includes("network") || error.message.includes("fetch")) {
+        userMessage += "Network error. Check your connection and try again.";
+      } else if (error.message.includes("Invalid passphrase")) {
+        userMessage += "Invalid code. Please check the code and try again.";
+      } else {
+        userMessage += error.message + " Please try restarting the connection.";
+      }
+      
+      this.updateStatus(userMessage, "error");
+    }
+  }
+
+  completeOtpFlow() {
+    this.otpFlowState = "complete";
+    if (this.connectionState === "connected") {
+      // Now safe to show communication UI
+      this.otpConnectionSection.style.display = "none";
+      this.communicationSection.style.display = "block";
+      this.updateStatus("Connected and ready to share files/clipboard", "connected");
+      this.updateProgress("connected");
+      this.addMessage("system", "Connection established", new Date());
+    }
+  }
+
+  startExpirationTimer(seconds) {
+    // Clear any existing timer
+    if (this.expirationTimer) {
+      clearInterval(this.expirationTimer);
+    }
+    
+    this.expirationTimer = setInterval(() => {
+      seconds--;
+      const minutes = Math.floor(seconds / 60);
+      const secs = seconds % 60;
+      const timeDisplay = `${minutes}:${secs.toString().padStart(2, '0')}`;
+      
+      // Update or create timer display
+      this.updateTimerDisplay(timeDisplay);
+      
+      if (seconds <= 0) {
+        clearInterval(this.expirationTimer);
+        this.expirationTimer = null;
+        this.handleCodeExpiration();
+      }
+    }, 1000);
+  }
+  
+  updateTimerDisplay(timeDisplay) {
+    // Find or create timer element
+    let timerElement = document.querySelector('.code-timer');
+    if (!timerElement) {
+      timerElement = document.createElement('div');
+      timerElement.className = 'code-timer';
+      timerElement.style.cssText = 'font-size: 0.9em; color: #666; margin-top: 8px; text-align: center;';
+      
+      // Add to the active OTP display
+      const activeDisplay = document.querySelector('#otp-create-display:not([style*="none"]), #otp-join-display:not([style*="none"]), #otp-final-display:not([style*="none"])');
+      if (activeDisplay) {
+        activeDisplay.appendChild(timerElement);
+      }
+    }
+    
+    timerElement.textContent = `Code expires in: ${timeDisplay}`;
+    
+    // Change color when time is running low
+    const totalSeconds = timeDisplay.split(':').reduce((acc, time) => (60 * acc) + +time);
+    if (totalSeconds <= 300) { // 5 minutes
+      timerElement.style.color = '#ef4444'; // Red warning
+    } else if (totalSeconds <= 600) { // 10 minutes
+      timerElement.style.color = '#f59e0b'; // Orange warning
+    }
+  }
+  
+  handleCodeExpiration() {
+    this.updateStatus("Connection codes have expired. Please restart the connection process.", "error");
+    // Automatically disconnect and reset
+    setTimeout(() => {
+      this.disconnect();
+    }, 3000);
+  }
+
+  async makeRequestWithRetry(url, options, maxRetries = 3) {
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        const response = await fetch(url, options);
+        if (response.ok) return response;
+        
+        // Don't retry 404s (code not found/expired) - those won't get better
+        if (response.status === 404) {
+          throw new Error("Connection code not found or expired");
+        }
+        
+        throw new Error(`Server error: ${response.status}`);
+      } catch (error) {
+        if (attempt === maxRetries || error.message.includes("not found")) {
+          throw error;
+        }
+        
+        // Exponential backoff: wait 1s, 2s, 4s before retries
+        const delay = 1000 * Math.pow(2, attempt - 1);
+        await new Promise(resolve => setTimeout(resolve, delay));
+        
+        console.log(`Request failed, retrying (${attempt}/${maxRetries})...`);
+      }
     }
   }
 
@@ -1407,15 +1545,37 @@ class ClosedLoop {
 
   onConnected() {
     this.connectionState = "connected";
+    
+    console.log("onConnected called - connectionMethod:", this.connectionMethod, "otpFlowState:", this.otpFlowState);
+    
+    // In OTP mode, don't hide UI until flow is complete
+    if (this.connectionMethod === "otp" && this.otpFlowState !== "complete") {
+      console.log("OTP mode - keeping UI visible, waiting for code exchange completion");
+      
+      // Special case: if primary processed answer but data channel wasn't ready before
+      if (this.otpAnswerProcessed && this.dataChannel && this.dataChannel.readyState === "open") {
+        console.log("Primary: Data channel now ready, sending completion message");
+        this.sendMessage({
+          kind: "otp-completed",
+          timestamp: Date.now()
+        });
+        this.completeOtpFlow();
+        return;
+      }
+      
+      // Connection established but OTP flow not done - show connected status but keep OTP UI
+      this.updateStatus("Connected! Complete the code exchange to finish setup", "connected");
+      this.updateProgress("answer"); // Move to final step
+      return; // Don't hide OTP UI yet
+    }
+    
+    // Normal connection completion
     this.updateStatus("Connected", "connected");
-
-    // Update progress to final step
     this.updateProgress("connected");
-
 
     // Hide session sections and show communication
     this.sessionSection.style.display = "none";
-    this.otpConnectionSection.style.display = "none"; // Hide OTP section too
+    this.otpConnectionSection.style.display = "none";
     this.communicationSection.style.display = "block";
 
     // Add connection message to feed
@@ -1472,6 +1632,9 @@ class ClosedLoop {
         case "pong":
           // Handle pong if needed
           break;
+        case "otp-completed":
+          this.handleOtpCompleted(message);
+          break;
         default:
           console.warn("Unknown message type:", message.kind);
       }
@@ -1482,12 +1645,19 @@ class ClosedLoop {
 
   handleTextMessage(message) {
     this.addMessage("received", message.content, new Date(message.timestamp));
+    
+    // Note: We don't auto-copy to clipboard as it requires user activation
+    // Users can use the Copy button in the message feed instead
+  }
 
-    // Try to write to clipboard (requires user interaction)
-    if (navigator.clipboard && window.isSecureContext) {
-      navigator.clipboard.writeText(message.content).catch((err) => {
-        console.log("Clipboard write failed:", err);
-      });
+  handleOtpCompleted(message) {
+    console.log("handleOtpCompleted called - connectionMethod:", this.connectionMethod, "otpFlowState:", this.otpFlowState);
+    // Primary has confirmed OTP completion - joiner can now transition
+    if (this.connectionMethod === "otp" && this.otpFlowState === "waiting-for-answer") {
+      console.log("Received OTP completion confirmation from primary - transitioning to connected");
+      this.completeOtpFlow();
+    } else {
+      console.log("Not in correct state to handle OTP completion");
     }
   }
 
@@ -2134,6 +2304,14 @@ class ClosedLoop {
     // Clear OTP data
     this.currentOtpCode = null;
     this.currentAnswerOtp = null;
+    this.otpFlowState = null;
+    this.otpAnswerProcessed = false;
+    
+    // Clear timers
+    if (this.expirationTimer) {
+      clearInterval(this.expirationTimer);
+      this.expirationTimer = null;
+    }
 
     // Clear form fields
     this.offerAnswerInput.value = "";
