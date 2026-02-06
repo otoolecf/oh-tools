@@ -1,0 +1,140 @@
+.vt-layout {
+  display: grid;
+  grid-template-columns: 340px 1fr;
+  gap: 1rem;
+}
+
+.vt-panel {
+  background: var(--panel-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  padding: 1rem;
+  margin-bottom: 1rem;
+}
+
+.vt-drop-zone {
+  border: 2px dashed var(--border-color);
+  border-radius: 8px;
+  padding: 1rem;
+  text-align: center;
+}
+.vt-drop-zone.dragging { border-color: var(--primary-color); }
+.muted { color: var(--text-secondary); font-size: 0.9rem; }
+.error { color: #e35d6a; }
+
+.btn {
+  background: var(--primary-color);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 0.5rem 0.85rem;
+  cursor: pointer;
+  display: inline-block;
+}
+.btn-secondary { background: #666; }
+
+.vt-video-wrap video {
+  width: 100%;
+  max-height: 420px;
+  background: #000;
+  border-radius: 8px;
+}
+
+.vt-player-controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 0.65rem;
+}
+
+.vt-info-grid {
+  display: grid;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+}
+
+.vt-timeline {
+  position: relative;
+  height: 90px;
+  background: var(--panel-bg);
+  overflow: hidden;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+}
+
+.vt-filmstrip {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  grid-template-columns: repeat(10, 1fr);
+}
+.vt-filmstrip img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-right: 1px solid rgba(255,255,255,0.08);
+}
+
+.vt-excluded {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+}
+
+.vt-handle {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 12px;
+  margin-left: -6px;
+  background: var(--primary-color);
+  cursor: col-resize;
+  z-index: 5;
+}
+
+.vt-playhead {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: #fff;
+  z-index: 4;
+}
+
+.vt-keyframes { position: absolute; inset: 0; }
+.vt-key {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: rgba(255, 196, 0, 0.75);
+}
+
+.vt-time-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.75rem;
+}
+.vt-time-grid strong {
+  display: block;
+  margin-top: 0.2rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.vt-progress {
+  margin-top: 0.7rem;
+  height: 8px;
+  border-radius: 999px;
+  background: var(--border-color);
+  overflow: hidden;
+}
+.vt-progress > div {
+  height: 100%;
+  width: 0;
+  background: var(--primary-color);
+}
+
+@media (max-width: 980px) {
+  .vt-layout { grid-template-columns: 1fr; }
+}

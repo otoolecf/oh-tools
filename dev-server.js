@@ -42,7 +42,7 @@ const server = http.createServer((req, res) => {
     const pathname = parsedUrl.pathname;
     
     // Apply strict CORS headers for image-editor routes and node_modules
-    if (pathname.startsWith('/image-editor') || pathname.startsWith('/node_modules')) {
+    if (pathname.startsWith('/image-editor') || pathname.startsWith('/video-trimmer') || pathname.startsWith('/node_modules')) {
         // CRITICAL: Headers required for SharedArrayBuffer/wasm-vips
         res.setHeader('Cross-Origin-Embedder-Policy', 'require-corp');
         res.setHeader('Cross-Origin-Opener-Policy', 'same-origin');

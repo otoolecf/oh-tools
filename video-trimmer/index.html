@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Video Trimmer - Oh! Tools</title>
+  <link rel="stylesheet" href="../global.css?v=1" />
+  <link rel="stylesheet" href="styles.css?v=1" />
+</head>
+<body>
+  <otoolebox-header current-tool="Video Trimmer" base-path="../"></otoolebox-header>
+  <div class="container">
+    <tool-hero data-tool-path="/video-trimmer/"></tool-hero>
+    <main class="tool-container">
+      <vt-app></vt-app>
+    </main>
+    <otoolebox-footer base-path="../"></otoolebox-footer>
+  </div>
+
+  <script type="module" src="video-engine.js?v=1"></script>
+  <script type="module" src="components/vt-app.js?v=1"></script>
+  <script type="module" src="components/vt-file-drop.js?v=1"></script>
+  <script type="module" src="components/vt-video-preview.js?v=1"></script>
+  <script type="module" src="components/vt-timeline.js?v=1"></script>
+  <script type="module" src="components/vt-trim-controls.js?v=1"></script>
+  <script type="module" src="components/vt-export-panel.js?v=1"></script>
+  <script type="module" src="components/vt-info-panel.js?v=1"></script>
+
+  <script src="../components/otoolebox-header.js"></script>
+  <script src="../components/otoolebox-footer.js"></script>
+  <script src="../components/tool-hero.js"></script>
+  <script src="../components/tool-data-loader.js"></script>
+</body>
+</html>
