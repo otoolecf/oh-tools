@@ -12,20 +12,21 @@ window.formatTimecode = function formatTimecode(timestampUs) {
 class VTApp extends HTMLElement {
   connectedCallback() {
     this.engine = new VideoEngine();
-    this.state = { file: null, metadata: null, trimStart: 0, trimEnd: 0, playhead: 0 };
+    this.state = { file: null, metadata: null, segments: [], playhead: 0 };
+    this.classList.add('vt-app', 'is-empty');
 
     this.innerHTML = `
       <div class="vt-layout">
-        <div>
+        <section class="vt-sidebar">
           <vt-file-drop></vt-file-drop>
           <vt-info-panel></vt-info-panel>
-        </div>
-        <div>
+        </section>
+        <section class="vt-editor">
           <vt-video-preview></vt-video-preview>
           <vt-timeline></vt-timeline>
           <vt-trim-controls></vt-trim-controls>
           <vt-export-panel></vt-export-panel>
-        </div>
+        </section>
       </div>
     `;
 
@@ -45,6 +46,15 @@ class VTApp extends HTMLElement {
     this.addEventListener('vt-trim-change-request', (event) => this.#updateTrim(event.detail));
     this.addEventListener('vt-export-request', () => this.#exportTrim());
     this.addEventListener('vt-export-cancel', () => this.engine.cancelExport());
+    this.addEventListener('vt-split-request', () => this.#splitAtPlayhead());
+    this.addEventListener('vt-clear-split', () => this.#clearSplit());
+    this.addEventListener('vt-handle-activate', (event) => {
+      this.activeHandle = event.detail.target;
+      this.trimControls.setActiveHandleLabel(this.#labelForHandle(this.activeHandle));
+    });
+    this.addEventListener('vt-nudge-request', (event) => this.#nudgeHandle(event.detail));
+    this.addEventListener('vt-playhead-nudge', (event) => this.#nudgePlayhead(event.detail));
+    this.addEventListener('vt-snap-to-playhead', () => this.#snapTrimToPlayhead());
   }
 
   async #onFileSelected(file) {
@@ -55,14 +65,17 @@ class VTApp extends HTMLElement {
         ...this.state,
         file,
         metadata,
-        trimStart: 0,
-        trimEnd: metadata.duration,
+        segments: [{ start: 0, end: metadata.duration }],
         playhead: 0,
       };
+      this.activeHandle = 'seg-0-end';
       this.preview.setFile(file);
       this.infoPanel.setMetadata(metadata);
       this.exportPanel.setReady(true);
       this.fileDrop.setStatus('Video loaded.');
+      this.classList.remove('is-empty');
+      this.classList.add('is-ready');
+      this.trimControls.setActiveHandleLabel(this.#labelForHandle(this.activeHandle || 'seg-0-end'));
       this.#refresh();
       this.#generateThumbnails();
     } catch (error) {
@@ -87,16 +100,28 @@ class VTApp extends HTMLElement {
     this.#refresh();
   }
 
-  #updateTrim({ target, timestampUs }) {
+  #updateTrim({ target, timestampUs, fine }) {
     if (!this.state.metadata) return;
-    const snapped = this.engine.snapToKeyframe(timestampUs);
-    if (target === 'in') {
-      this.state.trimStart = Math.min(snapped, this.state.trimEnd - 1000);
-      this.preview.seekTo(this.state.trimStart);
+    const snapped = fine ? timestampUs : this.engine.snapToKeyframe(timestampUs);
+    const minSegment = 1000;
+    const segments = this.#normalizedSegments();
+    const { index, edge } = this.#parseHandle(target);
+    const seg = segments[index];
+    if (!seg) return;
+    const prev = index > 0 ? segments[index - 1] : null;
+    const next = index < segments.length - 1 ? segments[index + 1] : null;
+    if (edge === 'start') {
+      const min = prev ? prev.end : 0;
+      const max = seg.end - minSegment;
+      seg.start = Math.max(min, Math.min(snapped, max));
+      this.preview.seekTo(seg.start);
     } else {
-      this.state.trimEnd = Math.max(snapped, this.state.trimStart + 1000);
-      this.preview.seekTo(this.state.trimEnd);
+      const min = seg.start + minSegment;
+      const max = next ? next.start : this.state.metadata.duration;
+      seg.end = Math.min(max, Math.max(snapped, min));
+      this.preview.seekTo(seg.end);
     }
+    this.state.segments = segments;
     this.#refresh();
   }
 
@@ -107,10 +132,12 @@ class VTApp extends HTMLElement {
 
     try {
       const ext = this.state.file.name.split('.').pop().toLowerCase();
+      const segments = this.#normalizedSegments();
+      const forceTranscode = segments.length > 1 || !this.#segmentsOnKeyframes(segments);
       const result = await this.engine.exportVideo({
-        trimStart: this.state.trimStart,
-        trimEnd: this.state.trimEnd,
+        segments,
         outputFormat: ext,
+        forceTranscode,
       }, ({ percent, message }) => this.exportPanel.setProgress(percent, message));
 
       const name = this.state.file.name.replace(/(\.[^.]+)?$/, `_trimmed.$1`).replace('..', '.');
@@ -125,14 +152,163 @@ class VTApp extends HTMLElement {
 
   #refresh() {
     if (!this.state.metadata) return;
+    const segments = this.#normalizedSegments();
     this.timeline.setData({
       duration: this.state.metadata.duration,
-      trimStart: this.state.trimStart,
-      trimEnd: this.state.trimEnd,
+      segments,
       playhead: this.state.playhead,
       keyframes: this.state.metadata.keyframes,
+      frameDurationUs: this.state.metadata.frameRate ? Math.round(window.VT_US_PER_SECOND / this.state.metadata.frameRate) : 33333,
     });
-    this.trimControls.updateTimes(this.state.trimStart, this.state.trimEnd);
+    this.timeline.setActiveHandle(this.activeHandle);
+    this.trimControls.updateTimes(segments);
+  }
+
+  #nudgeHandle({ direction, mode }) {
+    if (!this.state.metadata) return;
+    const target = this.activeHandle || 'seg-0-end';
+    const frameUs = this.state.metadata.frameRate
+      ? Math.round(window.VT_US_PER_SECOND / this.state.metadata.frameRate)
+      : 33333;
+    let timestampUs = this.#getHandleTimestamp(target);
+    if (mode === 'edge') {
+      timestampUs = direction < 0 ? 0 : this.state.metadata.duration;
+      this.#updateTrim({ target, timestampUs, fine: true });
+      return;
+    }
+    if (mode === 'keyframe') {
+      timestampUs = this.#nudgeToKeyframe(target, direction);
+      this.#updateTrim({ target, timestampUs, fine: false });
+      return;
+    }
+    timestampUs += direction * frameUs;
+    this.#updateTrim({ target, timestampUs, fine: true });
+  }
+
+  #nudgePlayhead({ direction, mode }) {
+    if (!this.state.metadata) return;
+    const frameUs = this.state.metadata.frameRate
+      ? Math.round(window.VT_US_PER_SECOND / this.state.metadata.frameRate)
+      : 33333;
+    let timestampUs = this.state.playhead;
+    if (mode === 'edge') {
+      timestampUs = direction < 0 ? 0 : this.state.metadata.duration;
+    } else if (mode === 'keyframe') {
+      const keyframes = this.state.metadata.keyframes || [];
+      if (keyframes.length) {
+        if (direction < 0) {
+          for (let i = keyframes.length - 1; i >= 0; i -= 1) {
+            if (keyframes[i] < timestampUs) {
+              timestampUs = keyframes[i];
+              break;
+            }
+          }
+        } else {
+          for (let i = 0; i < keyframes.length; i += 1) {
+            if (keyframes[i] > timestampUs) {
+              timestampUs = keyframes[i];
+              break;
+            }
+          }
+        }
+      } else {
+        timestampUs += direction * frameUs;
+      }
+    } else {
+      timestampUs += direction * frameUs;
+    }
+    this.#setPlayhead(timestampUs);
+    this.preview.seekTo(this.state.playhead);
+  }
+
+  #snapTrimToPlayhead() {
+    if (!this.state.metadata) return;
+    const target = this.activeHandle || 'seg-0-end';
+    const timestampUs = this.state.playhead;
+    this.#updateTrim({ target, timestampUs, fine: true });
+  }
+
+  #labelForHandle(handle) {
+    const { index, edge } = this.#parseHandle(handle);
+    const number = edge === 'start' ? index * 2 + 1 : index * 2 + 2;
+    return String(number);
+  }
+
+  #getHandleTimestamp(target) {
+    const { index, edge } = this.#parseHandle(target);
+    const seg = this.state.segments[index];
+    if (!seg) return 0;
+    return edge === 'start' ? seg.start : seg.end;
+  }
+
+  #nudgeToKeyframe(target, direction) {
+    const keyframes = this.state.metadata.keyframes || [];
+    if (!keyframes.length) {
+      const frameUs = this.state.metadata.frameRate
+        ? Math.round(window.VT_US_PER_SECOND / this.state.metadata.frameRate)
+        : 33333;
+      return this.#getHandleTimestamp(target) + direction * frameUs;
+    }
+    const current = this.#getHandleTimestamp(target);
+    if (direction < 0) {
+      for (let i = keyframes.length - 1; i >= 0; i -= 1) {
+        if (keyframes[i] < current) return keyframes[i];
+      }
+      return keyframes[0];
+    }
+    for (let i = 0; i < keyframes.length; i += 1) {
+      if (keyframes[i] > current) return keyframes[i];
+    }
+    return keyframes[keyframes.length - 1];
+  }
+
+  #normalizedSegments() {
+    if (!this.state.segments.length) return [{ start: 0, end: this.state.metadata.duration }];
+    const segments = this.state.segments.map((seg) => ({
+      start: Math.max(0, Math.min(this.state.metadata.duration, seg.start)),
+      end: Math.max(0, Math.min(this.state.metadata.duration, seg.end)),
+    })).sort((a, b) => a.start - b.start);
+    return segments;
+  }
+
+  #segmentsOnKeyframes(segments) {
+    const keys = new Set(this.state.metadata.keyframes || []);
+    return segments.every((seg) => keys.has(seg.start) && keys.has(seg.end));
+  }
+
+  #splitAtPlayhead() {
+    if (!this.state.metadata || !this.state.segments.length) return;
+    const segments = this.#normalizedSegments();
+    const minGap = 1000;
+    const splitPoint = this.state.playhead;
+    const index = segments.findIndex((seg) => splitPoint > seg.start + minGap && splitPoint < seg.end - minGap);
+    if (index === -1) {
+      this.fileDrop.setStatus('Split point is too close to the current trim edge.', true);
+      return;
+    }
+    const seg = segments[index];
+    segments.splice(index, 1, { start: seg.start, end: splitPoint }, { start: splitPoint, end: seg.end });
+    this.state.segments = segments;
+    this.activeHandle = `seg-${index}-end`;
+    this.trimControls.setActiveHandleLabel(this.#labelForHandle(this.activeHandle));
+    this.fileDrop.setStatus('Split created.');
+    this.#refresh();
+  }
+
+  #clearSplit() {
+    if (!this.state.metadata || this.state.segments.length <= 1) return;
+    const segments = this.#normalizedSegments();
+    this.state.segments = [{ start: segments[0].start, end: segments[segments.length - 1].end }];
+    this.activeHandle = 'seg-0-end';
+    this.trimControls.setActiveHandleLabel(this.#labelForHandle(this.activeHandle));
+    this.fileDrop.setStatus('Split cleared.');
+    this.#refresh();
+  }
+
+  #parseHandle(target) {
+    const match = /seg-(\d+)-(start|end)/.exec(target || '');
+    if (!match) return { index: 0, edge: 'end' };
+    return { index: Number(match[1]), edge: match[2] };
   }
 }
 

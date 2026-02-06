@@ -10,8 +10,9 @@ import {
   Mp4OutputFormat,
   Output,
   WebMOutputFormat,
+  AudioSample,
   canEncodeVideo,
-} from './lib/mediabunny.esm.js';
+} from 'https://cdn.jsdelivr.net/npm/mediabunny@1.32.0/dist/bundles/mediabunny.mjs';
 
 const US_PER_SECOND = 1_000_000;
 
@@ -168,14 +169,103 @@ export class VideoEngine {
       target,
     });
 
-    const conversion = await Conversion.init({
+    const segments = (options.segments && options.segments.length)
+      ? options.segments
+      : [{ start: options.trimStart, end: options.trimEnd }];
+    const normalized = segments
+      .map((seg) => ({ start: Math.max(0, seg.start), end: Math.max(0, seg.end) }))
+      .sort((a, b) => a.start - b.start);
+    const startUs = normalized[0].start;
+    const endUs = normalized[normalized.length - 1].end;
+    const conversionOptions = {
       input: this.input,
       output,
       trim: {
-        start: usToSeconds(options.trimStart),
-        end: usToSeconds(options.trimEnd),
+        start: usToSeconds(startUs),
+        end: usToSeconds(endUs),
       },
-    });
+    };
+
+    if (normalized.length > 1) {
+      const keepRanges = normalized.map((seg) => ({
+        start: usToSeconds(seg.start - startUs),
+        end: usToSeconds(seg.end - startUs),
+      }));
+      const rangesWithShift = [];
+      let removed = 0;
+      let previousEnd = keepRanges[0].start;
+      for (const range of keepRanges) {
+        removed += Math.max(0, range.start - previousEnd);
+        rangesWithShift.push({ ...range, shift: removed });
+        previousEnd = range.end;
+      }
+      const mapTimestamp = (timestamp, duration) => {
+        const dur = Number.isFinite(duration) ? duration : 0;
+        const end = timestamp + dur;
+        const epsilon = 1e-6;
+        for (const range of rangesWithShift) {
+          const fullyInside = timestamp >= range.start - epsilon && end <= range.end + epsilon;
+          if (fullyInside) return timestamp - range.shift;
+        }
+        return null;
+      };
+      conversionOptions.video = {
+        process: (sample) => {
+          const mapped = mapTimestamp(sample.timestamp, sample.duration);
+          if (mapped === null) return null;
+          sample.setTimestamp(mapped);
+          return sample;
+        },
+      };
+      conversionOptions.audio = {
+        process: (sample) => {
+          const duration = Number.isFinite(sample.duration) ? sample.duration : 0;
+          const start = sample.timestamp;
+          const end = start + duration;
+          const epsilon = 1e-6;
+          const overlaps = rangesWithShift
+            .map((range) => {
+              const overlapStart = Math.max(start, range.start);
+              const overlapEnd = Math.min(end, range.end);
+              if (overlapEnd - overlapStart <= 0) return null;
+              return { ...range, overlapStart, overlapEnd };
+            })
+            .filter(Boolean);
+
+          if (!overlaps.length) return null;
+          if (overlaps.length === 1 && start >= overlaps[0].start - epsilon && end <= overlaps[0].end + epsilon) {
+            sample.setTimestamp(start - overlaps[0].shift);
+            return sample;
+          }
+
+          const audioBuffer = sample.toAudioBuffer();
+          const results = [];
+          for (const overlap of overlaps) {
+            const offsetFrames = Math.round((overlap.overlapStart - start) * audioBuffer.sampleRate);
+            const lengthFrames = Math.max(0, Math.round((overlap.overlapEnd - overlap.overlapStart) * audioBuffer.sampleRate));
+            if (lengthFrames <= 0) continue;
+            const slice = new AudioBuffer({
+              numberOfChannels: audioBuffer.numberOfChannels,
+              length: lengthFrames,
+              sampleRate: audioBuffer.sampleRate,
+            });
+            for (let channel = 0; channel < audioBuffer.numberOfChannels; channel += 1) {
+              const temp = new Float32Array(lengthFrames);
+              audioBuffer.copyFromChannel(temp, channel, offsetFrames);
+              slice.copyToChannel(temp, channel, 0);
+            }
+            const newSamples = AudioSample.fromAudioBuffer(slice, overlap.overlapStart - overlap.shift);
+            results.push(...newSamples);
+          }
+          sample.close();
+          return results;
+        },
+      };
+    } else if (options.forceTranscode) {
+      conversionOptions.video = { forceTranscode: true };
+    }
+
+    const conversion = await Conversion.init(conversionOptions);
 
     if (!conversion.isValid) {
       throw new Error('Could not create export conversion for this file.');
@@ -195,7 +285,7 @@ export class VideoEngine {
     return {
       blob,
       fileSize: blob.size,
-      duration: options.trimEnd - options.trimStart,
+      duration: normalized.reduce((sum, seg) => sum + (seg.end - seg.start), 0),
       transmuxed: true,
     };
   }

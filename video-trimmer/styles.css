@@ -1,7 +1,17 @@
 .vt-layout {
   display: grid;
-  grid-template-columns: 340px 1fr;
+  grid-template-columns: 1fr;
   gap: 1rem;
+}
+
+.vt-sidebar,
+.vt-editor {
+  width: 100%;
+}
+
+.vt-app.is-empty .vt-editor,
+.vt-app.is-empty vt-info-panel {
+  display: none;
 }
 
 .vt-panel {
@@ -57,9 +67,30 @@
   position: relative;
   height: 90px;
   background: var(--panel-bg);
-  overflow: hidden;
+  overflow: visible;
   border: 1px solid var(--border-color);
   border-radius: 8px;
+}
+.vt-exclusions,
+.vt-dividers,
+.vt-handles,
+.vt-tabs,
+.vt-keyframes,
+.vt-playhead {
+  position: absolute;
+  inset: 0;
+}
+.vt-exclusions,
+.vt-dividers,
+.vt-keyframes,
+.vt-playhead {
+  pointer-events: none;
+}
+.vt-tabs {
+  pointer-events: none;
+}
+.vt-tabs .vt-handle-tab {
+  pointer-events: auto;
 }
 
 .vt-filmstrip {
@@ -86,11 +117,46 @@
   position: absolute;
   top: 0;
   bottom: 0;
-  width: 12px;
-  margin-left: -6px;
+  width: 14px;
+  margin-left: -7px;
   background: var(--primary-color);
   cursor: col-resize;
   z-index: 5;
+}
+.vt-handle.secondary {
+  background: #7dd3fc;
+}
+.vt-handle.active {
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.5);
+}
+.vt-handle-tab {
+  position: absolute;
+  top: 100%;
+  margin-top: 6px;
+  transform: translateX(calc(-50% + var(--tab-offset-x, 0px))) translateY(var(--tab-offset-y, 0px));
+  border: 1px solid var(--border-color);
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--text-primary);
+  border-radius: 10px;
+  padding: 0.25rem 0.55rem;
+  font-size: 0.8rem;
+  cursor: pointer;
+  z-index: 6;
+}
+.vt-handle-tab.active {
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 1px var(--primary-color);
+  background: rgba(148, 163, 184, 0.2);
+}
+.vt-split-marker {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  margin-left: -1px;
+  background: rgba(255, 255, 255, 0.75);
+  z-index: 3;
+  pointer-events: none;
 }
 
 .vt-playhead {
@@ -120,6 +186,54 @@
   display: block;
   margin-top: 0.2rem;
   font-variant-numeric: tabular-nums;
+}
+
+.vt-trim-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.vt-trim-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+.vt-nudge-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-top: 0.6rem;
+  flex-wrap: wrap;
+}
+.vt-nudge-group {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+.vt-trim-hint {
+  margin-left: auto;
+}
+.btn-compact {
+  padding: 0.35rem 0.6rem;
+  font-size: 0.85rem;
+}
+
+.vt-split-grid {
+  display: grid;
+  gap: 0.85rem;
+}
+
+.vt-split-block .vt-time-grid {
+  margin-top: 0.35rem;
+}
+
+.vt-split-total {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  font-weight: 600;
 }
 
 .vt-progress {
