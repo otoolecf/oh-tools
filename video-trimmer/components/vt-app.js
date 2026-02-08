@@ -25,6 +25,7 @@ class VTApp extends HTMLElement {
           <vt-video-preview></vt-video-preview>
           <vt-timeline></vt-timeline>
           <vt-trim-controls></vt-trim-controls>
+          <vt-convert-panel></vt-convert-panel>
           <vt-export-panel></vt-export-panel>
         </section>
       </div>
@@ -34,8 +35,17 @@ class VTApp extends HTMLElement {
     this.infoPanel = this.querySelector('vt-info-panel');
     this.preview = this.querySelector('vt-video-preview');
     this.timeline = this.querySelector('vt-timeline');
+    this.convertPanel = this.querySelector('vt-convert-panel');
     this.trimControls = this.querySelector('vt-trim-controls');
     this.exportPanel = this.querySelector('vt-export-panel');
+    customElements.whenDefined('vt-convert-panel').then(() => {
+      if (this.convertPanel?.setEngine) {
+        this.convertPanel.setEngine(this.engine);
+      }
+      if (this.state?.metadata && this.convertPanel?.setMetadata) {
+        this.convertPanel.setMetadata(this.state.metadata);
+      }
+    });
 
     this.addEventListener('vt-file-selected', (event) => this.#onFileSelected(event.detail.file));
     this.addEventListener('vt-playhead-change', (event) => this.#setPlayhead(event.detail.currentTimeUs));
@@ -46,6 +56,8 @@ class VTApp extends HTMLElement {
     this.addEventListener('vt-trim-change-request', (event) => this.#updateTrim(event.detail));
     this.addEventListener('vt-export-request', () => this.#exportTrim());
     this.addEventListener('vt-export-cancel', () => this.engine.cancelExport());
+    this.addEventListener('vt-convert-change', () => this.#refreshExportOperation());
+    this.addEventListener('vt-timecode-edit', (event) => this.#onTimecodeEdit(event.detail));
     this.addEventListener('vt-split-request', () => this.#splitAtPlayhead());
     this.addEventListener('vt-clear-split', () => this.#clearSplit());
     this.addEventListener('vt-handle-activate', (event) => {
@@ -72,9 +84,13 @@ class VTApp extends HTMLElement {
       this.preview.setFile(file);
       this.infoPanel.setMetadata(metadata);
       this.exportPanel.setReady(true);
+      this.exportPanel.setWarning('');
       this.fileDrop.setStatus('Video loaded.');
       this.classList.remove('is-empty');
       this.classList.add('is-ready');
+      if (this.convertPanel?.setMetadata) {
+        this.convertPanel.setMetadata(metadata);
+      }
       this.trimControls.setActiveHandleLabel(this.#labelForHandle(this.activeHandle || 'seg-0-end'));
       this.#refresh();
       this.#generateThumbnails();
@@ -127,24 +143,68 @@ class VTApp extends HTMLElement {
 
   async #exportTrim() {
     if (!this.state.file || !this.state.metadata) return;
+    const convert = this.convertPanel?.getValue ? this.convertPanel.getValue() : {
+      outputFormat: 'mp4',
+      videoCodec: 'copy',
+      audioCodec: 'copy',
+      quality: 'medium',
+      operation: 'transmux',
+    };
+    const segments = this.#normalizedSegments();
+    const trimForcesTranscode = segments.length > 1 || !this.#segmentsOnKeyframes(segments);
+    const operation = trimForcesTranscode || convert.operation === 'transcode' ? 'transcode' : 'transmux';
+    const suggestedExt = convert.outputFormat;
+    const suggestedName = this.#suggestedOutputName(this.state.file.name, suggestedExt);
+    const supportsPicker = typeof window.showSaveFilePicker === 'function';
+    let fileHandle = null;
+
+    if (!supportsPicker && this.state.metadata.fileSize > 500 * 1024 * 1024) {
+      this.exportPanel.setWarning('Your browser does not support direct file saving. For very large files, consider using Chrome.');
+    } else {
+      this.exportPanel.setWarning('');
+    }
+
+    if (supportsPicker) {
+      try {
+        fileHandle = await window.showSaveFilePicker({
+          suggestedName,
+          types: [this.#fileTypeForFormat(suggestedExt)],
+          excludeAcceptAllOption: false,
+        });
+      } catch (error) {
+        if (error?.name === 'AbortError') {
+          this.exportPanel.setProgress(0, 'Export canceled.', false);
+          return;
+        }
+        this.exportPanel.setProgress(0, error?.message || 'Could not open save dialog.', false);
+        return;
+      }
+    }
+
     this.exportPanel.setExporting(true);
-    this.exportPanel.setProgress(0, 'Preparing export...');
+    this.exportPanel.setOperationBadge(operation);
+    this.exportPanel.hideDownload();
+    this.exportPanel.setProgress(null, operation === 'transmux' ? 'Transmuxing...' : 'Transcoding...', true);
 
     try {
-      const ext = this.state.file.name.split('.').pop().toLowerCase();
-      const segments = this.#normalizedSegments();
-      const forceTranscode = segments.length > 1 || !this.#segmentsOnKeyframes(segments);
       const result = await this.engine.exportVideo({
         segments,
-        outputFormat: ext,
-        forceTranscode,
-      }, ({ percent, message }) => this.exportPanel.setProgress(percent, message));
+        outputFormat: convert.outputFormat,
+        videoCodec: convert.videoCodec,
+        audioCodec: convert.audioCodec,
+        quality: convert.quality,
+        fileHandle,
+        forceTranscode: trimForcesTranscode,
+      }, ({ percent, message, indeterminate }) => this.exportPanel.setProgress(percent, message, indeterminate));
 
-      const name = this.state.file.name.replace(/(\.[^.]+)?$/, `_trimmed.$1`).replace('..', '.');
-      this.exportPanel.setProgress(100, `Done. Output size ${(result.fileSize / (1024 * 1024)).toFixed(2)} MB`);
-      this.exportPanel.showDownload(result.blob, name);
+      if (fileHandle) {
+        this.exportPanel.setProgress(100, `Video saved successfully. Output size ${(result.fileSize / (1024 * 1024)).toFixed(2)} MB`, false);
+      } else {
+        this.exportPanel.setProgress(100, `Done. Output size ${(result.fileSize / (1024 * 1024)).toFixed(2)} MB`, false);
+        this.exportPanel.showDownload(result.blob, suggestedName);
+      }
     } catch (error) {
-      this.exportPanel.setProgress(0, error.message || 'Export failed.');
+      this.exportPanel.setProgress(0, error.message || 'Export failed.', false);
     } finally {
       this.exportPanel.setExporting(false);
     }
@@ -162,6 +222,7 @@ class VTApp extends HTMLElement {
     });
     this.timeline.setActiveHandle(this.activeHandle);
     this.trimControls.updateTimes(segments);
+    this.#refreshExportOperation();
   }
 
   #nudgeHandle({ direction, mode }) {
@@ -305,10 +366,75 @@ class VTApp extends HTMLElement {
     this.#refresh();
   }
 
+  #onTimecodeEdit({ edge, timestampUs, segmentIndex }) {
+    if (!this.state.metadata) return;
+    const segments = this.#normalizedSegments();
+    const index = Number.isInteger(segmentIndex) ? segmentIndex : 0;
+    const seg = segments[index];
+    if (!seg) {
+      this.trimControls.rejectTimecode(edge, index);
+      return;
+    }
+
+    if (!Number.isFinite(timestampUs) || timestampUs < 0 || timestampUs > this.state.metadata.duration) {
+      this.trimControls.rejectTimecode(edge, index);
+      return;
+    }
+
+    const minSegment = 1000;
+    const prev = index > 0 ? segments[index - 1] : null;
+    const next = index < segments.length - 1 ? segments[index + 1] : null;
+    if (edge === 'start') {
+      const min = prev ? prev.end : 0;
+      const max = seg.end - minSegment;
+      if (timestampUs < min || timestampUs > max) {
+        this.trimControls.rejectTimecode(edge, index);
+        return;
+      }
+      this.#updateTrim({ target: `seg-${index}-start`, timestampUs, fine: true });
+      return;
+    }
+    const min = seg.start + minSegment;
+    const max = next ? next.start : this.state.metadata.duration;
+    if (timestampUs < min || timestampUs > max) {
+      this.trimControls.rejectTimecode(edge, index);
+      return;
+    }
+    this.#updateTrim({ target: `seg-${index}-end`, timestampUs, fine: true });
+  }
+
+  #refreshExportOperation() {
+    if (!this.state.metadata) return;
+    const convert = this.convertPanel?.getValue ? this.convertPanel.getValue() : { operation: 'transmux' };
+    const segments = this.#normalizedSegments();
+    const trimForcesTranscode = segments.length > 1 || !this.#segmentsOnKeyframes(segments);
+    const operation = trimForcesTranscode || convert.operation === 'transcode' ? 'transcode' : 'transmux';
+    this.exportPanel.setOperationBadge(operation);
+  }
+
   #parseHandle(target) {
     const match = /seg-(\d+)-(start|end)/.exec(target || '');
     if (!match) return { index: 0, edge: 'end' };
     return { index: Number(match[1]), edge: match[2] };
+  }
+
+  #suggestedOutputName(inputName, ext) {
+    const base = String(inputName || 'video').replace(/\.[^.]+$/, '');
+    return `trimmed_${base}.${ext}`;
+  }
+
+  #fileTypeForFormat(format) {
+    const normalized = String(format || 'mp4').toLowerCase();
+    if (normalized === 'webm') {
+      return { description: 'WebM Video', accept: { 'video/webm': ['.webm'] } };
+    }
+    if (normalized === 'mkv') {
+      return { description: 'MKV Video', accept: { 'video/x-matroska': ['.mkv'] } };
+    }
+    if (normalized === 'mov') {
+      return { description: 'MOV Video', accept: { 'video/quicktime': ['.mov'] } };
+    }
+    return { description: 'MP4 Video', accept: { 'video/mp4': ['.mp4'] } };
   }
 }
 

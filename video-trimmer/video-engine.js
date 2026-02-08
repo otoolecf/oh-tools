@@ -9,8 +9,13 @@ import {
   MovOutputFormat,
   Mp4OutputFormat,
   Output,
+  QUALITY_HIGH,
+  QUALITY_LOW,
+  QUALITY_MEDIUM,
+  StreamTarget,
   WebMOutputFormat,
   AudioSample,
+  canEncodeAudio,
   canEncodeVideo,
 } from 'https://cdn.jsdelivr.net/npm/mediabunny@1.32.0/dist/bundles/mediabunny.mjs';
 
@@ -124,8 +129,13 @@ export class VideoEngine {
   }
 
   async isCodecSupported(codec) {
+    const normalized = String(codec || '').toLowerCase();
+    if (!normalized || normalized === 'copy') return true;
     try {
-      return await canEncodeVideo(codec);
+      if (['aac', 'opus', 'vorbis'].includes(normalized)) {
+        return await canEncodeAudio(normalized);
+      }
+      return await canEncodeVideo(normalized);
     } catch {
       return false;
     }
@@ -133,7 +143,7 @@ export class VideoEngine {
 
   getCompatibleCodecs(container) {
     const codecsByContainer = {
-      mp4: { video: ['avc', 'hevc', 'av1', 'vp9'], audio: ['aac', 'opus'] },
+      mp4: { video: ['avc', 'hevc', 'av1', 'vp9'], audio: ['aac'] },
       webm: { video: ['vp8', 'vp9', 'av1'], audio: ['opus', 'vorbis'] },
       mkv: { video: ['avc', 'hevc', 'vp8', 'vp9', 'av1'], audio: ['aac', 'opus', 'vorbis'] },
       mov: { video: ['avc', 'hevc', 'av1'], audio: ['aac'] },
@@ -163,20 +173,48 @@ export class VideoEngine {
       throw new Error('No file loaded');
     }
 
-    const target = new BufferTarget();
+    const outputFormat = (options.outputFormat || this.metadata.containerFormat || 'mp4').toLowerCase();
+    const videoCodecOption = (options.videoCodec || 'copy').toLowerCase();
+    const audioCodecOption = (options.audioCodec || 'copy').toLowerCase();
+    const compatible = this.getCompatibleCodecs(outputFormat);
+    const sourceVideoCodec = (this.metadata.videoCodec || '').toLowerCase();
+    const sourceAudioCodec = (this.metadata.audioCodec || '').toLowerCase();
+    const hasAudio = Boolean(this.audioTrack && sourceAudioCodec);
+
+    const videoCanCopy = videoCodecOption === 'copy'
+      && compatible.video.includes(sourceVideoCodec);
+    const audioCanCopy = !hasAudio || (audioCodecOption === 'copy'
+      && compatible.audio.includes(sourceAudioCodec));
+
+    let target;
+    let writable = null;
+    if (options.fileHandle) {
+      writable = await options.fileHandle.createWritable();
+      target = new StreamTarget(writable, { chunked: true, chunkSize: 16 * 1024 * 1024 });
+    } else {
+      target = new BufferTarget();
+    }
+
     const output = new Output({
-      format: this.#createOutputFormat(options.outputFormat),
+      format: this.#createOutputFormat(outputFormat),
       target,
     });
 
     const segments = (options.segments && options.segments.length)
       ? options.segments
-      : [{ start: options.trimStart, end: options.trimEnd }];
+      : [{
+        start: Number.isFinite(options.trimStart) ? options.trimStart : 0,
+        end: Number.isFinite(options.trimEnd) ? options.trimEnd : this.metadata.duration,
+      }];
     const normalized = segments
       .map((seg) => ({ start: Math.max(0, seg.start), end: Math.max(0, seg.end) }))
       .sort((a, b) => a.start - b.start);
     const startUs = normalized[0].start;
     const endUs = normalized[normalized.length - 1].end;
+    const trimTranscodeRequired = Boolean(options.forceTranscode || normalized.length > 1);
+    const needsVideoTranscode = trimTranscodeRequired || videoCodecOption !== 'copy' || !videoCanCopy;
+    const needsAudioTranscode = trimTranscodeRequired || (hasAudio && (audioCodecOption !== 'copy' || !audioCanCopy));
+    const transmuxed = !needsVideoTranscode && !needsAudioTranscode;
     const conversionOptions = {
       input: this.input,
       output,
@@ -210,6 +248,9 @@ export class VideoEngine {
         return null;
       };
       conversionOptions.video = {
+        forceTranscode: true,
+        ...(videoCodecOption !== 'copy' ? { codec: videoCodecOption } : {}),
+        ...this.#resolveQualityOptions(options.quality),
         process: (sample) => {
           const mapped = mapTimestamp(sample.timestamp, sample.duration);
           if (mapped === null) return null;
@@ -218,6 +259,9 @@ export class VideoEngine {
         },
       };
       conversionOptions.audio = {
+        forceTranscode: true,
+        ...(hasAudio && audioCodecOption !== 'copy' ? { codec: audioCodecOption } : {}),
+        ...this.#resolveQualityOptions(options.quality),
         process: (sample) => {
           const duration = Number.isFinite(sample.duration) ? sample.duration : 0;
           const start = sample.timestamp;
@@ -261,8 +305,21 @@ export class VideoEngine {
           return results;
         },
       };
-    } else if (options.forceTranscode) {
-      conversionOptions.video = { forceTranscode: true };
+    } else {
+      if (needsVideoTranscode) {
+        conversionOptions.video = {
+          forceTranscode: true,
+          ...(videoCodecOption !== 'copy' ? { codec: videoCodecOption } : {}),
+          ...this.#resolveQualityOptions(options.quality),
+        };
+      }
+      if (hasAudio && needsAudioTranscode) {
+        conversionOptions.audio = {
+          forceTranscode: true,
+          ...(audioCodecOption !== 'copy' ? { codec: audioCodecOption } : {}),
+          ...this.#resolveQualityOptions(options.quality),
+        };
+      }
     }
 
     const conversion = await Conversion.init(conversionOptions);
@@ -272,21 +329,46 @@ export class VideoEngine {
     }
 
     this.exportConversion = conversion;
+    const operationMessage = transmuxed ? 'Transmuxing...' : 'Transcoding...';
+    if (onProgress) {
+      onProgress({ percent: null, message: operationMessage, indeterminate: true, transmuxed });
+    }
     conversion.onProgress = (progress) => {
       if (onProgress) {
-        onProgress({ percent: Math.round(progress * 100), message: 'Trimming video...' });
+        onProgress({ percent: Math.round(progress * 100), message: operationMessage, indeterminate: false, transmuxed });
       }
     };
 
-    await conversion.execute();
-    this.exportConversion = null;
+    try {
+      await conversion.execute();
+    } finally {
+      this.exportConversion = null;
+    }
 
-    const blob = new Blob([target.buffer], { type: `video/${options.outputFormat}` });
+    if (writable && typeof writable.close === 'function') {
+      try {
+        await writable.close();
+      } catch {
+        // Ignore stream close errors here; conversion completion is the source of truth.
+      }
+    }
+
+    if (options.fileHandle) {
+      const savedFile = await options.fileHandle.getFile();
+      return {
+        blob: null,
+        fileSize: savedFile.size,
+        duration: normalized.reduce((sum, seg) => sum + (seg.end - seg.start), 0),
+        transmuxed,
+      };
+    }
+
+    const blob = new Blob([target.buffer], { type: this.#mimeForContainer(outputFormat) });
     return {
       blob,
       fileSize: blob.size,
       duration: normalized.reduce((sum, seg) => sum + (seg.end - seg.start), 0),
-      transmuxed: true,
+      transmuxed,
     };
   }
 
@@ -331,6 +413,25 @@ export class VideoEngine {
     if (normalized === 'mkv') return new MkvOutputFormat();
     if (normalized === 'mov') return new MovOutputFormat();
     return new Mp4OutputFormat();
+  }
+
+  #resolveQualityOptions(quality) {
+    const normalized = String(quality || 'medium').toLowerCase();
+    if (normalized === 'high') return { bitrate: QUALITY_HIGH };
+    if (normalized === 'low') return { bitrate: QUALITY_LOW };
+    if (normalized === 'medium') return { bitrate: QUALITY_MEDIUM };
+    const numeric = Number(quality);
+    if (Number.isFinite(numeric) && numeric > 0) {
+      return { bitrate: numeric };
+    }
+    return { bitrate: QUALITY_MEDIUM };
+  }
+
+  #mimeForContainer(container) {
+    if (container === 'webm') return 'video/webm';
+    if (container === 'mkv') return 'video/x-matroska';
+    if (container === 'mov') return 'video/quicktime';
+    return 'video/mp4';
   }
 }
 
