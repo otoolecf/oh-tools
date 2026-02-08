@@ -23,7 +23,10 @@
           "name": "wasm-vips",
           "url": "https://github.com/kleisauke/wasm-vips"
         },
-        { "name": "heic-to", "url": "https://github.com/hoppergee/heic-to" },
+        {
+          "name": "heic-to",
+          "url": "https://github.com/hoppergee/heic-to"
+        },
         {
           "name": "ExifReader",
           "url": "https://github.com/mattiasw/ExifReader"
@@ -37,7 +40,10 @@
       "path": "/barcode-generator/",
       "status": "active",
       "poweredBy": [
-        { "name": "bwip-js", "url": "https://github.com/metafloor/bwip-js" }
+        {
+          "name": "bwip-js",
+          "url": "https://github.com/metafloor/bwip-js"
+        }
       ],
       "heroExtra": ""
     },
@@ -52,7 +58,7 @@
           "url": "https://duckdb.org/docs/api/wasm/overview"
         }
       ],
-      "heroExtra": "<p style=\"font-size: 0.9rem; color: var(--text-secondary); margin-top: 0.5rem;\">Supports <strong>CSV ⇄ JSON ⇄ Parquet ⇄ Excel</strong> conversions with advanced SQL analytics. Features auto-schema detection, statistics generation, full-text search, and a complete SQL console for complex queries. Powered by DuckDB extensions: excel, fts, json, parquet.</p><p style=\"font-size: 0.85rem; color: var(--text-secondary); margin-top: 0.75rem;\">For SQL help and advanced queries, see the <a href=\"https://duckdb.org/docs/stable/\" target=\"_blank\" style=\"color: var(--link-color);\">DuckDB documentation</a>.</p>"
+      "heroExtra": "<p style=\"font-size: 0.9rem; color: var(--text-secondary); margin-top: 0.5rem;\">Supports <strong>CSV \u21c4 JSON \u21c4 Parquet \u21c4 Excel</strong> conversions with advanced SQL analytics. Features auto-schema detection, statistics generation, full-text search, and a complete SQL console for complex queries. Powered by DuckDB extensions: excel, fts, json, parquet.</p><p style=\"font-size: 0.85rem; color: var(--text-secondary); margin-top: 0.75rem;\">For SQL help and advanced queries, see the <a href=\"https://duckdb.org/docs/stable/\" target=\"_blank\" style=\"color: var(--link-color);\">DuckDB documentation</a>.</p>"
     },
     {
       "name": "JSON Utilities",
@@ -64,7 +70,10 @@
           "name": "jsonrepair",
           "url": "https://github.com/josdejong/jsonrepair"
         },
-        { "name": "JSON5", "url": "https://github.com/json5/json5" }
+        {
+          "name": "JSON5",
+          "url": "https://github.com/json5/json5"
+        }
       ],
       "heroExtra": "<p style=\"font-size: 0.9rem; color: var(--text-secondary); margin-top: 0.5rem;\"><strong>Clean</strong> removes comments, fixes quotes, handles MongoDB syntax, and repairs malformed JSON. If validation or formatting fails, try using <strong>Clean</strong> first to fix syntax errors.</p>"
     },
@@ -74,7 +83,10 @@
       "path": "/diff-utilities/",
       "status": "active",
       "poweredBy": [
-        { "name": "diff", "url": "https://github.com/kpdecker/jsdiff" }
+        {
+          "name": "diff",
+          "url": "https://github.com/kpdecker/jsdiff"
+        }
       ],
       "heroExtra": ""
     },
@@ -97,7 +109,10 @@
       "path": "/passphrase-generator/",
       "status": "active",
       "poweredBy": [
-        { "name": "PassHelp", "url": "https://github.com/passhelp/passhelp" }
+        {
+          "name": "PassHelp",
+          "url": "https://github.com/passhelp/passhelp"
+        }
       ],
       "heroExtra": ""
     },
@@ -107,9 +122,25 @@
       "path": "/hash-generator/",
       "status": "active",
       "poweredBy": [
-        { "name": "CryptoJS", "url": "https://github.com/brix/crypto-js" }
+        {
+          "name": "CryptoJS",
+          "url": "https://github.com/brix/crypto-js"
+        }
       ],
       "heroExtra": ""
+    },
+    {
+      "name": "Video Trimmer",
+      "description": "Trim and convert videos directly in your browser. Visual timeline with frame-by-frame precision, keyframe indicators, and format conversion. All processing happens locally \u2014 no data is sent to any server.",
+      "path": "/video-trimmer/",
+      "status": "active",
+      "poweredBy": [
+        {
+          "name": "Mediabunny",
+          "url": "https://mediabunny.dev/"
+        }
+      ],
+      "heroExtra": "<p style=\"font-size: 0.95rem; font-weight: 500; color: var(--text-primary); margin-top: 1rem;\">Desktop or wide-screen tablet recommended for best editing experience.</p>"
     }
   ]
 }
