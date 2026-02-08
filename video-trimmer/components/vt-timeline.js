@@ -27,6 +27,7 @@ class VTTimeline extends HTMLElement {
     this.filmstrip = this.querySelector('#filmstrip');
     this.exclusions = this.querySelector('#exclusions');
     this.keyframesEl = this.querySelector('#keyframes');
+    this.playheadEl = this.querySelector('#playhead');
 
     this.timeline.addEventListener('click', (event) => {
       const ratio = this.#eventRatio(event);
@@ -45,14 +46,30 @@ class VTTimeline extends HTMLElement {
   }
 
   setData({ duration, segments, playhead, keyframes, frameDurationUs }) {
-    this.state = {
+    const nextState = {
       duration,
       segments: segments && segments.length ? segments : [{ start: 0, end: duration }],
       playhead,
       keyframes: keyframes || [],
       frameDurationUs: frameDurationUs || 33333,
     };
-    this.#render();
+    const shouldFullRender = !this.state
+      || nextState.duration !== this.state.duration
+      || nextState.frameDurationUs !== this.state.frameDurationUs
+      || !this.#segmentsEqual(nextState.segments, this.state.segments)
+      || !this.#keyframesEqual(nextState.keyframes, this.state.keyframes);
+    this.state = nextState;
+    if (shouldFullRender) {
+      this.#render();
+      return;
+    }
+    this.#renderPlayhead();
+  }
+
+  setPlayhead(playhead) {
+    if (!Number.isFinite(playhead)) return;
+    this.state.playhead = Math.max(0, Math.min(this.state.duration || 1, playhead));
+    this.#renderPlayhead();
   }
 
   setActiveHandle(handleId) {
@@ -132,7 +149,7 @@ class VTTimeline extends HTMLElement {
       `;
     });
 
-    this.querySelector('#playhead').style.left = `${(playhead / duration) * 100}%`;
+    this.#renderPlayhead();
     this.keyframesEl.innerHTML = keyframes
       .map((timestamp) => `<span class="vt-key" style="left:${(timestamp / duration) * 100}%"></span>`)
       .join('');
@@ -244,6 +261,30 @@ class VTTimeline extends HTMLElement {
   #eventRatio(event) {
     const rect = this.timeline.getBoundingClientRect();
     return Math.min(1, Math.max(0, (event.clientX - rect.left) / rect.width));
+  }
+
+  #renderPlayhead() {
+    if (!this.playheadEl) return;
+    const duration = this.state.duration || 1;
+    this.playheadEl.style.left = `${(this.state.playhead / duration) * 100}%`;
+  }
+
+  #segmentsEqual(a, b) {
+    if (a === b) return true;
+    if (!a || !b || a.length !== b.length) return false;
+    for (let i = 0; i < a.length; i += 1) {
+      if (a[i].start !== b[i].start || a[i].end !== b[i].end) return false;
+    }
+    return true;
+  }
+
+  #keyframesEqual(a, b) {
+    if (a === b) return true;
+    if (!a || !b || a.length !== b.length) return false;
+    for (let i = 0; i < a.length; i += 1) {
+      if (a[i] !== b[i]) return false;
+    }
+    return true;
   }
 }
 

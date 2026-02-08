@@ -97,7 +97,7 @@ class VTApp extends HTMLElement {
   #setPlayhead(currentTimeUs) {
     if (!this.state.metadata) return;
     this.state.playhead = Math.max(0, Math.min(this.state.metadata.duration, currentTimeUs));
-    this.#refresh();
+    this.timeline.setPlayhead(this.state.playhead);
   }
 
   #updateTrim({ target, timestampUs, fine }) {

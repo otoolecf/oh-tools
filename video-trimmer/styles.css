@@ -42,6 +42,21 @@
   display: inline-block;
 }
 .btn-secondary { background: #666; }
+.btn.is-holding {
+  filter: brightness(1.15);
+}
+.vt-icon-btn {
+  min-width: 2.35rem;
+  text-align: center;
+  padding-left: 0.55rem;
+  padding-right: 0.55rem;
+  font-weight: 700;
+  font-size: 0.9rem;
+}
+.vt-icon-btn span {
+  display: inline-block;
+  min-width: 1.25rem;
+}
 
 .vt-video-wrap video {
   width: 100%;
@@ -140,13 +155,19 @@
   border-radius: 10px;
   padding: 0.25rem 0.55rem;
   font-size: 0.8rem;
+  font-weight: 600;
   cursor: pointer;
   z-index: 6;
+  opacity: 0.82;
 }
 .vt-handle-tab.active {
   border-color: var(--primary-color);
-  box-shadow: 0 0 0 1px var(--primary-color);
-  background: rgba(148, 163, 184, 0.2);
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.45);
+  background: var(--primary-color);
+  color: #fff;
+  font-weight: 800;
+  opacity: 1;
+  transform: translateX(calc(-50% + var(--tab-offset-x, 0px))) translateY(calc(var(--tab-offset-y, 0px) - 1px)) scale(1.06);
 }
 .vt-split-marker {
   position: absolute;
@@ -182,10 +203,23 @@
   grid-template-columns: repeat(3, 1fr);
   gap: 0.75rem;
 }
+.vt-time-card {
+  border: 1px solid var(--border-color);
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 10px;
+  padding: 0.55rem 0.65rem;
+}
 .vt-time-grid strong {
   display: block;
   margin-top: 0.2rem;
   font-variant-numeric: tabular-nums;
+}
+.vt-time-card small {
+  display: block;
+  margin-top: 0.2rem;
+  color: var(--text-secondary);
+  font-size: 0.76rem;
+  line-height: 1.35;
 }
 
 .vt-trim-header {
@@ -194,6 +228,12 @@
   justify-content: space-between;
   gap: 0.75rem;
   flex-wrap: wrap;
+}
+.vt-control-help {
+  margin: 0.5rem 0 0.2rem;
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  line-height: 1.45;
 }
 
 .vt-trim-actions {
@@ -214,6 +254,19 @@
 }
 .vt-trim-hint {
   margin-left: auto;
+}
+.vt-trim-hint strong {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.65rem;
+  padding: 0.1rem 0.45rem;
+  border-radius: 999px;
+  border: 1px solid var(--primary-color);
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff;
+  font-size: 0.95rem;
+  line-height: 1.1;
 }
 .btn-compact {
   padding: 0.35rem 0.6rem;
