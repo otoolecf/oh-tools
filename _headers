@@ -50,3 +50,8 @@
 /*/node_modules/*/*/*.js
   Content-Type: application/javascript
   Cross-Origin-Resource-Policy: cross-origin
+# SharedArrayBuffer support for video-trimmer (WebCodecs)
+/video-trimmer/*
+  Cross-Origin-Embedder-Policy: require-corp
+  Cross-Origin-Opener-Policy: same-origin
+  Cross-Origin-Resource-Policy: cross-origin
