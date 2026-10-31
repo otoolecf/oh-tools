@@ -4,7 +4,7 @@ let vips;
 let initialization;
 let nextImage = 0;
 const images = new Map();
-const vendor = '/vendor/wasm-vips-0.0.14/';
+const vendor = '/vendor/wasm-vips-0.0.19/';
 
 function initialize() {
   initialization ||= (async () => {
@@ -12,7 +12,7 @@ function initialize() {
     vips = await Vips({
       mainScriptUrlOrBlob: new URL(`${vendor}vips.js`, self.location.href).href,
       locateFile: path => new URL(`${vendor}${path}`, self.location.href).href,
-      dynamicLibraries: ['vips-heif.wasm', 'vips-resvg.wasm'],
+      dynamicLibraries: ['vips-heif.wasm', 'vips-jxl.wasm', 'vips-resvg.wasm'],
     });
   })();
   return initialization;

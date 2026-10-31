@@ -28,8 +28,8 @@ if (staging) {
 
 // Emscripten's loader starts pthread workers from its own script URL. Keep the
 // loader and its dynamic libraries together instead of bundling the loader.
-for (const file of ['vips.js', 'vips.wasm', 'vips-heif.wasm', 'vips-resvg.wasm']) {
-  await copy(`node_modules/wasm-vips/lib/${file}`, `vendor/wasm-vips-0.0.14/${file}`);
+for (const file of ['vips.js', 'vips.wasm', 'vips-heif.wasm', 'vips-jxl.wasm', 'vips-resvg.wasm']) {
+  await copy(`node_modules/wasm-vips/lib/${file}`, `vendor/wasm-vips-0.0.19/${file}`);
 }
 await copy('image-editor/engine-worker.js');
 
