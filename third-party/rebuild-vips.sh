@@ -414,7 +414,7 @@ node --version
 [ -f "$TARGET/lib/pkgconfig/libtiff-4.pc" ] || (
   stage "Compiling tiff"
   mkdir $DEPS/tiff
-  cat "${OH_SOURCE_DIR}/libtiff-libtiff-v4.7.2.tar.gz" | tar xzC $DEPS/tiff --strip-components=1
+  cat "${OH_SOURCE_DIR}/tiff-4.7.2.tar.gz" | tar xzC $DEPS/tiff --strip-components=1
   cd $DEPS/tiff
   # Build with -DCMAKE_FIND_ROOT_PATH=$TARGET to ensure WebP support (see https://github.com/emscripten-core/emscripten/issues/10078)
   emcmake cmake -B_build -S. -DCMAKE_BUILD_TYPE=MinSizeRel -DCMAKE_INSTALL_PREFIX=$TARGET -DCMAKE_FIND_ROOT_PATH=$TARGET \
