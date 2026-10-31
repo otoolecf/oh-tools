@@ -56,7 +56,7 @@ npm run deploy:check
 npm run deploy
 ```
 
-For forks, choose your own Worker name in `wrangler.jsonc`. See [CLOUDFLARE_DEPLOYMENT.md](CLOUDFLARE_DEPLOYMENT.md) for Git builds, Pages compatibility, and the production domain cutover.
+For forks, choose your own Worker name in `wrangler.jsonc`. See [CLOUDFLARE_DEPLOYMENT.md](CLOUDFLARE_DEPLOYMENT.md) for Git builds, Pages deployment, and custom-domain setup.
 
 ### Browser Bridge Configuration
 

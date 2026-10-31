@@ -1,6 +1,6 @@
 # Cloudflare Deployment Guide
 
-The site builds into `dist/` and can run on Workers Static Assets or the existing Pages project. Browser Bridge's signaling Worker stays separate. No domain or existing production service is changed by building or running a deployment dry run.
+The site builds into `dist/` and can run on Workers Static Assets or Cloudflare Pages. Browser Bridge's signaling Worker is deployed separately. Building or running a deployment dry run does not change a hosted service.
 
 ## Current Hosted Site
 
@@ -10,18 +10,12 @@ The production Pages project is `oh-tools`, connected to
 `www.oh-tools.net`. Automatic Pages preview deployments are disabled; use
 the explicit Workers staging deployment below for review.
 
-The previous `otoolebox` Pages project was deleted after the new deployment and
-both production domains were verified. Its original repository remains private
-until retired separately. Browser Bridge's
-production signaling Worker is deployed separately; switching the site's Git
-source does not migrate that backend.
-
-The production signaling rollout is now complete. `signaling.oh-tools.net`
+`signaling.oh-tools.net`
 targets the SQLite-backed `oh-tools-signaling` Worker. Its public custom domain,
 bindings and migration are in `browser-bridge/wrangler.production.jsonc`;
-`npm run deploy:signaling:production` deploys it explicitly. The previous Worker
-is retained with public endpoints disabled. See the Browser Bridge setup guide
-for the cutover and rollback behavior.
+`npm run deploy:signaling:production` deploys it explicitly. Site deployments
+do not deploy the signaling Worker. See the [Browser Bridge setup guide](browser-bridge/README-OTP.md)
+for local development and deployment instructions.
 
 ## Build And Preview
 
@@ -64,27 +58,29 @@ For Workers Builds previews, use `npm run build:staging` followed by
 `npx wrangler deploy --env staging`. Do not use a production build on a public
 preview hostname. `noindex` controls indexing; it does not restrict access.
 
-### Production Candidate
+### Production Deployment
 
 1. Authenticate with `npx wrangler login`, or supply a Cloudflare API token through your shell/CI secret store.
 2. Check the public Worker name in `wrangler.jsonc`; forks must choose their own name.
 3. Run `npm run deploy`. Only the built `dist/` directory is uploaded.
-4. Test the resulting Worker URL before adding `oh-tools.net` as a custom domain.
+4. Test the resulting Worker URL before adding your custom domain.
 
 For Workers Builds production deployments, connect the Git repository, select Node.js 22, use `npm run build` as the build command and `npx wrangler deploy` as the deploy command. Configure preview builds separately as described above. Set `VITE_SIGNALING_URL` as a build variable only when that preview should use a dedicated signaling service.
 
 An alternate hostname without `VITE_SIGNALING_URL` defaults to Browser Bridge Direct Exchange. Test Simple Codes on a preview only after explicitly configuring its signaling endpoint. Vite embeds this URL in the client bundle; changing it requires a rebuild.
 
-## Existing Pages Project And Domain Cutover
+## Pages Deployment
 
-The same `dist/` output works on Pages while the hosting migration is reviewed:
+Connect your repository to a Pages project with these settings:
 
 - Build command: `npm run build`.
 - Build output directory: `dist` (not the repository root).
 - Node.js: 22.
 - Keep the committed `_headers` and `_redirects`; asset preparation copies them into the build output.
 
-Validate the Worker deployment first, then move the custom domain from Pages to Workers in Cloudflare. Keep the Pages project available during the cutover so it can be restored if needed. The separate `signaling.oh-tools.net` service does not need to move. Do not delete the Pages project as part of an initial migration.
+Test the deployment before connecting your custom domain. Disable automatic
+preview builds unless they are configured to use the staging build and its
+`noindex` headers.
 
 ## Browser Bridge Signaling Worker
 
@@ -101,7 +97,10 @@ Choose a Worker name and a distinct rate-limiter namespace number in the ignored
 npm run deploy:signaling
 ```
 
-The site deployment does not deploy or modify this Worker. The new backend replaces KV with atomic SQLite inboxes; old KV records do not migrate. Let old sessions expire before changing the production signaling deployment. Never bind test harnesses to a public deployment. Keep credentials in Wrangler secrets or CI settings, never in a frontend variable or source file.
+The site deployment does not deploy or modify this Worker. The backend requires
+SQLite Durable Objects and the rate-limiter binding. Never bind test harnesses
+to a public deployment. Keep credentials in Wrangler secrets or CI settings,
+never in a frontend variable or source file.
 
 For a fork's frontend, copy `.env.example` to `.env.local`, set `VITE_SIGNALING_URL=https://your-signaling-worker.example`, and rebuild. The real `oh-tools.net` hostname automatically uses `https://signaling.oh-tools.net`; localhost uses http://localhost:3001.
 

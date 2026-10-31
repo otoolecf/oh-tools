@@ -19,9 +19,9 @@ required rate limiter and one SQLite Durable Object per code. Records expire
 after fifteen minutes; atomic creation and read/deletion prevent duplicate
 creation/consumption. The service receives Base64-encoded connection details,
 not encrypted signaling. It can read those details; WebRTC encrypts the
-subsequent data channel. The new backend stores no IP in signaling records. A consumed code remains reserved without its payload until expiry, preventing stale retries from retrieving a new record under a reused code. Live-record expiration does not promise physical erasure from provider backups/logs.
-The deployed backend must use the new configuration to receive these fixes;
-a static-site deployment does not update it.
+subsequent data channel. The backend stores no IP in signaling records. A consumed code remains reserved without its payload until expiry, preventing stale retries from retrieving a new record under a reused code. Live-record expiration does not promise physical erasure from provider backups/logs.
+The backend requires its own deployment with the storage and rate-limiter
+bindings; a static-site deployment does not update it.
 
 No OPFS persistence, automatic remote uploads, or encrypted rendezvous from the
 archived proposals is implied. See the public About page for network/privacy

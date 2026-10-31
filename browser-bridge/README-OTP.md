@@ -1,12 +1,12 @@
 # Browser Bridge Simple Codes Setup
 
-Simple Codes uses encoded WebRTC offer/answer records and six-digit codes to establish a peer-to-peer connection. The Worker stores encoded signaling records for up to 15 minutes and deletes a record after retrieval. The maintained Worker uses one SQLite Durable Object per code, with atomic creation and read/delete operations. Older KV deployments must migrate to gain this protection. Direct Exchange avoids the signaling service.
+Simple Codes uses encoded WebRTC offer/answer records and six-digit codes to establish a peer-to-peer connection. The Worker stores encoded signaling records for up to 15 minutes and clears a record's payload after retrieval. One SQLite Durable Object per code provides atomic creation and consumption; a consumed code stays reserved until expiry. Direct Exchange avoids the signaling service.
 
 The current frontend uses Base64 encoding, not encryption, for signaling metadata. The service can decode these records. WebRTC encrypts the subsequent data-channel transport; this does not make the signaling records confidential.
 
 ## Hosted Production Backend
 
-`signaling.oh-tools.net` runs the hardened `oh-tools-signaling` Worker with
+`signaling.oh-tools.net` runs the `oh-tools-signaling` Worker with
 SQLite inboxes and the mandatory rate limiter. Its configuration is committed
 as `wrangler.production.jsonc`. Deploy the hosted environments explicitly:
 
@@ -16,17 +16,11 @@ npm run deploy:signaling:staging
 ```
 
 Production is reachable only through its custom domain; its `workers.dev`
-and preview URLs are disabled. The former KV Worker is retained for rollback
-with its public endpoints disabled. The cutover observed no pending legacy
-codes; the old KV namespace was retained rather than deleted.
+and preview URLs are disabled.
 
 The configured rate is 10 requests per 60 seconds per IP in each Cloudflare
 location. Cloudflare's rate limiter is approximate and eventually consistent,
 so bursts can exceed that threshold before counters synchronize.
-
-For rollback, move the custom domain to the retained previous Worker through
-Cloudflare. Leave the new inbox namespace intact: codes created after the
-cutover are stored there and are not available to the old KV backend.
 
 ## Local Testing
 
@@ -74,6 +68,6 @@ Rebuild or restart the dev server after changing this value. This is a public UR
 ## Troubleshooting
 
 - If Simple Codes is unavailable, configure `VITE_SIGNALING_URL` and rebuild, or use Direct Exchange.
-- If a code is not found, it may have expired, been mistyped, or already retrieved. A retrieved code cannot be retrieved again. Codes from an older KV deployment will not migrate; let active sessions expire before cutover.
+- If a code is not found, it may have expired, been mistyped, or already retrieved. A retrieved code cannot be retrieved again.
 - If storage fails, check the Worker configuration, required rate limiter and SIGNALING_INBOXES binding.
-- Frontend and signaling deployments are separate. Validate the backend on a staging Worker before a production cutover.
+- Frontend and signaling deployments are separate. Validate the backend on a staging Worker before deploying to production.

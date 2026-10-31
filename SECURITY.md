@@ -19,7 +19,7 @@ Please report issues involving data exposure, unsafe file handling, cross-site s
 
 ## Known Signaling Limitation
 
-Browser Bridge currently Base64-encodes signaling records; this is not encryption. A signaling-service operator can decode connection metadata. WebRTC data-channel traffic is encrypted separately. The maintained Worker atomically stores and consumes records in SQLite Durable Objects, limits record sizes, and fails closed if rate limiting is unavailable. Older KV deployments lack these protections until migrated. Frontend deployments do not update the signaling Worker. Expiration and consumption limit live retrieval; they do not guarantee physical erasure from provider backups or logs.
+Browser Bridge currently Base64-encodes signaling records; this is not encryption. A signaling-service operator can decode connection metadata. WebRTC data-channel traffic is encrypted separately. The maintained Worker atomically stores and consumes records in SQLite Durable Objects, limits record sizes, and fails closed if rate limiting is unavailable. Frontend deployments do not update the signaling Worker. Expiration and consumption limit live retrieval; they do not guarantee physical erasure from provider backups or logs.
 
 SQL history is memory-only and excludes values, URLs, and credential-related statements. The old persisted history key is deleted on startup. Avoid pasting credentials into shared-device browser tabs; runtime extensions/remote URLs contact their destination services.
 
