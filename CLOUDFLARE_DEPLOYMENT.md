@@ -10,8 +10,9 @@ The production Pages project is `oh-tools`, connected to
 `www.oh-tools.net`. Automatic Pages preview deployments are disabled; use
 the explicit Workers staging deployment below for review.
 
-The previous `otoolebox` Pages project is retained for rollback, with automatic
-deployments disabled. Its original repository remains private. Browser Bridge's
+The previous `otoolebox` Pages project was deleted after the new deployment and
+both production domains were verified. Its original repository remains private
+until retired separately. Browser Bridge's
 production signaling Worker is deployed separately; switching the site's Git
 source does not migrate that backend.
 
