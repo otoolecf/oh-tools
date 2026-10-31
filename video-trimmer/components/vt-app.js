@@ -1,3 +1,4 @@
+import { videoAppMarkup } from '../initial-markup.mjs';
 import { VideoEngine } from '../video-engine.js';
 
 window.formatTimecode = function formatTimecode(timestampUs) {
@@ -15,21 +16,7 @@ class VTApp extends HTMLElement {
     this.state = { file: null, metadata: null, segments: [], playhead: 0 };
     this.classList.add('vt-app', 'is-empty');
 
-    this.innerHTML = `
-      <div class="vt-layout">
-        <section class="vt-sidebar">
-          <vt-file-drop></vt-file-drop>
-          <vt-info-panel></vt-info-panel>
-        </section>
-        <section class="vt-editor">
-          <vt-video-preview></vt-video-preview>
-          <vt-timeline></vt-timeline>
-          <vt-trim-controls></vt-trim-controls>
-          <vt-convert-panel></vt-convert-panel>
-          <vt-export-panel></vt-export-panel>
-        </section>
-      </div>
-    `;
+    if (!this.querySelector('.vt-layout')) this.innerHTML = videoAppMarkup();
 
     this.fileDrop = this.querySelector('vt-file-drop');
     this.infoPanel = this.querySelector('vt-info-panel');

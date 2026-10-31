@@ -658,7 +658,7 @@ class TintGrayscaleOperator extends HTMLElement {
     const tintLab = tintRgb.colourspace("lab");
 
     // Extract LAB values from the tint color
-    const labPixel = tintLab.getpoint(0, 0);
+    const labPixel = await tintLab.getpoint(0, 0);
     const tintChroma = [labPixel[1], labPixel[2]]; // A and B channels
 
     console.log("Tint LAB chroma:", tintChroma);
@@ -685,6 +685,7 @@ class TintGrayscaleOperator extends HTMLElement {
       if (image.hasAlpha()) {
         // Handle alpha channel separately during blending
         const originalWithoutAlpha = image.extractBand(0, { n: image.bands - 1 });
+        result = await result;
         const resultWithoutAlpha = result.extractBand(0, { n: result.bands - 1 });
         const alpha = image.extractBand(image.bands - 1);
         

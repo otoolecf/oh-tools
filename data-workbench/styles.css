@@ -3,10 +3,10 @@
 :root {
     --panel-bg: var(--card-bg);
     --panel-border: var(--border-color);
-    --success-color: #10b981;
-    --warning-color: #f59e0b;
-    --error-color: #ef4444;
-    --info-color: #3b82f6;
+    --success-color: #047857;
+    --warning-color: #a16207;
+    --error-color: #b91c1c;
+    --info-color: #1d4ed8;
 }
 
 /* Main App Layout */
@@ -246,7 +246,7 @@
 }
 
 #schemaTab bdw-schema-card .panel h3,
-#statsTab bdw-stats-panel .panel h3 {
+#statsTab bdw-stats-panel .panel h2, .panel h3 {
     margin-top: 0;
 }
 
@@ -345,7 +345,7 @@
     padding: 1.5rem;
 }
 
-.panel h3 {
+.panel h2, .panel h3 {
     margin: 0 0 1rem 0;
     color: var(--primary-color);
     font-size: 1.1rem;
@@ -971,8 +971,8 @@
 /* Mobile Optimization Notice */
 .mobile-notice {
     display: none;
-    background: var(--info-color);
-    color: white;
+    background: var(--button-bg);
+    color: var(--button-text);
     padding: 0.75rem;
     border-radius: 4px;
     margin-bottom: 1rem;
@@ -1039,3 +1039,6 @@
         height: 4px;
     }
 }
+[data-theme="dark"] { --success-color: #6ee7b7; --warning-color: #fcd34d; --error-color: #fca5a5; --info-color: #93c5fd; }
+
+.database-preparation { min-height: 5.5rem; display: flex; align-items: center; justify-content: center; padding: .75rem 1rem; border: 1px solid transparent; margin: 1rem 0 .5rem; color: var(--text-secondary); font-size: .9rem; }

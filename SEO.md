@@ -6,6 +6,8 @@ related links. This runs during the build (and in Vite development), not on a
 processing server. User inputs and files are not involved in generating pages.
 
 - `tools.json` supplies names, descriptions, paths, and library credits.
+- `about/index.html` holds the project story and processing/network details.
+  It is linked from the shared header.
 - `content/tool-guides.json` supplies examples, instructions, limitations, and
   related tool paths. Add a guide when registering a new tool.
 - The public origin is `siteOrigin` in `scripts/site-content.mjs`. Forks should
@@ -16,6 +18,9 @@ processing server. User inputs and files are not involved in generating pages.
 - Canonical URLs, Open Graph URLs, robots directives, and social preview image
   tags come from the same build transform. Titles and descriptions stay in each
   page's HTML source.
+- The homepage includes `WebSite` JSON-LD with the preferred name `Oh! Tools`
+  and canonical home URL. Every page includes `og:site_name`. These are static
+  metadata and do not load tracking scripts or send visitor data.
 - `components/brand.mjs` defines the shared wordmark and wrench/gear geometry.
 - Run `node scripts/render-social-preview.mjs` to regenerate `social-preview.svg`, `og-image.png` (1200×630), and the favicon/touch assets. It uses the bundled Inter font; the generated social SVG embeds the font and needs no external resources.
 - Staging social metadata points to staging's image; canonical URLs remain on the production domain.
@@ -31,6 +36,20 @@ points canonical URLs at production and does not advertise a sitemap in robots.
 static headings, canonical URLs, the full sitemap, indexing directives, the
 social image, and deployment file boundaries. Browser tests also exercise the
 public content with JavaScript disabled and with `/tools.json` unavailable.
+
+The build also renders the shared header using declarative shadow DOM and the
+initial Video Trimmer/Data Workbench import panels. Their custom elements
+enhance that markup rather than replacing it during startup. All pages reuse
+the local Inter font, preloaded by the HTML transform.
+
+The Image Editor initializes VIPS and performs its image pipelines in a browser
+worker. Its HEIC converter loads only after an HEIC/HEIF file is selected.
+Data Workbench downloads its core engine at startup and prepares JSON, Parquet,
+and Excel extensions when their formats are used; SQL can load other extensions
+through DuckDB. These changes keep file processing on the visitor's device.
+
+See the [baseline mobile audit](docs/performance-audit-2026-10-31.md) and
+[implementation and repeat audit](docs/performance-improvements-2026-10-31.md).
 
 ## Search Console
 
@@ -53,8 +72,8 @@ The connected property was accessible during this work, but the overview
 reported that performance, indexing, and experience data were still processing.
 No traffic or ranking improvement can be inferred from those pending reports.
 The production sitemap was already submitted successfully, last read October
-30, 2026, with 10 discovered pages. The new build adds Video Trimmer as the
-eleventh page (homepage plus ten tools); that entry will reach Google after
-production publication and a subsequent sitemap fetch.
+30, 2026, with 10 discovered pages. The build includes Video Trimmer and an
+About page, for 12 pages total (homepage, About, and ten tools). Those entries
+will reach Google after production publication and a subsequent sitemap fetch.
 The Core Web Vitals report separately confirms insufficient usage data for
 both mobile and desktop over its last 90 days.

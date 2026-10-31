@@ -475,7 +475,7 @@ class CropOperator extends HTMLElement {
             }
 
             // Apply smart crop using VIPS thumbnail
-            const buffer = this.currentImage.writeToBuffer('.jpg', { Q: 95 });
+            const buffer = await this.currentImage.writeToBuffer('.jpg', { Q: 95 });
             
             // Build options based on constraint mode
             const options = {

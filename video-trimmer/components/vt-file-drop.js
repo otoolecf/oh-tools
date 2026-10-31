@@ -1,17 +1,7 @@
+import { videoFileDropMarkup } from '../initial-markup.mjs';
 class VTFileDrop extends HTMLElement {
   connectedCallback() {
-    this.innerHTML = `
-      <section class="vt-panel vt-file-drop">
-        <h3>Import video</h3>
-        <div class="vt-drop-zone" id="dropZone">
-          <p>Choose a video or drop one here.</p>
-          <p class="muted">or</p>
-          <button class="btn" id="pickBtn" type="button">Choose file</button>
-          <input id="fileInput" type="file" accept="video/*" hidden />
-        </div>
-        <div class="vt-status" id="status"></div>
-      </section>
-    `;
+    if (!this.querySelector('.vt-panel')) this.innerHTML = videoFileDropMarkup();
 
     const dropZone = this.querySelector('#dropZone');
     const input = this.querySelector('#fileInput');

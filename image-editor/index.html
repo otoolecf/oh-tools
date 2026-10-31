@@ -50,31 +50,31 @@
             <div class="sidebar-container">
               <!-- Operation Tabs -->
               <div class="tabs-sidebar">
-                <button class="tab-btn disabled" data-tab="metadata">
+                <button class="tab-btn disabled" disabled data-tab="metadata">
                   Metadata
                 </button>
-                <button class="tab-btn disabled" data-tab="crop">
+                <button class="tab-btn disabled" disabled data-tab="crop">
                   Crop
                 </button>
-                <button class="tab-btn disabled" data-tab="resize">
+                <button class="tab-btn disabled" disabled data-tab="resize">
                   Resize
                 </button>
-                <button class="tab-btn disabled" data-tab="rotate-flip">
+                <button class="tab-btn disabled" disabled data-tab="rotate-flip">
                   Rotate/Flip
                 </button>
-                <button class="tab-btn disabled" data-tab="blur-sharpen">
+                <button class="tab-btn disabled" disabled data-tab="blur-sharpen">
                   Blur/Sharpen
                 </button>
-                <button class="tab-btn disabled" data-tab="tint-grayscale">
+                <button class="tab-btn disabled" disabled data-tab="tint-grayscale">
                   Tint/Grayscale
                 </button>
-                <button class="tab-btn disabled" data-tab="filters">
+                <button class="tab-btn disabled" disabled data-tab="filters">
                   Filters
                 </button>
-                <button class="tab-btn disabled" data-tab="edge-detection">
+                <button class="tab-btn disabled" disabled data-tab="edge-detection">
                   Edge Detection
                 </button>
-                <button class="tab-btn disabled" data-tab="export">
+                <button class="tab-btn disabled" disabled data-tab="export">
                   Export
                 </button>
               </div>
@@ -90,11 +90,12 @@
             <!-- Initial Upload Section -->
             <div id="initialUploadSection" class="initial-upload-section">
               <div class="upload-prompt">
-                <h3>Get Started</h3>
+                <h2>Get Started</h2>
                 <p>Choose an image or drop one here.</p>
-                <button id="initialUploadBtn" class="btn-upload">
+                <button id="initialUploadBtn" class="btn-upload" disabled>
                   Choose Image
                 </button>
+                <p id="initialEngineStatus" role="status">Getting the image editor ready…</p>
               </div>
             </div>
 
@@ -251,8 +252,6 @@
     </div>
 
     <!-- Libraries from local lib directory -->
-      <script src="/vendor/wasm-vips-0.0.14/vips.js"></script>
-    <script src="/vendor/heic-to-1.2.1/heic-to.js"></script>
     <script type="module" src="./main.js"></script>
 </body>
 </html>

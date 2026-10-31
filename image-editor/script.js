@@ -1,4 +1,5 @@
 import ExifReader from 'exifreader';
+import { createImageEngine } from './engine-client.js';
 
 class ImageEditor {
     constructor() {
@@ -334,11 +335,17 @@ class ImageEditor {
     }
 
     async handleWebComponentOperation(detail) {
+        if (this.isProcessing) return;
+        this.isProcessing = true;
+        const controls = document.querySelector('.tool-container');
+        controls.inert = true;
+        this.resetBtn.disabled = true;
+        this.showStatus('Applying your change…', 'info');
         try {
             console.log('Web component operation:', detail);
             
             // Update the current image
-            this.currentImage = detail.image;
+            this.currentImage = await detail.image;
             
             // Add to operations list
             this.operations.push(detail.description);
@@ -378,62 +385,27 @@ class ImageEditor {
         } catch (error) {
             console.error('Failed to process web component operation:', error);
             this.showStatus(`Couldn’t apply that change: ${error.message}`, 'error');
+        } finally {
+            this.isProcessing = false;
+            controls.inert = false;
+            this.resetBtn.disabled = this.operations.length === 0;
         }
     }
 
     async initializeLibraries() {
+        const status = document.getElementById('initialEngineStatus');
         try {
             this.showStatus('Getting the image editor ready…', 'info');
-            
-            // Debug info
-            console.log('crossOriginIsolated:', window.crossOriginIsolated);
-            console.log('SharedArrayBuffer available:', typeof SharedArrayBuffer !== 'undefined');
-            console.log('Vips available:', typeof Vips !== 'undefined');
-            console.log('HeicTo available:', typeof HeicTo !== 'undefined');
-            
-            // Check if SharedArrayBuffer is available
-            if (typeof SharedArrayBuffer === 'undefined') {
-                throw new Error('SharedArrayBuffer is not available. Please serve with Cross-Origin-Embedder-Policy: require-corp and Cross-Origin-Opener-Policy: same-origin headers.');
-            }
-            
-            // heic-to library doesn't need initialization, just check availability
-            if (typeof HeicTo !== 'undefined') {
-                this.heif = HeicTo;
-                console.log('heic-to library available');
-            } else {
-                console.warn('heic-to not available - HEIC support will be limited');
-            }
-            
-            // Check if Vips is available
-            if (typeof Vips === 'undefined') {
-                throw new Error('wasm-vips library failed to load.');
-            }
-            
-            // Initialize VIPS with HEIF and SVG support
-            console.log('Attempting Vips initialization with HEIF and SVG support...');
-            this.vips = await Vips({
-                locateFile: (path) => `/vendor/wasm-vips-0.0.14/${path}`,
-                dynamicLibraries: ['vips-heif.wasm', 'vips-resvg.wasm'],   // Load HEIF and SVG plugins
-            });
-            console.log('Vips initialized successfully:', this.vips);
-            
-            // Sanity check: are the plugins registered?
-            const hasHeif = !!this.vips.Utils.typeFind('VipsOperation', 'heifload');
-            const hasSvg = !!this.vips.Utils.typeFind('VipsOperation', 'svgload');
-            console.log('vips-heif loaded?', hasHeif);
-            console.log('vips-resvg loaded?', hasSvg);
-            
-            // Enable upload area now that libraries are ready
+            if (!crossOriginIsolated) throw new Error('Image processing needs a secure, cross-origin isolated page.');
+            this.vips = await createImageEngine();
             this.enableUpload();
-            
+            status.textContent = 'Ready.';
             this.showStatus('Ready. Choose an image to get started.', 'success');
         } catch (error) {
+            status.textContent = 'Couldn’t start the image editor. Reload to try again.';
             this.showStatus('Failed to initialize image processing: ' + error.message, 'error');
-            console.error('Library initialization failed:', error);
-            console.error('Full error object:', error);
         }
     }
-    
 
     handleDragOver(e) {
         e.preventDefault();
@@ -446,26 +418,6 @@ class ImageEditor {
         const file = e.dataTransfer.files[0];
         if (file && file.type.startsWith('image/')) {
             this.handleFile(file);
-        }
-    }
-
-    async convertHeicToPng(file) {
-        try {
-            console.log('Converting HEIC to PNG using heic-to library...');
-            
-            // heic-to library has a very simple API - just pass the file directly
-            const pngBlob = await this.heif({
-                blob: file,
-                type: "image/png",
-                quality: 1.0  // Maximum quality
-            });
-            
-            console.log('HEIC successfully converted to PNG');
-            return pngBlob;
-            
-        } catch (error) {
-            console.error('HEIC conversion failed:', error);
-            throw new Error(`HEIC conversion failed: ${error.message}`);
         }
     }
 
@@ -494,39 +446,10 @@ class ImageEditor {
                           file.name.toLowerCase().endsWith('.tif') ||
                           file.type === 'image/tiff';
             
-            let processedFile = file;
-            let originalFileBuffer = null;
-            
-            // Store the original buffer for metadata extraction
-            this.showStatus('Processing file and extracting metadata...', 'info');
-            originalFileBuffer = await file.arrayBuffer();
-            console.log('Stored original file buffer for metadata extraction');
-            
-            // For HEIC files, convert to a more standard format
-            if (isHeic) {
-                console.log('Converting HEIC file...');
-            }
-            
-            if (isHeic && this.heif) {
-                // Convert HEIC to PNG for processing (for pixel data)
-                this.showStatus('Converting HEIC image to PNG format... This may take a moment.', 'info');
-                const pngBlob = await this.convertHeicToPng(file);
-                this.showStatus('HEIC conversion completed successfully, loading image...', 'info');
-                processedFile = new File([pngBlob], file.name.replace(/\.(heic|heif)$/i, '.png'), {
-                    type: 'image/png'
-                });
-                console.log('HEIC converted to PNG for image processing');
-            } else if (isHeic) {
-                throw new Error('HEIC file detected but heic-to library not available');
-            }
-            
-            const buffer = await processedFile.arrayBuffer();
-            const uint8Array = new Uint8Array(buffer);
-            
-            // Load image using vips
-            console.log(`Loading ${file.type || 'unknown'} file into VIPS...`);
-            this.originalImage = this.vips.Image.newFromBuffer(uint8Array);
-            this.currentImage = this.originalImage.copy();
+            const originalFileBuffer = await file.arrayBuffer();
+            this.showStatus(isHeic ? 'Converting HEIC image…' : 'Loading image…', 'info');
+            this.originalImage = await this.vips.loadImage(new Uint8Array(originalFileBuffer), { heic: isHeic });
+            this.currentImage = await this.originalImage.copy();
             
             // Debug: Check if we have metadata fields available
             console.log('Checking for available metadata fields...');
@@ -573,8 +496,8 @@ class ImageEditor {
     async updateImageDisplay() {
         try {
             // Convert images to display format - use PNG for better compatibility with HEIC/complex formats
-            const originalBuffer = this.originalImage.writeToBuffer('.png');
-            const currentBuffer = this.currentImage.writeToBuffer('.png');
+            const originalBuffer = await this.originalImage.writeToBuffer('.png');
+            const currentBuffer = await this.currentImage.writeToBuffer('.png');
             
             // Create blob URLs
             const originalBlob = new Blob([originalBuffer], { type: 'image/png' });
@@ -676,6 +599,7 @@ class ImageEditor {
         const tabs = document.querySelectorAll('.tab-btn');
         tabs.forEach(tab => {
             tab.classList.add('disabled');
+            tab.disabled = true;
             tab.classList.remove('active');
         });
     }
@@ -769,9 +693,9 @@ class ImageEditor {
         const noUpscale = this.thumbnailNoUpscale.checked;
         
         await this.applyOperation(
-            (image) => {
+            async (image) => {
                 // Create a buffer from the current image
-                const buffer = image.writeToBuffer('.jpg', { Q: 95 });
+                const buffer = await image.writeToBuffer('.jpg', { Q: 95 });
                 
                 // Build options object
                 const options = {
@@ -1071,8 +995,8 @@ class ImageEditor {
         // Try optional properties safely
         try {
             metadataObject.resolution = {
-                x: image.xres(),
-                y: image.yres(),
+                x: image.xres,
+                y: image.yres,
                 unit: "pixels/mm"
             };
         } catch (e) {
@@ -1109,7 +1033,7 @@ class ImageEditor {
                 // Source is a VIPS Image, convert to buffer
                 console.log('Converting VIPS image to buffer for metadata extraction');
                 try {
-                    const imageBuffer = image.writeToBuffer('.jpg', { Q: 95 });
+                    const imageBuffer = await image.writeToBuffer('.jpg', { Q: 95 });
                     arrayBuffer = imageBuffer.buffer.slice(imageBuffer.byteOffset, imageBuffer.byteOffset + imageBuffer.byteLength);
                     console.log('Got image buffer for ExifReader, size:', arrayBuffer.byteLength);
                 } catch (e) {
@@ -1426,22 +1350,22 @@ class ImageEditor {
             
             switch (format) {
                 case 'jpeg':
-                    buffer = this.currentImage.writeToBuffer('.jpg', { Q: quality });
+                    buffer = await this.currentImage.writeToBuffer('.jpg', { Q: quality });
                     mimeType = 'image/jpeg';
                     extension = 'jpg';
                     break;
                 case 'png':
-                    buffer = this.currentImage.writeToBuffer('.png');
+                    buffer = await this.currentImage.writeToBuffer('.png');
                     mimeType = 'image/png';
                     extension = 'png';
                     break;
                 case 'webp':
-                    buffer = this.currentImage.writeToBuffer('.webp', { Q: quality });
+                    buffer = await this.currentImage.writeToBuffer('.webp', { Q: quality });
                     mimeType = 'image/webp';
                     extension = 'webp';
                     break;
                 case 'tiff':
-                    buffer = this.currentImage.writeToBuffer('.tiff');
+                    buffer = await this.currentImage.writeToBuffer('.tiff');
                     mimeType = 'image/tiff';
                     extension = 'tiff';
                     break;
@@ -1484,12 +1408,12 @@ class ImageEditor {
         });
     }
 
-    resetToOriginal() {
+    async resetToOriginal() {
         if (!this.originalImage) return;
         
-        this.currentImage = this.originalImage.copy();
+        this.currentImage = await this.originalImage.copy();
         this.operations = [];
-        this.updateImageDisplay();
+        await this.updateImageDisplay();
         this.updateOperationList();
         this.resetBtn.disabled = true;
         
@@ -1678,7 +1602,6 @@ class ImageEditor {
             this.initialUploadBtn.disabled = true;
             this.initialUploadBtn.style.opacity = '0.5';
             this.initialUploadBtn.style.cursor = 'not-allowed';
-            this.initialUploadBtn.textContent = 'Loading...';
         }
     }
 
@@ -1803,6 +1726,7 @@ class ImageEditor {
         const tabs = document.querySelectorAll('.tab-btn');
         tabs.forEach(tab => {
             tab.classList.remove('disabled');
+            tab.disabled = false;
         });
         
         // Set metadata as the default active tab

@@ -1,3 +1,4 @@
+import { dataAppMarkup } from '../initial-markup.mjs';
 // Main Browser Data Workbench Application Component
 
 class BDWApp extends HTMLElement {
@@ -8,85 +9,7 @@ class BDWApp extends HTMLElement {
     }
 
     connectedCallback() {
-        this.innerHTML = `
-            <div class="bdw-app">
-                <!-- Mobile Notice -->
-                <div class="mobile-notice">
-                    📱 For best experience, use a tablet or larger screen
-                </div>
-                
-                <!-- File Import Section -->
-                <div class="panel">
-                    <h3>Import Data</h3>
-                    <bdw-file-drop></bdw-file-drop>
-                    <div style="margin-top: 1rem; text-align: center;">
-                        <button class="btn" id="showFullInterface" onclick="this.closest('bdw-app').showFullInterface()">
-                            Show Full Interface (No Data)
-                        </button>
-                    </div>
-                </div>
-                
-                <!-- Standalone SQL Console -->
-                <div class="panel" id="standaloneSQL" style="display: none;">
-                    <h3>SQL Console</h3>
-                    <div class="sql-warning" style="background: var(--bg-secondary); border: 1px solid var(--border-color); padding: 0.75rem; margin-bottom: 1rem; border-radius: 6px; color: var(--text-secondary); font-size: 0.9rem;">
-                        <strong>Note:</strong> No data file loaded. The table <code>input_data</code> does not exist. Load a file above or test with queries like <code>SELECT 1 as test</code>.
-                    </div>
-                    <bdw-sql-console></bdw-sql-console>
-                </div>
-
-                <!-- Main Content Area -->
-                <div id="mainContent" style="display: none;">
-                    <div class="main-content-panel">
-                        <div class="panel">
-                            <!-- Tab Navigation -->
-                            <div class="tab-nav">
-                                <button class="tab-btn active" onclick="this.closest('bdw-app').switchTab('data')">Data Preview</button>
-                                <button class="tab-btn" onclick="this.closest('bdw-app').switchTab('schema')">Schema</button>
-                                <button class="tab-btn" onclick="this.closest('bdw-app').switchTab('stats')">Statistics</button>
-                                <button class="tab-btn" onclick="this.closest('bdw-app').switchTab('sql')">SQL Console</button>
-                                <div class="tab-actions">
-                                    <button class="btn btn-primary" onclick="this.closest('bdw-app').openExportModal()">Export Data</button>
-                                </div>
-                            </div>
-                            
-                            <!-- Tab Content -->
-                            <div class="tab-content">
-                                <div id="dataTab" class="tab-panel active">
-                                    <div class="data-grid-container">
-                                        <div id="dataPreview" class="data-grid">
-                                            <!-- Data will be displayed here -->
-                                        </div>
-                                        <div class="data-grid-resize-handle" title="Drag to resize data grid">
-                                            <div class="resize-grip"></div>
-                                        </div>
-                                        <div class="data-grid-controls">
-                                            <button class="resize-reset-btn" title="Reset to default height" onclick="this.closest('bdw-app').resetDataGridHeight()">⟲ Reset Height</button>
-                                            <button class="column-reset-btn" title="Reset all columns to default width" onclick="this.closest('bdw-app').resetColumnWidths()">⟲ Reset Columns</button>
-                                        </div>
-                                    </div>
-                                </div>
-                                
-                                <div id="schemaTab" class="tab-panel">
-                                    <bdw-schema-card></bdw-schema-card>
-                                </div>
-                                
-                                <div id="statsTab" class="tab-panel">
-                                    <bdw-stats-panel></bdw-stats-panel>
-                                </div>
-                                
-                                <div id="sqlTab" class="tab-panel">
-                                    <bdw-sql-console></bdw-sql-console>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Status Messages -->
-                <div id="statusArea"></div>
-            </div>
-        `;
+        if (!this.querySelector('.bdw-app')) this.innerHTML = dataAppMarkup();
 
         this.setupEventListeners();
         this.setupDataGridResizer();
@@ -125,10 +48,8 @@ class BDWApp extends HTMLElement {
                 throw new Error('DuckDB Manager not available after waiting');
             }
 
-            await window.duckDBManager.init({
-                useOPFS: true,
-                extensions: ['json', 'parquet']  // Load common extensions
-            });
+            const result = await window.duckDBManager.init();
+            if (!result.success) throw new Error(result.error);
 
             this.showStatus('Ready. Choose a data file or paste a URL.', 'success');
             
@@ -549,6 +470,7 @@ class BDWApp extends HTMLElement {
     async handleDirectURLFile(fileData) {
         const fileName = fileData.fileName; // For direct URLs, we use the registered filename as-is
         const extension = (fileData.fileType || fileName.split('.').pop()).toLowerCase();
+        await window.duckDBManager.prepareFormat(extension);
         const ignoreErrors = fileData.ignoreErrors || false;
         
         // For direct URLs, we can't change the filename since it's already registered
@@ -574,7 +496,7 @@ class BDWApp extends HTMLElement {
                 viewQuery = `CREATE OR REPLACE TEMP VIEW ${tableName} AS FROM read_parquet('${fileName}')`;
                 break;
             case 'xlsx':
-                viewQuery = `CREATE OR REPLACE TEMP VIEW ${tableName} AS FROM read_excel('${fileName}'${ignoreErrors ? ', ignore_errors=true' : ''})`;
+                viewQuery = `CREATE OR REPLACE TEMP VIEW ${tableName} AS FROM read_xlsx('${fileName}'${ignoreErrors ? ', ignore_errors=true' : ''})`;
                 break;
             default:
                 throw new Error(`Unsupported file type: ${extension}`);
@@ -937,15 +859,8 @@ class BDWApp extends HTMLElement {
         const fileDropComponent = this.querySelector('bdw-file-drop');
         if (!fileDropComponent) return;
 
-        // Remove any existing status in drop zone
-        const existingStatus = fileDropComponent.querySelector('.drop-zone-status');
-        if (existingStatus) {
-            existingStatus.remove();
-        }
-
-        // Add status message to the drop zone
-        const statusDiv = document.createElement('div');
-        statusDiv.className = `drop-zone-status status-${type}`;
+        const statusDiv = fileDropComponent.querySelector('.database-preparation') || document.createElement('div');
+        statusDiv.className = `database-preparation drop-zone-status status-${type}`;
         statusDiv.style.cssText = `
             padding: 0.75rem 1rem;
             margin-top: 1rem;
@@ -979,18 +894,10 @@ class BDWApp extends HTMLElement {
         
         // Append to the file drop component
         const dropZone = fileDropComponent.querySelector('#dropZone');
-        if (dropZone) {
+        if (dropZone && !statusDiv.isConnected) {
             dropZone.appendChild(statusDiv);
         }
 
-        // Auto-remove success messages after 5 seconds
-        if (type === 'success') {
-            setTimeout(() => {
-                if (statusDiv.parentNode) {
-                    statusDiv.remove();
-                }
-            }, 5000);
-        }
     }
 
     showFileStatus(fileName, message, type = 'info') {

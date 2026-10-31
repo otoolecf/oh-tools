@@ -1,15 +1,29 @@
 // DuckDB Manager - bundled JavaScript with version-pinned oversized WASM assets
-class DuckDBManager {
+class DuckDBManager extends EventTarget {
   constructor() {
+    super();
     this.db = null;
     this.conn = null;
     this.worker = null;
     this.isInitialized = false;
     this.duckdb = null; // Store the DuckDB module reference
-    this.extensionsLoaded = false;
+    this.extensionLoads = new Map();
+    this.initialization = null;
   }
 
-  async init(options = {}) {
+  init() {
+    if (this.isInitialized) return Promise.resolve({ success: true });
+    if (!this.initialization) {
+      this.initialization = this.initialize().then(result => {
+        if (!result.success) this.initialization = null;
+        return result;
+      });
+    }
+    return this.initialization;
+  }
+
+  async initialize() {
+    let workerUrl;
     try {
       console.log("Initializing DuckDB...");
 
@@ -35,24 +49,59 @@ class DuckDBManager {
       );
 
       // Create worker URL using blob (JSDelivr pattern)
-      const worker_url = URL.createObjectURL(
-        new Blob([`importScripts("${DUCKDB_CONFIG.mainWorker}");`], {
+      workerUrl = URL.createObjectURL(
+        new Blob([`
+          self.addEventListener('unhandledrejection', event => {
+            event.preventDefault();
+            self.postMessage({ type: 'oh-tools-worker-error', error: event.reason?.message || String(event.reason) });
+          });
+          importScripts(${JSON.stringify(DUCKDB_CONFIG.mainWorker)});
+        `], {
           type: "text/javascript",
         })
       );
 
       // Create worker and database
-      this.worker = new Worker(worker_url);
+      this.worker = new Worker(workerUrl);
+
+      // A worker compile/download failure can leave this package's instantiate
+      // promise pending. Surface the worker error without imposing a deadline
+      // on a slow but healthy download.
+      let onWorkerError;
+      let onWorkerMessage;
+      const workerFailed = new Promise((_, reject) => {
+        onWorkerError = event => {
+          event.preventDefault();
+          reject(new Error(event.message || 'The database worker could not start.'));
+        };
+        onWorkerMessage = event => {
+          if (event.data?.type !== 'oh-tools-worker-error') return;
+          event.stopImmediatePropagation();
+          reject(new Error(event.data.error));
+        };
+        this.worker.addEventListener('error', onWorkerError);
+        this.worker.addEventListener('message', onWorkerMessage);
+      });
       this.db = new this.duckdb.AsyncDuckDB(logger, this.worker);
+      try {
+        await Promise.race([
+          this.db.instantiate(
+            DUCKDB_CONFIG.mainModule,
+            DUCKDB_CONFIG.pthreadWorker,
+            progress => {
+              const percent = progress.bytesTotal > 0 ? Math.min(99, Math.floor(100 * progress.bytesLoaded / progress.bytesTotal)) : null;
+              const message = percent === null ? 'Downloading the database…' : `Downloading the database… ${percent}%`;
+              this.dispatchEvent(new CustomEvent('progress', { detail: message }));
+            }
+          ),
+          workerFailed,
+        ]);
+      } finally {
+        this.worker.removeEventListener('error', onWorkerError);
+        this.worker.removeEventListener('message', onWorkerMessage);
+      }
 
-      // Instantiate the database
-      await this.db.instantiate(
-        DUCKDB_CONFIG.mainModule,
-        DUCKDB_CONFIG.pthreadWorker
-      );
-
-      // Clean up the blob URL
-      URL.revokeObjectURL(worker_url);
+      this.dispatchEvent(new CustomEvent('progress', { detail: 'Starting the database…' }));
 
       // Create connection
       this.conn = await this.db.connect();
@@ -62,86 +111,39 @@ class DuckDBManager {
       //     "SET custom_extension_repository = 'http://nightly-extensions.duckdb.org';"
       //   );
 
-      // Load core extensions
-      await this.loadExtensions();
-
       this.isInitialized = true;
       return { success: true, message: "DuckDB initialized successfully" };
     } catch (error) {
       console.error("DuckDB initialization failed:", error);
+      this.worker?.terminate();
+      this.worker = null;
+      this.db = null;
+      this.conn = null;
       return { success: false, error: error.message };
+    } finally {
+      if (workerUrl) URL.revokeObjectURL(workerUrl);
     }
   }
 
-  async loadExtensions() {
-    // First check what extensions are available
-    console.log("Checking available extensions...");
-    try {
-      const availableResult = await this.conn.query(
-        `SELECT * FROM duckdb_extensions()`
-      );
-      console.log("Available extensions:", availableResult.toArray());
-    } catch (error) {
-      console.warn("Could not query available extensions:", error);
+  async ensureExtension(name) {
+    if (!['json', 'parquet', 'excel', 'fts'].includes(name)) throw new Error('Unknown database extension.');
+    if (!this.extensionLoads.has(name)) {
+      const loading = (async () => {
+        await this.conn.query(`INSTALL ${name};`);
+        await this.conn.query(`LOAD ${name};`);
+        await this.verifyExtension(name);
+      })().catch(error => {
+        this.extensionLoads.delete(name);
+        throw new Error(`Couldn’t prepare ${name} support: ${error.message}`);
+      });
+      this.extensionLoads.set(name, loading);
     }
+    await this.extensionLoads.get(name);
+  }
 
-    const coreExtensions = ["fts", "json", "parquet"]; // Remove excel for now
-    const communityExtensions = [];
-    const loadedExtensions = [];
-
-    for (const ext of coreExtensions) {
-      try {
-        console.log(`Installing extension: ${ext}`);
-        await this.conn.query(`INSTALL ${ext};`);
-        console.log(`Loading extension: ${ext}`);
-        await this.conn.query(`LOAD ${ext};`);
-
-        // Verify the extension is actually loaded by testing a function
-        await this.verifyExtension(ext);
-
-        loadedExtensions.push(ext);
-        console.log(`Successfully installed and loaded extension: ${ext}`);
-      } catch (error) {
-        console.warn(`Failed to install/load extension ${ext}:`, error);
-      }
-    }
-
-    // Load community extensions
-    for (const ext of communityExtensions) {
-      try {
-        console.log(`Installing community extension: ${ext}`);
-        await this.conn.query(`INSTALL ${ext} FROM community;`);
-        console.log(`Loading extension: ${ext}`);
-        await this.conn.query(`LOAD ${ext};`);
-
-        loadedExtensions.push(ext);
-        console.log(`Successfully installed and loaded community extension: ${ext}`);
-      } catch (error) {
-        console.warn(`Failed to install/load community extension ${ext}:`, error);
-      }
-    }
-
-    // Try to load excel extension separately with better error handling
-    try {
-      console.log("Attempting to install excel extension...");
-      await this.conn.query("INSTALL excel;");
-      await this.conn.query("LOAD excel;");
-      await this.verifyExtension("excel");
-      loadedExtensions.push("excel");
-      console.log("Excel extension loaded successfully");
-    } catch (error) {
-      console.warn(
-        "Excel extension not available in this DuckDB build:",
-        error.message
-      );
-      console.log("Excel files will need alternative handling");
-    }
-
-    this.extensionsLoaded = true;
-    console.log(
-      `Extensions loaded successfully: ${loadedExtensions.join(", ")}`
-    );
-    return loadedExtensions;
+  async prepareFormat(extension) {
+    const name = { json: 'json', jsonl: 'json', ndjson: 'json', parquet: 'parquet', xlsx: 'excel' }[extension];
+    if (name) await this.ensureExtension(name);
   }
 
   async verifyExtension(ext) {
@@ -270,6 +272,7 @@ class DuckDBManager {
       let copyQuery = `COPY (${query}) TO '${fileName}'`;
 
       const ext = fileName.split(".").pop().toLowerCase();
+      await this.prepareFormat(ext);
       const formatOptions = [];
 
       switch (ext) {
@@ -344,6 +347,8 @@ class DuckDBManager {
         this.worker = null;
       }
       this.isInitialized = false;
+      this.initialization = null;
+      this.extensionLoads.clear();
       return { success: true, message: "DuckDB closed successfully" };
     } catch (error) {
       return { success: false, error: error.message };
@@ -352,15 +357,11 @@ class DuckDBManager {
 
   // Convenience methods for common operations
   async autoDetectAndLoad(file, options = {}) {
-    // Ensure extensions are loaded before attempting to use them
-    if (!this.extensionsLoaded) {
-      throw new Error(
-        "Extensions not yet loaded. Please wait for DuckDB initialization to complete."
-      );
-    }
+    if (!this.isInitialized) throw new Error('The database is still getting ready.');
 
     const originalFileName = file.name;
     const extension = originalFileName.split(".").pop().toLowerCase();
+    await this.prepareFormat(extension);
     const ignoreErrors = options.ignoreErrors || false;
     
     // Create unique filename to avoid DuckDB caching issues when settings change

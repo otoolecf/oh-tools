@@ -2,7 +2,7 @@ class VTExportPanel extends HTMLElement {
   connectedCallback() {
     this.innerHTML = `
       <section class="vt-panel">
-        <h3>Export</h3>
+        <h2>Export</h2>
         <div class="vt-export-row">
           <button id="exportBtn" class="btn" type="button" disabled>Save Trimmed Video</button>
           <span id="operationBadge" class="vt-pill vt-pill-transmux">Transmux (fast)</span>

@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>About Oh! Tools — How it works</title>
+    <meta name="description" content="Why Oh! Tools exists, how browser processing works, and what happens when you use Browser Bridge or connect to external services." />
+    <meta property="og:title" content="About Oh! Tools — How it works" />
+    <meta property="og:description" content="The story behind Oh! Tools, plus how file processing, network requests, and Browser Bridge work." />
+    <meta name="twitter:title" content="About Oh! Tools — How it works" />
+    <meta name="twitter:description" content="The story behind Oh! Tools, plus how file processing, network requests, and Browser Bridge work." />
+    <link rel="stylesheet" href="../global.css" />
+    <style>
+      .about-content { max-width: 760px; margin: 0 auto; padding: 3rem 0; color: var(--text-secondary); line-height: 1.7; }
+      .about-content h1 { display: flex; flex-wrap: wrap; align-items: center; gap: 0.3em 0.25em; color: var(--primary-color); font-size: 2.5rem; line-height: 1.2; margin-bottom: 2.5rem; }
+      .about-content h2 { color: var(--primary-color); font-size: 1.5rem; line-height: 1.35; margin-bottom: 1rem; }
+      .about-content section + section { margin-top: 3rem; }
+      .about-content p + p { margin-top: 1.25rem; }
+      .about-content a, .about-content a:visited { color: inherit; text-underline-offset: 0.15em; }
+      .about-content .footnote { font-size: 0.875rem; font-style: italic; }
+      @media (max-width: 600px) { .about-content h1 { font-size: 2rem; } }
+    </style>
+  </head>
+  <body>
+    <otoolebox-header current-path="/about/"></otoolebox-header>
+    <div class="container">
+      <main class="about-content">
+        <h1>About <!-- site-wordmark --></h1>
+        <section aria-labelledby="why-i-built-this">
+          <h2 id="why-i-built-this">Why I Built This</h2>
+          <p>I kept running into paywalls, daily limits, and apps that were a bit much for
+            the job. Sometimes I just want to resize a picture and move on.</p>
+          <p>There are already good open source libraries for most of this stuff. I wanted
+            some simple interfaces for them, so I made a few. It was also a good excuse
+            to see how much a browser can do these days.</p>
+        </section>
+        <section aria-labelledby="why-oh-tools">
+          <h2 id="why-oh-tools">Why “Oh! Tools”?</h2>
+          <p>My last name is O’Toole. I made some tools. The name more or less
+            picked itself… and domains are non-refundable.</p>
+        </section>
+        <section aria-labelledby="how-it-works">
+          <h2 id="how-it-works">How it works</h2>
+          <p>Editing, converting, hashing, and running queries happen on your device.
+            Our servers deliver the site, but they don’t process your files.</p>
+          <p>The site still makes network requests. Some tools download fonts, libraries,
+            or database extensions. If you open a remote URL or run a query that accesses
+            another service, your browser contacts that service.</p>
+          <p><a href="/browser-bridge/">Browser Bridge</a> is for sharing between devices.
+            Simple Codes uses a temporary server to exchange connection details. Those details
+            aren’t encrypted, so the signaling service can read them. Direct Exchange skips
+            that service. WebRTC encrypts the files and messages sent between devices.</p>
+          <p class="footnote">Hosting providers and external services may keep ordinary
+            request logs, including IP addresses and requested URLs.</p>
+        </section>
+      </main>
+      <otoolebox-footer base-path="/"></otoolebox-footer>
+    </div>
+    <script type="module" src="../components/site.js"></script>
+  </body>
+</html>

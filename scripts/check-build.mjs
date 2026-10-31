@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { readFile, readdir, stat } from 'node:fs/promises';
 import { join } from 'node:path';
-import { pagePaths, siteOrigin } from './site-content.mjs';
+import { pagePaths, siteOrigin, siteName } from './site-content.mjs';
 
 const { tools } = JSON.parse(await readFile('tools.json', 'utf8'));
 const staging = process.argv.includes('--staging');
@@ -18,6 +18,8 @@ for (const path of pagePaths) {
   assert(html.includes(`rel="canonical" href="${siteOrigin}${path}"`));
   assert(html.includes(`name="robots" content="${staging ? 'noindex, follow' : 'index, follow'}"`));
   assert(html.includes(`property="og:url" content="${siteOrigin}${path}"`));
+  assert.equal([...html.matchAll(/property="og:site_name"/g)].length, 1);
+  assert(html.includes(`property="og:site_name" content="${siteName}"`));
   assert(html.includes('property="og:image"'));
   const socialOrigin = staging ? 'https://oh-tools-staging.otoolecf.workers.dev' : siteOrigin;
   assert(html.includes(`property="og:image" content="${socialOrigin}/og-image.png"`));
@@ -25,13 +27,16 @@ for (const path of pagePaths) {
   assert(html.includes('rel="icon" href="/favicon.svg" type="image/svg+xml"'));
   assert(html.includes('rel="apple-touch-icon" href="/apple-touch-icon.png"'));
   assert(sitemap.includes(`<loc>${siteOrigin}${path}</loc>`), `Missing sitemap entry: ${path}`);
-  if (path !== '/') {
+  if (tools.some(tool => tool.path === path)) {
     assert(html.includes('class="tool-guide"'), `Missing static guide: ${path}`);
     assert(html.includes('aria-label="Related tools"'));
   }
 }
 const home = await readFile(`${output}/index.html`, 'utf8');
-for (const tool of tools) assert(home.includes(`href="${tool.path}" class="tool-link">Open ${tool.name}</a>`));
+const schemas = [...home.matchAll(/<script type="application\/ld\+json" id="site-name-schema">([\s\S]*?)<\/script>/g)];
+assert.equal(schemas.length, 1);
+assert.deepEqual(JSON.parse(schemas[0][1]), { '@context': 'https://schema.org', '@type': 'WebSite', name: siteName, url: `${siteOrigin}/` });
+for (const tool of tools) assert(home.includes(`href="${tool.path}" class="tool-link"><span class="tool-link-label">Open ${tool.name}</span></a>`));
 const headers = await readFile(`${output}/_headers`, 'utf8');
 assert.equal(/X-Robots-Tag: noindex/.test(headers), staging, 'Indexing headers must match the build target');
 const robots = await readFile(`${output}/robots.txt`, 'utf8');

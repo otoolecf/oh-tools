@@ -12,7 +12,7 @@ export function punctuationDrawing(paper = 'var(--brand-paper, var(--card-bg))')
 }
 
 export const brandStyles = `
-  .brand-wordmark { display: inline-flex; align-items: center; white-space: nowrap; font-family: "Oh Tools Inter", Inter, Arial, sans-serif; font-weight: 750; letter-spacing: -.055em; line-height: 1; color: var(--brand-ink, #475569); }
+  .brand-wordmark { display: inline-flex; align-items: center; white-space: nowrap; font-family: Inter, Arial, sans-serif; font-weight: 750; letter-spacing: -.055em; line-height: 1; color: var(--brand-ink, #475569); }
   .brand-punctuation { display: inline-block; flex: 0 0 auto; width: .34em; height: .86em; margin: 0 .05em 0 .1em; transform: rotate(-14deg); overflow: visible; }
   .brand-tools { margin-left: .22em; }
 `;

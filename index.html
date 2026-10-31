@@ -24,17 +24,11 @@
       property="twitter:image"
       content="https://oh-tools.net/og-image.png"
     />
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
-      rel="stylesheet"
-    />
     <link rel="stylesheet" href="global.css" />
     <style>
       .tools-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(min(300px, 100%), 1fr));
+        display: flex;
+        flex-wrap: wrap;
         gap: 2rem;
         margin-top: 2rem;
         justify-content: center;
@@ -44,6 +38,8 @@
       }
 
       .tool-card {
+        flex: 0 1 calc((100% - 4rem) / 3);
+        min-width: 0;
         background: var(--card-bg);
         border: 1px solid var(--border-color);
         border-radius: 8px;
@@ -52,6 +48,14 @@
         display: flex;
         flex-direction: column;
         min-height: 200px;
+      }
+
+      @media (max-width: 1011px) {
+        .tool-card { flex-basis: calc((100% - 2rem) / 2); }
+      }
+
+      @media (max-width: 679px) {
+        .tool-card { flex-basis: 100%; }
       }
 
       .tool-card:hover {
@@ -73,7 +77,12 @@
       }
 
       .tool-link {
-        display: block;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        min-height: var(--tool-link-height, 4rem);
+        line-height: 1.5;
         padding: 0.5rem 1rem;
         background: var(--button-bg);
         color: var(--button-text);
@@ -85,8 +94,13 @@
         text-align: center;
       }
 
-      .tool-link:hover {
+      .tool-link-label { width: 100%; }
+
+      .tool-link:hover,
+      .tool-link:focus-visible {
         background: var(--button-hover);
+        color: var(--button-text);
+        text-decoration: none;
       }
 
       .tool-link:visited {
@@ -114,45 +128,24 @@
         font-size: 1.0rem;
         font-weight: 400;
         color: var(--text-secondary);
-        opacity: 0.8;
-        margin-top: -4px;
+        margin-top: 0.5rem;
+        line-height: 1.5;
         font-style: normal;
       }
 
       .home-hero p {
         font-size: 1.2rem;
+        line-height: 1.7;
         color: var(--text-secondary);
         max-width: 600px;
         margin: 0 auto;
         text-align: justify;
       }
 
-      .content-section {
-        max-width: 700px;
-        margin: 4rem auto 2rem;
-        text-align: left;
+      .home-hero p + p {
+        margin-top: 1.25rem;
       }
 
-      .content-section h2 {
-        color: var(--primary-color);
-        margin-bottom: 1rem;
-        font-size: 1.5rem;
-      }
-
-      .content-section p {
-        color: var(--text-secondary);
-        line-height: 1.6;
-        margin-bottom: 1rem;
-        font-size: 1rem;
-      }
-
-      .footnote {
-        font-size: 0.85rem !important;
-        font-style: italic;
-        color: var(--text-secondary);
-        opacity: 0.8;
-        margin-top: 0.5rem;
-      }
     </style>
     <meta name="description" content="Edit images, trim videos, fix JSON, compare text, and more. Free browser tools that process files locally." />
     <meta property="og:title" content="Oh! Tools — Free browser tools" />
@@ -180,39 +173,6 @@
           <!-- Tool cards are generated from tools.json during the build. -->
         </div>
       </main>
-
-      <!-- Content sections -->
-      <section class="content-section">
-        <h2>Why I Built This</h2>
-        <p>I kept running into paywalls, daily limits, and apps that were a bit much for
-          the job. Sometimes I just want to resize a picture and move on.</p>
-        <p>There are already good open source libraries for most of this stuff. I wanted
-          some simple interfaces for them, so I made a few. It was also a good excuse
-          to see how much a browser can do these days.</p>
-      </section>
-
-      <section class="content-section">
-        <h2>The Technical Bit</h2>
-        <p>Editing, converting, hashing, and running queries happen on your device.
-          Our servers deliver the site, but they don’t process your files.</p>
-        <p>The site still makes network requests. Some tools download fonts, libraries,
-          or database extensions. If you open a remote URL or run a query that accesses
-          another service, your browser contacts that service.</p>
-        <p>Browser Bridge is for sharing between devices. Simple Codes uses a temporary
-          server to exchange connection details. Those details aren’t encrypted, so
-          the signaling service can read them. Direct Exchange skips that service.
-          WebRTC encrypts the files and messages sent between devices.</p>
-        <p class="footnote">Hosting providers and external services may keep ordinary
-          request logs, including IP addresses and requested URLs.</p>
-      </section>
-
-      <section class="content-section">
-        <h2>Why "Oh! Tools"?</h2>
-        <p>
-          My last name is O’Toole. I made some tools. The name more or less
-          picked itself… and domains are non-refundable.
-        </p>
-      </section>
 
       <otoolebox-footer></otoolebox-footer>
     </div>

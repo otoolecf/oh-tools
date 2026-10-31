@@ -516,7 +516,7 @@ body div.container:has(main.tool-container) {
     background: var(--bg-primary);
 }
 
-.upload-prompt h3 {
+.upload-prompt h2 {
     color: var(--text-primary);
     margin-bottom: 0.5rem;
     font-size: 1.5rem;
@@ -1236,4 +1236,10 @@ body div.container:has(main.tool-container) {
         outline: 2px solid var(--primary-color);
         outline-offset: -2px;
     }
+}
+.upload-prompt #initialEngineStatus {
+    min-height: 3rem;
+    margin-top: 1rem;
+    font-size: .9rem;
+    color: var(--text-secondary);
 }

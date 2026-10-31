@@ -10,7 +10,7 @@ class VTTrimControls extends HTMLElement {
     this.innerHTML = `
       <section class="vt-panel vt-timecodes">
         <div class="vt-trim-header">
-          <h3>Trim</h3>
+          <h2>Trim</h2>
         </div>
         <div class="vt-nudge-row">
           <span class="muted">Playhead</span>

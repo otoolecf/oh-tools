@@ -1,5 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { readFileSync } from 'node:fs';
+import { pagePaths } from '../scripts/site-content.mjs';
 
 const { tools } = JSON.parse(readFileSync('tools.json', 'utf8'));
 
@@ -8,9 +9,16 @@ test('public content and tool discovery work without JavaScript', async ({ brows
   const page = await context.newPage();
   await page.goto('/');
   await expect(page.locator('.tool-card')).toHaveCount(tools.length);
+  await expect(page.locator('meta[property="og:site_name"]')).toHaveAttribute('content', 'Oh! Tools');
+  expect(JSON.parse(await page.locator('#site-name-schema').textContent())).toEqual({
+    '@context': 'https://schema.org', '@type': 'WebSite', name: 'Oh! Tools', url: 'https://oh-tools.net/',
+  });
   for (const tool of tools) {
     await expect(page.getByRole('link', { name: `Open ${tool.name}`, exact: true })).toHaveAttribute('href', tool.path);
     await page.goto(tool.path);
+    await expect(page.locator('otoolebox-header a.nav-brand')).toBeVisible();
+    if (tool.path === '/video-trimmer/') await expect(page.locator('vt-file-drop #pickBtn')).toBeVisible();
+    if (tool.path === '/data-workbench/') await expect(page.locator('bdw-file-drop #chooseFilesBtn')).toBeVisible();
     await expect(page.getByRole('heading', { level: 1 })).toHaveText(tool.name);
     await expect(page.locator('.tool-description')).toHaveText(tool.description);
     await expect(page.locator('.tool-guide')).toBeVisible();
@@ -19,6 +27,10 @@ test('public content and tool discovery work without JavaScript', async ({ brows
     await expect(page.locator('link[rel="canonical"]')).toHaveAttribute('href', `https://oh-tools.net${tool.path}`);
     await page.goto('/');
   }
+  await page.goto('/about/');
+  await expect(page.getByRole('heading', { level: 1 })).toHaveAccessibleName('About Oh! Tools');
+  await expect(page.getByRole('heading', { level: 2 })).toHaveText(['Why I Built This', 'Why “Oh! Tools”?', 'How it works']);
+  await expect(page.locator('#how-it-works + p')).toContainText('they don’t process your files');
   await context.close();
 });
 
@@ -39,8 +51,8 @@ test('production metadata, complete sitemap, and social preview are served', asy
   const sitemap = await request.get('/sitemap.xml');
   expect(sitemap.ok()).toBe(true);
   const xml = await sitemap.text();
-  expect(xml.match(/<loc>/g)).toHaveLength(tools.length + 1);
-  for (const path of ['/', ...tools.map(tool => tool.path)]) {
+  expect(xml.match(/<loc>/g)).toHaveLength(pagePaths.length);
+  for (const path of pagePaths) {
     expect(xml).toContain(`<loc>https://oh-tools.net${path}</loc>`);
     const response = await request.get(path);
     expect(response.headers()['x-robots-tag']).toBeUndefined();

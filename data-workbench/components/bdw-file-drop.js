@@ -1,3 +1,4 @@
+import { dataFileDropMarkup } from '../initial-markup.mjs';
 // File Drop Component for Browser Data Workbench
 
 class BDWFileDrop extends HTMLElement {
@@ -7,59 +8,7 @@ class BDWFileDrop extends HTMLElement {
     }
 
     connectedCallback() {
-        this.innerHTML = `
-            <div class="file-drop-zone" id="dropZone">
-                <div class="drop-text">
-                    <strong>Choose a data file or paste a URL.</strong><br>
-                    You can also drop files here.<br>
-                    <small>Supports: CSV, JSON, JSONL, Parquet, Excel</small>
-                </div>
-                
-                <div class="drop-actions">
-                    <button class="btn btn-primary" id="chooseFilesBtn" onclick="this.nextElementSibling.click()" disabled>
-                        Choose Files
-                    </button>
-                    <input type="file" id="fileInput" accept="${this.acceptedTypes.join(',')}" multiple disabled>
-                    
-                    <button class="btn" id="loadUrlBtn" onclick="document.getElementById('urlInput').focus()" disabled>
-                        Load from URL
-                    </button>
-                </div>
-
-                <div class="url-input-group">
-                    <input type="url" 
-                           id="urlInput" 
-                           class="url-input" 
-                           placeholder="https://example.com/data.csv"
-                           disabled>
-                    <button class="btn" id="loadBtn" onclick="this.parentElement.parentElement.parentElement.__loadFromURL()" disabled>
-                        Load
-                    </button>
-                </div>
-                
-                <div class="file-options" style="margin-top: 1rem; padding: 0.75rem; background: var(--input-bg); border-radius: 6px;">
-                    <label class="ignore-errors-checkbox">
-                        <input type="checkbox" id="ignoreErrors">
-                        <span class="checkmark"></span>
-                        Ignore parse errors (recommended for files with data quality issues)
-                    </label>
-                    <div class="option-help" style="margin-top: 0.5rem; font-size: 0.85rem; color: var(--text-secondary);">
-                        When enabled, DuckDB will skip problematic rows and load valid data. Useful for CSV files with inconsistent formatting or Excel files with mixed data types.
-                    </div>
-                </div>
-                
-                <div class="url-info" style="margin-top: 0.5rem; padding: 0.5rem; background: var(--bg-secondary); border-radius: 4px; font-size: 0.85rem; color: var(--text-secondary);">
-                    <div style="margin-bottom: 0.5rem;">
-                        <strong>CORS Notice:</strong> Some URLs may fail due to cross-origin restrictions. Services like HuggingFace, AWS S3, and Google Cloud Storage typically work well. GitHub raw files and many other services block cross-origin requests.
-                    </div>
-                    <div>
-                        <strong>For authenticated URLs:</strong> Open the full interface and use the SQL Console to set up credentials first (e.g., <code>SET s3_access_key_id='...';</code>). Check the DuckDB documentation for specific authentication settings for your cloud provider.
-                    </div>
-                </div>
-            </div>
-            
-            <div id="fileList" style="margin-top: 1rem;"></div>
-        `;
+        if (!this.querySelector('#dropZone')) this.innerHTML = dataFileDropMarkup(this.acceptedTypes);
 
         this.setupEventListeners();
         this.setupIgnoreErrorsChangeListener();
@@ -132,35 +81,25 @@ class BDWFileDrop extends HTMLElement {
     }
 
     async checkDuckDBStatus() {
-        // Disable all file inputs initially
         this.setFileInputsEnabled(false);
-        
-        // Wait for DuckDB to be initialized
-        let retries = 0;
-        const maxRetries = 100; // 10 seconds
-        
-        while (retries < maxRetries) {
-            if (window.duckDBManager && window.duckDBManager.isInitialized) {
-                this.setFileInputsEnabled(true);
-                this.updateDropZoneText('Choose a data file or paste a URL.', 'You can also drop files here.');
-                break;
-            }
-            
-            // Update status text to show loading
-            if (retries % 10 === 0) { // Update every second
-                this.updateDropZoneText('Initializing DuckDB...', 'Please wait while the database loads');
-            }
-            
-            await new Promise(resolve => setTimeout(resolve, 100));
-            retries++;
-        }
-        
-        if (retries >= maxRetries) {
-            this.updateDropZoneText('DuckDB initialization failed', 'Please refresh the page to try again');
+        const status = this.querySelector('.database-preparation');
+        status.textContent = 'Getting the database ready…';
+        const manager = window.duckDBManager;
+        const onProgress = event => { if (this.isConnected) status.textContent = event.detail; };
+        manager.addEventListener('progress', onProgress);
+        try {
+            const result = await window.duckDBManager.init();
+            if (!result.success) throw new Error(result.error);
+            if (!this.isConnected) return;
+            this.setFileInputsEnabled(true);
+            status.textContent = 'Ready.';
+        } catch (error) {
+            if (this.isConnected) status.textContent = 'Couldn’t prepare the database. Check your connection and reload to try again.';
+        } finally {
+            manager.removeEventListener('progress', onProgress);
         }
     }
-    
-    
+
     setFileInputsEnabled(enabled) {
         const chooseFilesBtn = this.querySelector('#chooseFilesBtn');
         const fileInput = this.querySelector('#fileInput');
@@ -178,10 +117,8 @@ class BDWFileDrop extends HTMLElement {
         if (dropZone) {
             if (enabled) {
                 dropZone.style.pointerEvents = 'auto';
-                dropZone.style.opacity = '1';
             } else {
                 dropZone.style.pointerEvents = 'none';
-                dropZone.style.opacity = '0.6';
             }
         }
     }

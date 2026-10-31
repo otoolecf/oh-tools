@@ -30,7 +30,7 @@ if (staging) {
 for (const file of ['vips.js', 'vips.wasm', 'vips-heif.wasm', 'vips-resvg.wasm']) {
   await copy(`node_modules/wasm-vips/lib/${file}`, `vendor/wasm-vips-0.0.14/${file}`);
 }
-await copy('node_modules/heic-to/dist/iife/heic-to.js', 'vendor/heic-to-1.2.1/heic-to.js');
+await copy('image-editor/engine-worker.js');
 
 // Include license files for installed runtime dependencies, including transitive
 // packages. These are generated from the same locked versions as the build.

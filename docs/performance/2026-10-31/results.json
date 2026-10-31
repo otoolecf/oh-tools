@@ -1,0 +1,519 @@
+{
+  "date": "2026-10-31",
+  "target": "https://oh-tools-staging.otoolecf.workers.dev",
+  "deployment": "999dae1b-04eb-4197-bb6c-ade47481327c",
+  "lighthouse_version": "13.6.0",
+  "environment": {
+    "networkUserAgent": "Mozilla/5.0 (Linux; Android 11; moto g power (2022)) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.0.0 Mobile Safari/537.36",
+    "hostUserAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/156.0.0.0 Safari/537.36",
+    "benchmarkIndex": 2969,
+    "credits": {
+      "axe-core": "4.14.0"
+    }
+  },
+  "settings": {
+    "formFactor": "mobile",
+    "screenEmulation": {
+      "mobile": true,
+      "width": 412,
+      "height": 823,
+      "deviceScaleFactor": 1.75,
+      "disabled": false
+    },
+    "throttlingMethod": "simulate",
+    "throttling": {
+      "rttMs": 150,
+      "throughputKbps": 1638.4,
+      "requestLatencyMs": 562.5,
+      "downloadThroughputKbps": 1474.5600000000002,
+      "uploadThroughputKbps": 675,
+      "cpuSlowdownMultiplier": 4
+    }
+  },
+  "lighthouse_runs": [
+    {
+      "page": "home",
+      "path": "/",
+      "run": 1,
+      "performance": 99,
+      "accessibility": 96,
+      "fcp_ms": 1757.2310000000002,
+      "lcp_ms": 1757.2310000000002,
+      "tbt_ms": 0,
+      "cls": 0,
+      "speed_index_ms": 2676.0109435588292,
+      "transfer_bytes": 417674,
+      "warnings": [],
+      "duration_s": 17.7,
+      "json": "home-1.report.json",
+      "html": "home-1.report.html"
+    },
+    {
+      "page": "home",
+      "path": "/",
+      "run": 2,
+      "performance": 96,
+      "accessibility": 96,
+      "fcp_ms": 1795.9279999999999,
+      "lcp_ms": 1795.9279999999999,
+      "tbt_ms": 6.999999999999773,
+      "cls": 0,
+      "speed_index_ms": 4633.089929866281,
+      "transfer_bytes": 417670,
+      "warnings": [],
+      "duration_s": 13.2,
+      "json": "home-2.report.json",
+      "html": "home-2.report.html"
+    },
+    {
+      "page": "home",
+      "path": "/",
+      "run": 3,
+      "performance": 96,
+      "accessibility": 96,
+      "fcp_ms": 1772.4709999999998,
+      "lcp_ms": 1772.4709999999998,
+      "tbt_ms": 2,
+      "cls": 0,
+      "speed_index_ms": 4461.913517065111,
+      "transfer_bytes": 417670,
+      "warnings": [],
+      "duration_s": 13.2,
+      "json": "home-3.report.json",
+      "html": "home-3.report.html"
+    },
+    {
+      "page": "image-editor",
+      "path": "/image-editor/",
+      "run": 1,
+      "performance": 64,
+      "accessibility": 94,
+      "fcp_ms": 1088.009,
+      "lcp_ms": 1088.009,
+      "tbt_ms": 6622,
+      "cls": 0.1426374544349939,
+      "speed_index_ms": 1111.9366992329954,
+      "transfer_bytes": 4862480,
+      "warnings": [],
+      "duration_s": 12.8,
+      "json": "image-editor-1.report.json",
+      "html": "image-editor-1.report.html"
+    },
+    {
+      "page": "image-editor",
+      "path": "/image-editor/",
+      "run": 2,
+      "performance": 41,
+      "accessibility": 94,
+      "fcp_ms": 4112.782,
+      "lcp_ms": 4112.782,
+      "tbt_ms": 6063.999999999999,
+      "cls": 0.1426374544349939,
+      "speed_index_ms": 4112.782,
+      "transfer_bytes": 4862137,
+      "warnings": [],
+      "duration_s": 12.9,
+      "json": "image-editor-2.report.json",
+      "html": "image-editor-2.report.html"
+    },
+    {
+      "page": "image-editor",
+      "path": "/image-editor/",
+      "run": 3,
+      "performance": 65,
+      "accessibility": 94,
+      "fcp_ms": 833.0550000000001,
+      "lcp_ms": 833.0550000000001,
+      "tbt_ms": 6665,
+      "cls": 0.1426374544349939,
+      "speed_index_ms": 1350.042829070765,
+      "transfer_bytes": 4860681,
+      "warnings": [],
+      "duration_s": 13.0,
+      "json": "image-editor-3.report.json",
+      "html": "image-editor-3.report.html"
+    },
+    {
+      "page": "video-trimmer",
+      "path": "/video-trimmer/",
+      "run": 1,
+      "performance": 100,
+      "accessibility": 98,
+      "fcp_ms": 824.9475,
+      "lcp_ms": 824.9475,
+      "tbt_ms": 31,
+      "cls": 0,
+      "speed_index_ms": 838.8820720434188,
+      "transfer_bytes": 482332,
+      "warnings": [],
+      "duration_s": 11.8,
+      "json": "video-trimmer-1.report.json",
+      "html": "video-trimmer-1.report.html"
+    },
+    {
+      "page": "video-trimmer",
+      "path": "/video-trimmer/",
+      "run": 2,
+      "performance": 82,
+      "accessibility": 98,
+      "fcp_ms": 795.76,
+      "lcp_ms": 795.76,
+      "tbt_ms": 52,
+      "cls": 0.3779807108140948,
+      "speed_index_ms": 1234.0805796212537,
+      "transfer_bytes": 482283,
+      "warnings": [],
+      "duration_s": 11.2,
+      "json": "video-trimmer-2.report.json",
+      "html": "video-trimmer-2.report.html"
+    },
+    {
+      "page": "video-trimmer",
+      "path": "/video-trimmer/",
+      "run": 3,
+      "performance": 82,
+      "accessibility": 98,
+      "fcp_ms": 799.9365,
+      "lcp_ms": 799.9365,
+      "tbt_ms": 31,
+      "cls": 0.3779807108140948,
+      "speed_index_ms": 1221.782319755777,
+      "transfer_bytes": 482327,
+      "warnings": [],
+      "duration_s": 11.2,
+      "json": "video-trimmer-3.report.json",
+      "html": "video-trimmer-3.report.html"
+    },
+    {
+      "page": "data-workbench",
+      "path": "/data-workbench/",
+      "run": 1,
+      "performance": 76,
+      "accessibility": 95,
+      "fcp_ms": 836.105,
+      "lcp_ms": 836.105,
+      "tbt_ms": 13,
+      "cls": 1,
+      "speed_index_ms": 1017.557996805584,
+      "transfer_bytes": 6694705,
+      "warnings": [],
+      "duration_s": 11.3,
+      "json": "data-workbench-1.report.json",
+      "html": "data-workbench-1.report.html"
+    },
+    {
+      "page": "data-workbench",
+      "path": "/data-workbench/",
+      "run": 2,
+      "performance": 98,
+      "accessibility": 95,
+      "fcp_ms": 1048.7440000000001,
+      "lcp_ms": 1048.7440000000001,
+      "tbt_ms": 13,
+      "cls": 0,
+      "speed_index_ms": 4150.903485799705,
+      "transfer_bytes": 6694132,
+      "warnings": [],
+      "duration_s": 13.4,
+      "json": "data-workbench-2.report.json",
+      "html": "data-workbench-2.report.html"
+    },
+    {
+      "page": "data-workbench",
+      "path": "/data-workbench/",
+      "run": 3,
+      "performance": 100,
+      "accessibility": 95,
+      "fcp_ms": 1050.7020000000002,
+      "lcp_ms": 1050.7020000000002,
+      "tbt_ms": 24,
+      "cls": 0,
+      "speed_index_ms": 1218.7987847592556,
+      "transfer_bytes": 6694522,
+      "warnings": [],
+      "duration_s": 11.2,
+      "json": "data-workbench-3.report.json",
+      "html": "data-workbench-3.report.html"
+    }
+  ],
+  "lighthouse_medians": [
+    {
+      "page": "home",
+      "runs": 3,
+      "performance": 96,
+      "accessibility": 96,
+      "fcp_ms": 1772.4709999999998,
+      "lcp_ms": 1772.4709999999998,
+      "tbt_ms": 2,
+      "cls": 0,
+      "speed_index_ms": 4461.913517065111,
+      "transfer_bytes": 417670
+    },
+    {
+      "page": "image-editor",
+      "runs": 3,
+      "performance": 64,
+      "accessibility": 94,
+      "fcp_ms": 1088.009,
+      "lcp_ms": 1088.009,
+      "tbt_ms": 6622,
+      "cls": 0.1426374544349939,
+      "speed_index_ms": 1350.042829070765,
+      "transfer_bytes": 4862137
+    },
+    {
+      "page": "video-trimmer",
+      "runs": 3,
+      "performance": 82,
+      "accessibility": 98,
+      "fcp_ms": 799.9365,
+      "lcp_ms": 799.9365,
+      "tbt_ms": 31,
+      "cls": 0.3779807108140948,
+      "speed_index_ms": 1221.782319755777,
+      "transfer_bytes": 482327
+    },
+    {
+      "page": "data-workbench",
+      "runs": 3,
+      "performance": 98,
+      "accessibility": 95,
+      "fcp_ms": 1048.7440000000001,
+      "lcp_ms": 1048.7440000000001,
+      "tbt_ms": 13,
+      "cls": 0,
+      "speed_index_ms": 1218.7987847592556,
+      "transfer_bytes": 6694522
+    }
+  ],
+  "readiness": {
+    "conditions": {
+      "latency_ms": 562.5,
+      "download_kbps": 1474.56,
+      "upload_kbps": 675,
+      "main_thread_cpu_slowdown": 4,
+      "cache_disabled": true,
+      "viewport": [
+        412,
+        823
+      ]
+    },
+    "runs": [
+      {
+        "page": "home",
+        "status": "ready",
+        "ready_ms": 1433.7000000476837,
+        "elapsed_s": 4.45,
+        "observed_fcp_ms": 1708,
+        "observed_lcp_ms": 1708,
+        "observed_cls": 2.9120128869412485e-05,
+        "layout_shifts": [
+          {
+            "value": 2.9120128869412485e-05,
+            "startTime": 2551.600000023842,
+            "hadRecentInput": false,
+            "sources": [
+              {
+                "node": null,
+                "previous": {
+                  "x": 259.90625,
+                  "y": 60.390625,
+                  "width": 63.28125,
+                  "height": 40,
+                  "top": 60.390625,
+                  "right": 323.1875,
+                  "bottom": 100.390625,
+                  "left": 259.90625
+                },
+                "current": {
+                  "x": 256.828125,
+                  "y": 60.390625,
+                  "width": 65.1875,
+                  "height": 40,
+                  "top": 60.390625,
+                  "right": 322.015625,
+                  "bottom": 100.390625,
+                  "left": 256.828125
+                }
+              }
+            ]
+          }
+        ],
+        "page_errors": []
+      },
+      {
+        "page": "video-trimmer",
+        "status": "ready",
+        "ready_ms": 2065.25,
+        "elapsed_s": 5.07,
+        "observed_fcp_ms": 1315.9649999141693,
+        "observed_lcp_ms": 1315.9649999141693,
+        "observed_cls": 0.3779807108140948,
+        "layout_shifts": [
+          {
+            "value": 0.3779807108140948,
+            "startTime": 2048.3700000047684,
+            "hadRecentInput": false,
+            "sources": [
+              {
+                "node": "DIV",
+                "previous": {
+                  "x": 0,
+                  "y": 0,
+                  "width": 412,
+                  "height": 823,
+                  "top": 0,
+                  "right": 412,
+                  "bottom": 823,
+                  "left": 0
+                },
+                "current": {
+                  "x": 0,
+                  "y": 117.390625,
+                  "width": 412,
+                  "height": 705.609375,
+                  "top": 117.390625,
+                  "right": 412,
+                  "bottom": 823,
+                  "left": 0
+                }
+              },
+              {
+                "node": "SECTION",
+                "previous": {
+                  "x": 41,
+                  "y": 558.03125,
+                  "width": 330,
+                  "height": 264.96875,
+                  "top": 558.03125,
+                  "right": 371,
+                  "bottom": 823,
+                  "left": 41
+                },
+                "current": {
+                  "x": 0,
+                  "y": 0,
+                  "width": 0,
+                  "height": 0,
+                  "top": 0,
+                  "right": 0,
+                  "bottom": 0,
+                  "left": 0
+                }
+              }
+            ]
+          }
+        ],
+        "page_errors": []
+      },
+      {
+        "page": "data-workbench",
+        "status": "ready",
+        "ready_ms": 40720.700000047684,
+        "elapsed_s": 43.73,
+        "observed_fcp_ms": 1324,
+        "observed_lcp_ms": 1324,
+        "observed_cls": 0,
+        "layout_shifts": [
+          {
+            "value": 1,
+            "startTime": 1447.7000000476837,
+            "hadRecentInput": true,
+            "sources": [
+              {
+                "node": "DIV",
+                "previous": {
+                  "x": 0,
+                  "y": 0,
+                  "width": 412,
+                  "height": 823,
+                  "top": 0,
+                  "right": 412,
+                  "bottom": 823,
+                  "left": 0
+                },
+                "current": {
+                  "x": 0,
+                  "y": 117.390625,
+                  "width": 412,
+                  "height": 705.609375,
+                  "top": 117.390625,
+                  "right": 412,
+                  "bottom": 823,
+                  "left": 0
+                }
+              },
+              {
+                "node": "SECTION",
+                "previous": {
+                  "x": 41,
+                  "y": 532.4375,
+                  "width": 330,
+                  "height": 290.5625,
+                  "top": 532.4375,
+                  "right": 371,
+                  "bottom": 823,
+                  "left": 41
+                },
+                "current": {
+                  "x": 0,
+                  "y": 0,
+                  "width": 0,
+                  "height": 0,
+                  "top": 0,
+                  "right": 0,
+                  "bottom": 0,
+                  "left": 0
+                }
+              }
+            ]
+          }
+        ],
+        "page_errors": []
+      },
+      {
+        "page": "image-editor",
+        "status": "ready",
+        "ready_ms": 32013.18499994278,
+        "elapsed_s": 35.03,
+        "observed_fcp_ms": 1462.6549999713898,
+        "observed_lcp_ms": 1462.6549999713898,
+        "observed_cls": 0.14263745443499393,
+        "layout_shifts": [
+          {
+            "value": 0.14263745443499393,
+            "startTime": 5020.079999923706,
+            "hadRecentInput": false,
+            "sources": [
+              {
+                "node": "DIV",
+                "previous": {
+                  "x": 0,
+                  "y": 0,
+                  "width": 412,
+                  "height": 823,
+                  "top": 0,
+                  "right": 412,
+                  "bottom": 823,
+                  "left": 0
+                },
+                "current": {
+                  "x": 0,
+                  "y": 117.390625,
+                  "width": 412,
+                  "height": 705.609375,
+                  "top": 117.390625,
+                  "right": 412,
+                  "bottom": 823,
+                  "left": 0
+                }
+              }
+            ]
+          }
+        ],
+        "page_errors": []
+      }
+    ]
+  },
+  "scope": "Lab navigation and startup only; no field INP or file-processing throughput measured."
+}

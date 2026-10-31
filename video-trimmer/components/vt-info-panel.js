@@ -1,6 +1,6 @@
 class VTInfoPanel extends HTMLElement {
   connectedCallback() {
-    this.innerHTML = `<section class="vt-panel"><h3>Video Info</h3><div id="info" class="vt-info-grid muted">Load a file to view metadata.</div></section>`;
+    this.innerHTML = `<section class="vt-panel"><h2>Video Info</h2><div id="info" class="vt-info-grid muted">Load a file to view metadata.</div></section>`;
   }
 
   setMetadata(metadata) {

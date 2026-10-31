@@ -63,6 +63,7 @@ class OToolboxFooter extends HTMLElement {
         .kofi-container {
           margin-top: 1rem;
         }
+
       </style>
       
       <footer class="main-footer">

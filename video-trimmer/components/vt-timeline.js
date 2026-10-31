@@ -10,7 +10,7 @@ class VTTimeline extends HTMLElement {
     };
     this.innerHTML = `
       <section class="vt-panel">
-        <h3>Timeline (keyframe-snapped, hold Shift/Alt for fine adjust)</h3>
+        <h2>Timeline (keyframe-snapped, hold Shift/Alt for fine adjust)</h2>
         <div id="timeline" class="vt-timeline" tabindex="0">
           <div id="filmstrip" class="vt-filmstrip"></div>
           <div id="exclusions" class="vt-exclusions"></div>

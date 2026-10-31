@@ -37,7 +37,7 @@ export default defineConfig(({ mode }) => ({
     target: 'es2022',
     assetsInlineLimit: 0,
     rolldownOptions: {
-      input: [resolve('index.html'), ...tools.map(tool => resolve(`.${tool.path}index.html`))],
+      input: [resolve('index.html'), resolve('about/index.html'), ...tools.map(tool => resolve(`.${tool.path}index.html`))],
     },
   },
 }));
