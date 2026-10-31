@@ -1,5 +1,5 @@
 {
-  "name": "otoolebox",
+  "name": "oh-tools",
   "version": "1.0.0",
   "description": "Browser-based utilities with local file processing and optional WebRTC signaling.",
   "scripts": {
@@ -16,15 +16,15 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/otoolecf/otoolebox.git"
+    "url": "git+https://github.com/otoolecf/oh-tools.git"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/otoolecf/otoolebox/issues"
+    "url": "https://github.com/otoolecf/oh-tools/issues"
   },
-  "homepage": "https://github.com/otoolecf/otoolebox#readme",
+  "homepage": "https://github.com/otoolecf/oh-tools#readme",
   "dependencies": {
     "@duckdb/duckdb-wasm": "1.29.1-dev266.0",
     "@noble/hashes": "2.4.0",

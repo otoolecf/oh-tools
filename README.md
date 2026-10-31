@@ -2,11 +2,15 @@
 
 Browser-based utilities at https://oh-tools.net. Files and inputs are processed locally, without uploading them to our servers for processing. Libraries, fonts, and database extensions may download from external services; user-selected URLs and network queries also make requests to their destinations. Browser Bridge optionally uses a signaling service to establish peer-to-peer connections.
 
+The source repository is [otoolecf/oh-tools](https://github.com/otoolecf/oh-tools).
+
 ## Development
 
 Use Node.js 22.12 or newer (see `.nvmrc`). Install dependencies once at the repository root:
 
 ```bash
+git clone https://github.com/otoolecf/oh-tools.git
+cd oh-tools
 npm ci
 npm run dev
 ```
