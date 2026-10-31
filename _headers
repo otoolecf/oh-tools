@@ -13,7 +13,7 @@
   Cross-Origin-Opener-Policy: same-origin
 
 # Emscripten starts pthread workers from this loader; workers need COEP too.
-/vendor/wasm-vips-0.0.14/*
+/vendor/wasm-vips-0.0.19/*
   Cross-Origin-Embedder-Policy: require-corp
 
 # Vite emits content-hashed bundles; vendor directories include package versions.

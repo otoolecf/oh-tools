@@ -1,9 +1,9 @@
 {
   "packages": {
-    "wasm-vips": "0.0.14",
+    "wasm-vips": "0.0.19",
     "heic-to": "1.6.7",
     "exifreader": "4.52.0",
-    "mediabunny": "1.32.0"
+    "mediabunny": "1.63.0"
   },
   "archives": [
     {
@@ -107,7 +107,7 @@
     {
       "name": "libimagequant-v2.4.1.tar.gz",
       "url": "https://github.com/lovell/libimagequant/archive/refs/tags/v2.4.1.tar.gz",
-      "group": "wasm-vips 0.0.14",
+      "group": "wasm-vips 0.0.14; wasm-vips 0.0.19",
       "sha256": "47d2a84b7b1052975c9d50a3d4e3cacbf57b43d84a4c3131210848ead9964dfb",
       "bytes": 45792
     },
@@ -184,7 +184,7 @@
     {
       "name": "vips-patch-3.patch",
       "url": "https://github.com/kleisauke/libjpeg-turbo/commit/a60fb467fc7601b008741d42e98268c8a7bcb5b4.patch",
-      "group": "wasm-vips 0.0.14",
+      "group": "wasm-vips 0.0.14; wasm-vips 0.0.19",
       "sha256": "f0475206df39214377821faae087a2ee9eef58660f272bf0b4874c1783930cab",
       "bytes": 2580
     },
@@ -222,6 +222,167 @@
       "group": "Historical heic-to 1.2.1 (retained Git history)",
       "sha256": "49cd75efdc3ae691a69bd9d8b48cf0f034e883b59c387b93fa31fdd24d6ec5bb",
       "bytes": 4347394
+    },
+    {
+      "name": "zlib-ng-2.3.3.tar.gz",
+      "url": "https://github.com/zlib-ng/zlib-ng/archive/refs/tags/2.3.3.tar.gz",
+      "group": "wasm-vips 0.0.19",
+      "sha256": "f9c65aa9c852eb8255b636fd9f07ce1c406f061ec19a2e7d508b318ca0c907d1",
+      "bytes": 2447397
+    },
+    {
+      "name": "libffi-3.8.0.tar.gz",
+      "url": "https://github.com/libffi/libffi/releases/download/v3.8.0/libffi-3.8.0.tar.gz",
+      "group": "wasm-vips 0.0.19",
+      "sha256": "7da3e2d9a171eb0a038f592ecad3ff2bb2550f3496d87b3b29ad0cf4430c0db4",
+      "bytes": 1581626
+    },
+    {
+      "name": "glib-2.90.0.tar.xz",
+      "url": "https://download.gnome.org/sources/glib/2.90/glib-2.90.0.tar.xz",
+      "group": "wasm-vips 0.0.19",
+      "sha256": "17d15cac2af80a33271127408e0abc2748eb297c595c2a26409e81e14e7d1b8f",
+      "bytes": 5830480
+    },
+    {
+      "name": "vips-0.0.19-patch-1.patch",
+      "url": "https://github.com/GNOME/glib/compare/2.90.0...kleisauke:wasm-vips-2.90.0.patch",
+      "group": "wasm-vips 0.0.19",
+      "sha256": "e57b5b8bc485d74dbdacd56432b9a98cb3889b4ed46007c6bfe210275a4cc2be",
+      "bytes": 208505
+    },
+    {
+      "name": "expat-2.8.5.tar.xz",
+      "url": "https://github.com/libexpat/libexpat/releases/download/R_2_8_5/expat-2.8.5.tar.xz",
+      "group": "wasm-vips 0.0.19",
+      "sha256": "1e727b8933ec51a77a9a9d9afcf8e688bce45d907c13e36ab7393fe36e703182",
+      "bytes": 528380
+    },
+    {
+      "name": "libexif-0.6.26.tar.xz",
+      "url": "https://github.com/libexif/libexif/releases/download/v0.6.26/libexif-0.6.26.tar.xz",
+      "group": "wasm-vips 0.0.19",
+      "sha256": "4a055ed6575e61ca46c3172be3c753cc16c9becd0f99ec71d58dd0e471476c0c",
+      "bytes": 1335488
+    },
+    {
+      "name": "lcms2-2.19.1.tar.gz",
+      "url": "https://github.com/mm2/Little-CMS/releases/download/lcms2.19.1/lcms2-2.19.1.tar.gz",
+      "group": "wasm-vips 0.0.19",
+      "sha256": "bfc54f7bab59fbc921012014a8032e4cba4abd46db47d46b76416a8c0b2815c8",
+      "bytes": 5728743
+    },
+    {
+      "name": "highway-1.4.0.tar.gz",
+      "url": "https://github.com/google/highway/archive/refs/tags/1.4.0.tar.gz",
+      "group": "wasm-vips 0.0.19",
+      "sha256": "e72241ac9524bb653ae52ced768b508045d4438726a303f10181a38f764a453c",
+      "bytes": 3691240
+    },
+    {
+      "name": "brotli-v1.2.0.tar.gz",
+      "url": "https://github.com/google/brotli/archive/refs/tags/v1.2.0.tar.gz",
+      "group": "wasm-vips 0.0.19",
+      "sha256": "816c96e8e8f193b40151dad7e8ff37b1221d019dbcb9c35cd3fadbfe6477dfec",
+      "bytes": 646315
+    },
+    {
+      "name": "mozjpeg-0826579.tar.gz",
+      "url": "https://github.com/mozilla/mozjpeg/archive/0826579.tar.gz",
+      "group": "wasm-vips 0.0.19",
+      "sha256": "b680167bd5d9afebdd576a12f8c49d2c9066a3b92ef96a2b2c5f7829b8600fe5",
+      "bytes": 2443542
+    },
+    {
+      "name": "libultrahdr-v2.0.2.tar.gz",
+      "url": "https://github.com/google/libultrahdr/archive/refs/tags/v2.0.2.tar.gz",
+      "group": "wasm-vips 0.0.19",
+      "sha256": "aa8d193bb887c348c419780511dd03b374f4e07af8812b6d3f80c8537cf1ef2c",
+      "bytes": 1518872
+    },
+    {
+      "name": "libjxl-v0.12.0.tar.gz",
+      "url": "https://github.com/libjxl/libjxl/archive/refs/tags/v0.12.0.tar.gz",
+      "group": "wasm-vips 0.0.19",
+      "sha256": "03e9be69a30be4011f559da75328b6d7cea8ad921fabfbd551ce10bf45cdc992",
+      "bytes": 1698757
+    },
+    {
+      "name": "libpng-v1.6.58.tar.gz",
+      "url": "https://github.com/pnggroup/libpng/archive/refs/tags/v1.6.58.tar.gz",
+      "group": "wasm-vips 0.0.19",
+      "sha256": "a9d4df463d36a6e5f9c29bd6f4967312d17e996c1854f3511f833924eb1993cf",
+      "bytes": 1592190
+    },
+    {
+      "name": "cgif-v0.5.4.tar.gz",
+      "url": "https://github.com/dloebl/cgif/archive/refs/tags/v0.5.4.tar.gz",
+      "group": "wasm-vips 0.0.19",
+      "sha256": "83a70a15bc2da41f081a44ebc58ee48e2e1d524a6d3fdb4a24064afa08d5ad4d",
+      "bytes": 40028
+    },
+    {
+      "name": "libwebp-1.6.0.tar.gz",
+      "url": "https://storage.googleapis.com/downloads.webmproject.org/releases/webp/libwebp-1.6.0.tar.gz",
+      "group": "wasm-vips 0.0.19",
+      "sha256": "e4ab7009bf0629fd11982d4c2aa83964cf244cffba7347ecd39019a9e38c4564",
+      "bytes": 4296070
+    },
+    {
+      "name": "libtiff-libtiff-v4.7.2.tar.gz",
+      "url": "https://gitlab.com/libtiff/libtiff/-/archive/v4.7.2/libtiff-v4.7.2.tar.gz",
+      "group": "wasm-vips 0.0.19",
+      "sha256": "62b15f44c10106065211efa22a2dc77937bd97ee1f6e3afd2c9659010de112eb",
+      "bytes": 2616788
+    },
+    {
+      "name": "resvg-0.48.1.tar.xz",
+      "url": "https://github.com/linebender/resvg/releases/download/v0.48.1/resvg-0.48.1.tar.xz",
+      "group": "wasm-vips 0.0.19",
+      "sha256": "13ed5a2bae7a01156288ecae5bf944cf7d1c572742c19fc68027947a4d87294c",
+      "bytes": 13023916
+    },
+    {
+      "name": "libaom-3.15.1.tar.gz",
+      "url": "https://storage.googleapis.com/aom-releases/libaom-3.15.1.tar.gz",
+      "group": "wasm-vips 0.0.19",
+      "sha256": "8ca0c52746174603500f0adb6f2a215d69c9ca2aab2acb3caa06fb791d8d01bf",
+      "bytes": 6623477
+    },
+    {
+      "name": "libheif-1.23.5.tar.gz",
+      "url": "https://github.com/strukturag/libheif/releases/download/v1.23.5/libheif-1.23.5.tar.gz",
+      "group": "wasm-vips 0.0.19",
+      "sha256": "fd9036064c4432f0550d15072ddf34956a248279ee9aeaff0fba3fa0f77d8f1a",
+      "bytes": 2276803
+    },
+    {
+      "name": "vips-8.18.7.tar.xz",
+      "url": "https://github.com/libvips/libvips/releases/download/v8.18.7/vips-8.18.7.tar.xz",
+      "group": "wasm-vips 0.0.19",
+      "sha256": "5baaead3b0bb20ffdb9e9ff09aa9fda08620923df77b63b436654cb5e0b3bf94",
+      "bytes": 25425084
+    },
+    {
+      "name": "vips-0.0.19-patch-2.patch",
+      "url": "https://github.com/libvips/libvips/compare/v8.18.7...kleisauke:wasm-vips-8.18.7.patch",
+      "group": "wasm-vips 0.0.19",
+      "sha256": "6c9039a65d5853dd2918c5a308b0e1f7db0f05d8b2cf9cab0b79376348b65df7",
+      "bytes": 109430
+    },
+    {
+      "name": "wasm-vips-0.0.19-source.tar.gz",
+      "url": "https://codeload.github.com/kleisauke/wasm-vips/tar.gz/refs/tags/v0.0.19",
+      "group": "wasm-vips 0.0.19",
+      "sha256": "de3f5b19b8e4bfaa466047e3df3fbbb06135a63db8715ae7634d997d1e8b54d5",
+      "bytes": 7714916
+    },
+    {
+      "name": "mediabunny-1.63.0-source.tgz",
+      "url": "https://registry.npmjs.org/mediabunny/-/mediabunny-1.63.0.tgz",
+      "group": "MPL source",
+      "sha256": "bc7d4e838541279f767de90c7601826b46998e877dc9076db814df2fc9272475",
+      "bytes": 2271758
     }
   ]
 }

@@ -7,7 +7,8 @@ export default defineConfig({
   workers: 2,
   use: { baseURL: 'http://localhost:4173', headless: true, trace: 'retain-on-failure' },
   webServer: [
-    { command: 'npm run build && npm run preview', url: 'http://localhost:4173', timeout: 60_000 },
+    // Cold builds also fetch and verify the corresponding library source archives.
+    { command: 'npm run build && npm run preview', url: 'http://localhost:4173', timeout: 180_000 },
     { command: 'npm run dev:signaling', port: 3001, timeout: 30_000 },
     { command: 'npx wrangler dev --config tests/fixtures/signaling/wrangler.jsonc --port 3002', url: 'http://localhost:3002', timeout: 30_000 },
   ],

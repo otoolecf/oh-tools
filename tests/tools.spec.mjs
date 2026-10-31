@@ -251,9 +251,9 @@ test('directory URLs, legacy redirects, caching, and private-file boundaries', a
   for (const path of ['/package.json', '/.env.local', '/wrangler.jsonc', '/README.md', '/browser-bridge/cloudflare-worker.js', '/node_modules/diff/package.json', '/missing-page/']) {
     expect((await request.get(path)).status(), path).toBe(404);
   }
-  const wasm = await request.get('/vendor/wasm-vips-0.0.14/vips.wasm');
+  const wasm = await request.get('/vendor/wasm-vips-0.0.19/vips.wasm');
   expect(wasm.headers()['content-type']).toContain('application/wasm');
   expect(wasm.headers()['cache-control']).toContain('immutable');
-  const worker = await request.get('/vendor/wasm-vips-0.0.14/vips.js');
+  const worker = await request.get('/vendor/wasm-vips-0.0.19/vips.js');
   expect(worker.headers()['cross-origin-embedder-policy']).toBe('require-corp');
 });
