@@ -1,3 +1,4 @@
+import { escapeHTML } from '../../components/safe-html.js';
 // Schema Display Component for Browser Data Workbench
 
 class BDWSchemaCard extends HTMLElement {
@@ -52,8 +53,8 @@ class BDWSchemaCard extends HTMLElement {
             const typeBadgeClass = this.getTypeBadgeClass(column.column_type);
             html += `
                 <tr>
-                    <td><strong>${column.column_name}</strong></td>
-                    <td><span class="type-badge ${typeBadgeClass}">${column.column_type}</span></td>
+                    <td><strong>${escapeHTML(column.column_name)}</strong></td>
+                    <td><span class="type-badge ${typeBadgeClass}">${escapeHTML(column.column_type)}</span></td>
                     <td>${column.null === 'YES' ? 'Yes' : 'No'}</td>
                 </tr>
             `;

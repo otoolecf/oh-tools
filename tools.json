@@ -15,7 +15,7 @@
     },
     {
       "name": "Image Editor",
-      "description": "Crop, resize, rotate, adjust, and convert images in your browser. Check the metadata while you’re there, if that’s what brought you here.",
+      "description": "Crop, resize, rotate, adjust, and convert images in your browser. Check the metadata while you\u2019re there, if that\u2019s what brought you here.",
       "path": "/image-editor/",
       "status": "active",
       "poweredBy": [
@@ -62,7 +62,7 @@
     },
     {
       "name": "JSON Utilities",
-      "description": "Fix broken JSON, clean up the formatting, and check whether it’s valid. Missing quotes happen.",
+      "description": "Fix broken JSON, clean up the formatting, and check whether it\u2019s valid. Missing quotes happen.",
       "path": "/json-utilities/",
       "status": "active",
       "poweredBy": [
@@ -105,7 +105,7 @@
     },
     {
       "name": "Passphrase Generator",
-      "description": "Make a passphrase you can remember, or a random password you probably won’t. Adjust the length and character options to suit the job.",
+      "description": "Make a passphrase you can remember, or a random password you probably won\u2019t. Adjust the length and character options to suit the job.",
       "path": "/passphrase-generator/",
       "status": "active",
       "poweredBy": [
@@ -123,8 +123,8 @@
       "status": "active",
       "poweredBy": [
         {
-          "name": "CryptoJS",
-          "url": "https://github.com/brix/crypto-js"
+          "name": "Web Crypto API",
+          "url": "https://developer.mozilla.org/en-US/docs/Web/API/Web_Crypto_API"
         },
         {
           "name": "noble-hashes",
@@ -135,7 +135,7 @@
     },
     {
       "name": "Video Trimmer",
-      "description": "Keep the parts you want, cut the parts you don’t, and change formats if needed. Your browser does the processing.",
+      "description": "Keep the parts you want, cut the parts you don\u2019t, and change formats if needed. Your browser does the processing.",
       "path": "/video-trimmer/",
       "status": "active",
       "poweredBy": [

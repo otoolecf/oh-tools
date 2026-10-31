@@ -1,0 +1,8 @@
+{
+  "$schema": "../../../node_modules/wrangler/config-schema.json",
+  "name": "oh-tools-signaling-test",
+  "main": "harness.mjs",
+  "compatibility_date": "2026-10-30",
+  "durable_objects": {"bindings": [{"name":"SIGNALING_INBOXES","class_name":"SignalingInbox"}]},
+  "migrations": [{"tag":"v1","new_sqlite_classes":["SignalingInbox"]}]
+}

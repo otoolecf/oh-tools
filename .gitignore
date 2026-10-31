@@ -170,3 +170,6 @@ passhelp
 .wrangler/
 playwright-report/
 test-results/
+
+# Verified upstream source archives used to publish license/source downloads
+.license-sources/

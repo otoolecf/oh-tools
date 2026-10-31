@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { createHash } from 'node:crypto';
 import { readFile, readdir, stat } from 'node:fs/promises';
 import { join } from 'node:path';
 import { pagePaths, siteOrigin, siteName } from './site-content.mjs';
@@ -31,6 +32,19 @@ for (const path of pagePaths) {
     assert(html.includes('class="tool-guide"'), `Missing static guide: ${path}`);
     assert(html.includes('aria-label="Related tools"'));
   }
+}
+for (const name of ['heic-to', 'exifreader', 'mediabunny']) {
+  assert((await readFile(`${output}/licenses/${name}/LICENSE`, 'utf8')).length > 100, `Missing license: ${name}`);
+}
+for (const name of ['GPL-3.0.txt', 'LGPL-3.0.txt', 'THIRD_PARTY_NOTICES.md']) {
+  assert((await readFile(`${output}/licenses/${name}`, 'utf8')).length > 100);
+}
+const sources = JSON.parse(await readFile(`${output}/licenses/sources/manifest.json`, 'utf8'));
+const sourceIndex = await readFile(`${output}/licenses/index.html`, 'utf8');
+for (const item of sources.archives) {
+  const chunks = await Promise.all(item.parts.map(name => readFile(`${output}/licenses/sources/${name}`)));
+  assert.equal(createHash('sha256').update(Buffer.concat(chunks)).digest('hex'), item.sha256, `Source checksum: ${item.name}`);
+  for (const name of item.parts) assert(sourceIndex.includes(name));
 }
 const home = await readFile(`${output}/index.html`, 'utf8');
 const schemas = [...home.matchAll(/<script type="application\/ld\+json" id="site-name-schema">([\s\S]*?)<\/script>/g)];

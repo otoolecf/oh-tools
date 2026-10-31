@@ -1,6 +1,7 @@
 import { copyFile, mkdir, readFile, readdir, rm, writeFile } from 'node:fs/promises';
 import { resolve, dirname } from 'node:path';
 import { sitemap, siteOrigin } from './site-content.mjs';
+import { prepareLicenseSources } from './prepare-license-sources.mjs';
 
 const staging = process.argv.includes('--staging');
 
@@ -46,3 +47,7 @@ for (const [directory, info] of Object.entries(lock.packages)) {
 await copy('LICENSE', 'licenses/oh-tools/LICENSE');
 await copy('brand/INTER-LICENSE.txt', 'licenses/brand/INTER-LICENSE.txt');
 await copy('brand/LUCIDE-LICENSE.txt', 'licenses/brand/LUCIDE-LICENSE.txt');
+for (const file of ['GPL-3.0.txt', 'LGPL-3.0.txt', 'THIRD_PARTY_NOTICES.md']) {
+  await copy(`third-party/${file}`, `licenses/${file}`);
+}
+await prepareLicenseSources(output);

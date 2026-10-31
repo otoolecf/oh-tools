@@ -1,3 +1,4 @@
+import { escapeHTML, httpURL } from '../../components/safe-html.js';
 import ExifReader from 'exifreader';
 
 /**
@@ -458,7 +459,7 @@ class MetadataOperator extends HTMLElement {
             this.showCopyFeedback(`${type} copied to clipboard!`);
             return true;
         } catch (err) {
-            console.error('Failed to copy to clipboard:', err);
+            console.error("Failed to copy to clipboard:");
             this.showCopyFeedback(`Failed to copy ${type.toLowerCase()}`);
             return false;
         }
@@ -641,7 +642,7 @@ class MetadataOperator extends HTMLElement {
             entries.forEach(([k, v]) => {
                 // Skip keys starting with underscore
                 if (!k.startsWith('_')) {
-                    html += `<div><strong>${this.formatKey(k)}:</strong> ${this.formatValueForHTML(v)}</div>`;
+                    html += `<div><strong>${escapeHTML(this.formatKey(k))}:</strong> ${this.formatValueForHTML(v)}</div>`;
                 }
             });
             html += '</div>';
@@ -658,20 +659,20 @@ class MetadataOperator extends HTMLElement {
         
         if (typeof value === 'string') {
             // Handle URLs
-            if (value.startsWith('http://') || value.startsWith('https://')) {
-                return `<a href="${value}" target="_blank" rel="noopener noreferrer">${value}</a>`;
+            if (httpURL(value)) {
+                return `<a href="${escapeHTML(httpURL(value))}" target="_blank" rel="noopener noreferrer">${escapeHTML(value)}</a>`;
             }
             
             // Truncate very long strings for display
             if (value.length > 150) {
                 const truncated = value.substring(0, 150);
-                return `<span class="metadata-value truncated" title="${value}">${truncated}</span>`;
+                return `<span class="metadata-value truncated" title="${escapeHTML(value)}">${escapeHTML(truncated)}</span>`;
             }
             
-            return value;
+            return escapeHTML(value);
         }
         
-        return String(value);
+        return escapeHTML(value);
     }
 
     formatMetadataForText(metadata, extended = false) {
@@ -994,7 +995,7 @@ class MetadataOperator extends HTMLElement {
                         });
                     }
                 } catch (e) {
-                    console.warn('ExifReader failed, using basic metadata only:', e);
+                    console.warn("ExifReader failed, using basic metadata only:");
                 }
             }
             
@@ -1008,7 +1009,7 @@ class MetadataOperator extends HTMLElement {
             this.showStatus(`Metadata extracted`);
             
         } catch (error) {
-            console.error('Failed to extract metadata:', error);
+            console.error("Failed to extract metadata:");
             this.metadata = {
                 basic: {
                     error: 'Failed to extract metadata',

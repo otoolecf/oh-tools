@@ -1,6 +1,6 @@
 # Browser Bridge Simple Codes Setup
 
-Simple Codes uses encoded WebRTC offer/answer records and six-digit codes to establish a peer-to-peer connection. The Worker stores encoded signaling records for up to 15 minutes and deletes a record after retrieval. Workers KV is eventually consistent, so this is not a guarantee of atomic one-time retrieval. Direct Exchange avoids the signaling service.
+Simple Codes uses encoded WebRTC offer/answer records and six-digit codes to establish a peer-to-peer connection. The Worker stores encoded signaling records for up to 15 minutes and deletes a record after retrieval. The maintained Worker uses one SQLite Durable Object per code, with atomic creation and read/delete operations. Older KV deployments must migrate to gain this protection. Direct Exchange avoids the signaling service.
 
 The current frontend uses Base64 encoding, not encryption, for signaling metadata. The service can decode these records. WebRTC encrypts the subsequent data-channel transport; this does not make the signaling records confidential.
 
@@ -21,11 +21,10 @@ From the repository root:
 
 ```bash
 cp browser-bridge/wrangler.example.toml browser-bridge/wrangler.toml
-npx wrangler kv namespace create TEMP_STORAGE_KV --config browser-bridge/wrangler.toml
-npx wrangler kv namespace create TEMP_STORAGE_KV --preview --config browser-bridge/wrangler.toml
+npx wrangler deploy --dry-run --config browser-bridge/wrangler.toml
 ```
 
-Set your namespace IDs in the local config; configure its optional rate limiter for a public deployment. Keep the real config untracked, then run:
+Choose your Worker name and a distinct limiter namespace number in the local config. The example includes the SQLite class migration and a required rate limiter. Records are bounded to 32 KiB of JSON and expire after 15 minutes. Missing or failing bindings return 503; exhausted limits return 429. Keep the real config untracked, then run:
 
 ```bash
 npm run deploy:signaling
@@ -51,6 +50,6 @@ Rebuild or restart the dev server after changing this value. This is a public UR
 ## Troubleshooting
 
 - If Simple Codes is unavailable, configure `VITE_SIGNALING_URL` and rebuild, or use Direct Exchange.
-- If a code is not found, it may have expired, been mistyped, or already retrieved. KV propagation can also delay visibility between locations.
-- If storage fails, check the signaling Worker logs and KV bindings.
-- Production signaling storage and consistency improvements are separate from the frontend build migration.
+- If a code is not found, it may have expired, been mistyped, or already retrieved. A retrieved code cannot be retrieved again. Codes from an older KV deployment will not migrate; let active sessions expire before cutover.
+- If storage fails, check the Worker configuration, required rate limiter and SIGNALING_INBOXES binding.
+- Frontend and signaling deployments are separate. Validate the backend on a staging Worker before a production cutover.

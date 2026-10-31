@@ -66,6 +66,10 @@ For another deployment, copy `.env.example` to `.env.local` and set `VITE_SIGNAL
 
 Use `browser-bridge/wrangler.example.toml` as the template for the ignored local signaling config. See [Browser Bridge setup](browser-bridge/README-OTP.md).
 
+## Architecture and security checks
+
+See [current architecture](docs/architecture.md). Archived proposals are not setup instructions. SQL history stays in the tab; statements containing values, URLs, or credential-related terms are excluded. Old persisted SQL history is removed. CI scans Git history with Gitleaks and checks dependency advisories; Dependabot proposes updates.
+
 ## Adding Tools
 
 1. Create a kebab-case directory with `index.html`, `main.js`, and styles.
@@ -77,7 +81,7 @@ Use `browser-bridge/wrangler.example.toml` as the template for the ignored local
 
 ## Browser Bridge Security Limitation
 
-The current signaling helpers use Base64 encoding, not encryption. WebRTC data-channel transport is encrypted, but a signaling-service operator can decode connection metadata. Do not treat Simple Codes as end-to-end encrypted signaling. Replacing that protocol and improving KV consistency are separate backend changes.
+The current signaling helpers use Base64 encoding, not encryption. WebRTC data-channel transport is encrypted, but a signaling-service operator can decode connection metadata. Do not treat Simple Codes as end-to-end encrypted signaling. The maintained signaling Worker uses SQLite Durable Objects for atomic code creation/retrieval and requires a functioning rate limiter. Deploying the frontend does not update an older signaling backend.
 
 ## Donation And Contact Links
 
@@ -85,4 +89,4 @@ The hosted site's Ko-fi and contact links are in `components/otoolebox-footer.js
 
 ## License
 
-Project code is ISC; see `LICENSE`. Third-party dependencies retain their own licenses. Available installed dependency license/notice files are copied into `dist/licenses/` during asset preparation.
+Project code is ISC; see `LICENSE`. Third-party dependencies retain their own licenses. License/notice files and verified corresponding-source archives are published at `/licenses/`. See [third-party notices](third-party/THIRD_PARTY_NOTICES.md) for versions and rebuild/replacement instructions. The first build downloads source archives into an ignored cache; later builds verify and reuse them.

@@ -1,3 +1,4 @@
+import { escapeHTML } from '../components/safe-html.js';
 import bwipjs from 'bwip-js';
 
 // Closed Loop Tool - WebRTC P2P Implementation
@@ -261,7 +262,7 @@ class ClosedLoop {
     try {
       // Regenerate offer QR code if it exists
       if (this.currentOfferUrl && this.qrDisplay.style.display !== "none") {
-        console.log("Regenerating offer QR code for theme change");
+
         await this.generateQRCodeFromUrl(this.currentOfferUrl);
       }
 
@@ -270,28 +271,28 @@ class ClosedLoop {
         this.currentAnswerData &&
         this.answerDisplay.style.display !== "none"
       ) {
-        console.log("Regenerating answer QR code for theme change");
+
         await this.generateAnswerQRCode(this.currentAnswerData);
       }
     } catch (error) {
-      console.error("Error regenerating QR codes for theme:", error);
+      console.error("Error regenerating QR codes for theme:");
     }
   }
 
   checkForOfferInUrl() {
-    console.log("Checking for offer or answer in URL...");
+
 
     // Check if there's an offer or answer in the URL hash
     const hash = window.location.hash;
-    console.log("Current URL hash:", hash);
+
 
     if (hash.startsWith("#offer=")) {
-      console.log("Found offer in URL hash");
+
       // Show processing banner
       this.urlProcessingBanner.style.display = "block";
 
       const compressed = hash.substring(7); // Remove '#offer='
-      console.log("Compressed offer data length:", compressed.length);
+
 
       try {
         // Add padding if needed for base64 decoding
@@ -299,27 +300,24 @@ class ClosedLoop {
         while (paddedCompressed.length % 4) {
           paddedCompressed += "=";
         }
-        console.log(
-          "Padded compressed data:",
-          paddedCompressed.substring(0, 50) + "..."
-        );
+
 
         // Decode the offer
         const decoded = atob(paddedCompressed);
-        console.log("Decoded JSON length:", decoded.length);
+
 
         const offer = JSON.parse(decoded);
-        console.log("Parsed offer type:", offer.type);
-        console.log("Offer SDP preview:", offer.sdp?.substring(0, 100) + "...");
+
+
 
         if (offer.type === "offer") {
-          console.log("Starting auto-join process...");
+
           // Auto-start join process with this offer
           this.autoJoinWithOffer(offer);
 
           // Clear the hash from URL for security after a short delay
           setTimeout(() => {
-            console.log("Clearing URL hash for security");
+
             window.history.replaceState(
               "",
               document.title,
@@ -327,26 +325,23 @@ class ClosedLoop {
             );
           }, 1000);
         } else {
-          console.error("Not a valid offer type:", offer.type);
+          console.error("Not a valid offer type:");
         }
       } catch (error) {
-        console.error("Error processing offer from URL:", error);
-        console.error(
-          "Raw compressed data:",
-          compressed.substring(0, 100) + "..."
-        );
+        console.error("Error processing offer from URL:");
+        console.error("Raw compressed data:");
 
         // Hide processing banner and show error
         this.urlProcessingBanner.style.display = "none";
         this.updateStatus("Invalid offer URL - please check the link", "error");
       }
     } else if (hash.startsWith("#answer=")) {
-      console.log("Found answer in URL hash");
+
       // Show processing banner
       this.urlProcessingBanner.style.display = "block";
 
       const compressed = hash.substring(8); // Remove '#answer='
-      console.log("Compressed answer data length:", compressed.length);
+
 
       try {
         // Add padding if needed for base64 decoding
@@ -354,30 +349,24 @@ class ClosedLoop {
         while (paddedCompressed.length % 4) {
           paddedCompressed += "=";
         }
-        console.log(
-          "Padded compressed data:",
-          paddedCompressed.substring(0, 50) + "..."
-        );
+
 
         // Decode the answer
         const decoded = atob(paddedCompressed);
-        console.log("Decoded JSON length:", decoded.length);
+
 
         const answer = JSON.parse(decoded);
-        console.log("Parsed answer type:", answer.type);
-        console.log(
-          "Answer SDP preview:",
-          answer.sdp?.substring(0, 100) + "..."
-        );
+
+
 
         if (answer.type === "answer") {
-          console.log("Starting auto-process answer...");
+
           // Auto-process this answer (paste it into the response input)
           this.autoProcessAnswer(compressed);
 
           // Clear the hash from URL for security after a short delay
           setTimeout(() => {
-            console.log("Clearing URL hash for security");
+
             window.history.replaceState(
               "",
               document.title,
@@ -385,14 +374,11 @@ class ClosedLoop {
             );
           }, 1000);
         } else {
-          console.error("Not a valid answer type:", answer.type);
+          console.error("Not a valid answer type:");
         }
       } catch (error) {
-        console.error("Error processing answer from URL:", error);
-        console.error(
-          "Raw compressed data:",
-          compressed.substring(0, 100) + "..."
-        );
+        console.error("Error processing answer from URL:");
+        console.error("Raw compressed data:");
 
         // Hide processing banner and show error
         this.urlProcessingBanner.style.display = "none";
@@ -402,61 +388,58 @@ class ClosedLoop {
         );
       }
     } else {
-      console.log("No offer or answer found in URL hash");
+
     }
   }
 
   async autoJoinWithOffer(offer) {
     try {
-      console.log("Auto-joining with offer...");
+
       // Hide processing banner once we start the actual process
       this.urlProcessingBanner.style.display = "none";
       this.updateStatus("Auto-joining session from URL...", "connecting");
       this.isInitiator = false;
 
       // Show join UI
-      console.log("Showing session UI");
+
       this.showSessionUI("Joining Session from URL");
 
       // Override progress for joining device - they start at step 2 (they are the "other device")
       this.updateProgress("connect");
 
       // Create peer connection
-      console.log(
-        "Creating peer connection with config:",
-        this.getIceConfiguration()
-      );
+
       const iceConfig = this.getIceConfiguration();
       this.pc = new RTCPeerConnection(iceConfig);
       this.setupPeerConnection();
 
       // Set remote description
-      console.log("Setting remote description (offer)");
+
       await this.pc.setRemoteDescription(offer);
-      console.log("Remote description set successfully");
+
 
       // Create answer
-      console.log("Creating answer...");
+
       const answer = await this.pc.createAnswer();
       await this.pc.setLocalDescription(answer);
-      console.log("Answer created and local description set");
+
 
       // Wait for ICE gathering
-      console.log("Waiting for ICE gathering to complete...");
+
       await this.waitForIceGathering();
-      console.log("ICE gathering completed");
+
 
       // Display answer for sharing back
-      console.log("Displaying answer for user to share");
+
       this.displayAnswer(this.pc.localDescription);
       this.updateStatus(
         "Copy the answer below and send it back to the other device",
         "connecting"
       );
     } catch (error) {
-      console.error("Error auto-joining session:", error);
-      console.error("Error details:", error.message);
-      console.error("Error stack:", error.stack);
+      console.error("Error auto-joining session:");
+      console.error("Error details:");
+      console.error("Error stack:");
       this.updateStatus(
         "Failed to join session from URL: " + error.message,
         "error"
@@ -466,14 +449,14 @@ class ClosedLoop {
 
   autoProcessAnswer(compressedAnswer) {
     try {
-      console.log("Auto-processing answer from URL...");
+
       // Hide processing banner
       this.urlProcessingBanner.style.display = "none";
 
       // Check if we're in the right state to receive an answer
       if (this.waitingResponse.style.display !== "none") {
         // We're waiting for a response, automatically paste it
-        console.log("Pasting answer into response input");
+
         this.responseInput.value = compressedAnswer;
 
         // Show status message
@@ -484,20 +467,18 @@ class ClosedLoop {
 
         // Auto-click the process button after a short delay
         setTimeout(() => {
-          console.log("Auto-clicking process response button");
+
           this.processResponseBtn.click();
         }, 500);
       } else {
-        console.log(
-          "Not in waiting response state, showing answer for manual processing"
-        );
+
         this.updateStatus(
           "Answer URL received - copy the response data if needed",
           "info"
         );
       }
     } catch (error) {
-      console.error("Error auto-processing answer:", error);
+      console.error("Error auto-processing answer:");
       this.updateStatus(
         "Failed to process answer from URL: " + error.message,
         "error"
@@ -602,7 +583,7 @@ class ClosedLoop {
         await this.createDirectSession();
       }
     } catch (error) {
-      console.error("Error creating session:", error);
+      console.error("Error creating session:");
       this.updateStatus("Failed to create session", "error");
     }
   }
@@ -676,7 +657,7 @@ class ClosedLoop {
     this.currentOtpCode = this.generateOtpCode();
 
     // Encrypt and store the offer
-    const encryptedOffer = await this.encryptData(
+    const encryptedOffer = await this.encodeSignaling(
       JSON.stringify(this.pc.localDescription),
       this.currentOtpCode
     );
@@ -709,7 +690,7 @@ class ClosedLoop {
         this.showOtpAnswerUI();
       }, 1000); // Just a short delay so user can see the first code
     } catch (error) {
-      console.error("Failed to store offer:", error);
+      console.error("Failed to store offer:");
       this.updateStatus(
         "Failed to store connection data. Please try direct mode.",
         "error"
@@ -717,24 +698,24 @@ class ClosedLoop {
     }
   }
 
-  // Encryption/Decryption helpers for OTP mode
-  async encryptData(data, passphrase) {
+  // Compatibility encoding for signaling; this does not provide confidentiality.
+  async encodeSignaling(data, passphrase) {
     try {
-      // Simple Base64 encoding for now - in production, use real encryption
+      // The service can read this Base64-encoded connection metadata.
       const combined = passphrase + "|" + data;
       return btoa(combined)
         .replace(/\+/g, "-")
         .replace(/\//g, "_")
         .replace(/=/g, "");
     } catch (error) {
-      console.error("Encryption failed:", error);
+      console.error("Encryption failed:");
       throw error;
     }
   }
 
-  async decryptData(encryptedData, passphrase) {
+  async decodeSignaling(encryptedData, passphrase) {
     try {
-      // Simple Base64 decoding - in production, use real decryption
+      // Decode the legacy wire format, not encrypted data.
       let padded = encryptedData.replace(/-/g, "+").replace(/_/g, "/");
       while (padded.length % 4) padded += "=";
 
@@ -749,7 +730,7 @@ class ClosedLoop {
 
       return data;
     } catch (error) {
-      console.error("Decryption failed:", error);
+      console.error("Decryption failed:");
       throw error;
     }
   }
@@ -760,7 +741,7 @@ class ClosedLoop {
       console.error("No OTP code available when showing UI");
       return;
     }
-    console.log("Showing OTP create UI with code:", this.currentOtpCode);
+
 
     this.connectionSetupSection.style.display = "none";
     this.otpConnectionSection.style.display = "block";
@@ -782,11 +763,6 @@ class ClosedLoop {
     // Start expiration timer
     this.startExpirationTimer(15 * 60); // 15 minutes
 
-    console.log("OTP UI elements:", {
-      otpConnectionSection: this.otpConnectionSection.style.display,
-      otpCreateDisplay: this.otpCreateDisplay.style.display,
-      otpCodeText: this.otpCodeText.textContent,
-    });
   }
 
   showOtpJoinUI() {
@@ -840,7 +816,7 @@ class ClosedLoop {
       const data = await response.json();
 
       // Decrypt the offer
-      const decryptedOffer = await this.decryptData(data.encryptedData, code);
+      const decryptedOffer = await this.decodeSignaling(data.encryptedData, code);
       const offer = JSON.parse(decryptedOffer);
 
       // Create peer connection and process offer
@@ -859,7 +835,7 @@ class ClosedLoop {
 
       // Generate code for answer and store it (using same method as first code)
       this.currentAnswerOtp = this.generateOtpCode();
-      const encryptedAnswer = await this.encryptData(
+      const encryptedAnswer = await this.encodeSignaling(
         JSON.stringify(this.pc.localDescription),
         this.currentAnswerOtp
       );
@@ -887,7 +863,7 @@ class ClosedLoop {
       // Keep progress at 'connect' - the second device is still "joining"
       this.updateProgress("connect");
     } catch (error) {
-      console.error("Failed to join with OTP code:", error);
+      console.error("Failed to join with OTP code:");
       
       // Enhanced error handling
       let userMessage = "Failed to join: ";
@@ -960,7 +936,7 @@ class ClosedLoop {
       const data = await response.json();
 
       // Decrypt the answer
-      const decryptedAnswer = await this.decryptData(data.encryptedData, code);
+      const decryptedAnswer = await this.decodeSignaling(data.encryptedData, code);
       const answer = JSON.parse(decryptedAnswer);
 
       // Set remote description (answer)
@@ -971,19 +947,19 @@ class ClosedLoop {
       
       // Try to send completion message if data channel is ready
       if (this.dataChannel && this.dataChannel.readyState === "open") {
-        console.log("Sending otp-completed message to joiner");
+
         this.sendMessage({
           kind: "otp-completed",
           timestamp: Date.now()
         });
         this.completeOtpFlow();
       } else {
-        console.log("Data channel not ready, will send when connected");
+
       }
       
       this.updateStatus("Connected. You can send text and files.", "connected");
     } catch (error) {
-      console.error("Failed to complete OTP connection:", error);
+      console.error("Failed to complete OTP connection:");
       
       // Enhanced error handling with specific messages
       let userMessage = "Connection failed: ";
@@ -1090,8 +1066,7 @@ class ClosedLoop {
         // Exponential backoff: wait 1s, 2s, 4s before retries
         const delay = 1000 * Math.pow(2, attempt - 1);
         await new Promise(resolve => setTimeout(resolve, delay));
-        
-        console.log(`Request failed, retrying (${attempt}/${maxRetries})...`);
+
       }
     }
   }
@@ -1113,7 +1088,7 @@ class ClosedLoop {
         this.manualExchange.style.display = "block";
       }
     } catch (error) {
-      console.error("Error joining session:", error);
+      console.error("Error joining session:");
       this.updateStatus("Failed to join session", "error");
     }
   }
@@ -1178,7 +1153,7 @@ class ClosedLoop {
         this.updateStatus("Connecting...", "connecting");
       }
     } catch (error) {
-      console.error("Error processing offer/answer:", error);
+      console.error("Error processing offer/answer:");
       this.updateStatus("Failed to process offer/answer", "error");
     }
   }
@@ -1225,14 +1200,14 @@ class ClosedLoop {
       // Hide the waiting section
       this.waitingResponse.style.display = "none";
     } catch (error) {
-      console.error("Error processing response:", error);
+      console.error("Error processing response:");
       this.updateStatus("Failed to process response", "error");
     }
   }
 
   setupPeerConnection() {
     this.pc.oniceconnectionstatechange = () => {
-      console.log("ICE connection state:", this.pc.iceConnectionState);
+
 
       switch (this.pc.iceConnectionState) {
         case "connected":
@@ -1254,7 +1229,7 @@ class ClosedLoop {
     };
 
     this.pc.onconnectionstatechange = () => {
-      console.log("Connection state:", this.pc.connectionState);
+
     };
   }
 
@@ -1262,12 +1237,12 @@ class ClosedLoop {
     this.dataChannel = channel;
 
     channel.onopen = () => {
-      console.log("Data channel opened");
+
       this.onConnected();
     };
 
     channel.onclose = () => {
-      console.log("Data channel closed");
+
       this.onDisconnected();
     };
 
@@ -1279,7 +1254,7 @@ class ClosedLoop {
     channel.binaryType = "arraybuffer";
 
     channel.onerror = (error) => {
-      console.error("Data channel error:", error);
+      console.error("Data channel error:");
     };
   }
 
@@ -1377,7 +1352,7 @@ class ClosedLoop {
       this.copyOfferBtn.setAttribute("data-content", offerUrl);
       this.copyOfferBtn.style.display = "inline-block";
     } catch (error) {
-      console.error("QR code generation error:", error);
+      console.error("QR code generation error:");
       // Fallback to manual exchange
       this.manualExchange.style.display = "block";
     }
@@ -1569,22 +1544,21 @@ class ClosedLoop {
         qrHeight
       );
     } catch (error) {
-      console.error("QR code generation error for answer:", error);
+      console.error("QR code generation error for answer:");
     }
   }
 
   onConnected() {
     this.connectionState = "connected";
-    
-    console.log("onConnected called - connectionMethod:", this.connectionMethod, "otpFlowState:", this.otpFlowState);
+
     
     // In OTP mode, don't hide UI until flow is complete
     if (this.connectionMethod === "otp" && this.otpFlowState !== "complete") {
-      console.log("OTP mode - keeping UI visible, waiting for code exchange completion");
+
       
       // Special case: if primary processed answer but data channel wasn't ready before
       if (this.otpAnswerProcessed && this.dataChannel && this.dataChannel.readyState === "open") {
-        console.log("Primary: Data channel now ready, sending completion message");
+
         this.sendMessage({
           kind: "otp-completed",
           timestamp: Date.now()
@@ -1666,10 +1640,10 @@ class ClosedLoop {
           this.handleOtpCompleted(message);
           break;
         default:
-          console.warn("Unknown message type:", message.kind);
+          console.warn("Unknown message type:");
       }
     } catch (error) {
-      console.error("Error handling message:", error);
+      console.error("Error handling message:");
     }
   }
 
@@ -1681,18 +1655,23 @@ class ClosedLoop {
   }
 
   handleOtpCompleted(message) {
-    console.log("handleOtpCompleted called - connectionMethod:", this.connectionMethod, "otpFlowState:", this.otpFlowState);
+
     // Primary has confirmed OTP completion - joiner can now transition
     if (this.connectionMethod === "otp" && this.otpFlowState === "waiting-for-answer") {
-      console.log("Received OTP completion confirmation from primary - transitioning to connected");
+
       this.completeOtpFlow();
     } else {
-      console.log("Not in correct state to handle OTP completion");
+
     }
   }
 
   // File transfer methods
   handleFileStart(message) {
+    if (typeof message.transferId !== 'string' || message.transferId.length > 100 ||
+        typeof message.name !== 'string' || message.name.length > 512 ||
+        !Number.isSafeInteger(message.size) || message.size < 0 || message.size > 500 * 1024 * 1024 ||
+        typeof message.type !== 'string' || message.type.length > 100 ||
+        this.transfers.has(message.transferId) || this.transfers.size >= 8) return;
     const transfer = {
       id: message.transferId,
       name: message.name,
@@ -1711,9 +1690,11 @@ class ClosedLoop {
   handleFileChunk(data) {
     // Handle binary chunk data
     if (data instanceof ArrayBuffer) {
+      if (data.byteLength < 4) return;
       // Parse header from binary data
       const view = new DataView(data);
       const headerLength = view.getUint32(0);
+      if (headerLength > 4096 || headerLength > data.byteLength - 4) return;
       const headerBytes = new Uint8Array(data, 4, headerLength);
       const headerString = new TextDecoder().decode(headerBytes);
       const header = JSON.parse(headerString);
@@ -1722,6 +1703,8 @@ class ClosedLoop {
 
       const transfer = this.transfers.get(header.transferId);
       if (transfer) {
+        if (!Number.isSafeInteger(header.seq) || header.seq < 0 || header.seq > 1_000_000 ||
+            transfer.chunks.has(header.seq) || transfer.receivedBytes + chunkData.length > transfer.size) return;
         transfer.chunks.set(header.seq, chunkData);
         transfer.receivedBytes += chunkData.length;
 
@@ -1750,12 +1733,7 @@ class ClosedLoop {
 
       // Verify file size if provided
       if (endMessage.totalBytes && blob.size !== endMessage.totalBytes) {
-        console.warn(
-          "File size mismatch:",
-          blob.size,
-          "vs",
-          endMessage.totalBytes
-        );
+        console.warn("File size mismatch:");
       }
 
       // Convert to base64 for storage in message feed
@@ -1779,7 +1757,7 @@ class ClosedLoop {
 
       this.completeFileTransfer(transfer.id);
     } catch (error) {
-      console.error("Error assembling file:", error);
+      console.error("Error assembling file:");
     }
   }
 
@@ -1925,7 +1903,7 @@ class ClosedLoop {
 
       this.sendMessage(endMessage);
     } catch (error) {
-      console.error("Error sending file:", error);
+      console.error("Error sending file:");
       alert("Failed to send file: " + error.message);
     }
   }
@@ -1953,6 +1931,18 @@ class ClosedLoop {
     }
   }
 
+  async copyMessageText(content) {
+    try { await navigator.clipboard.writeText(String(content)); }
+    catch {
+      const textarea = document.createElement('textarea');
+      textarea.value = String(content);
+      document.body.append(textarea);
+      textarea.select();
+      document.execCommand('copy');
+      textarea.remove();
+    }
+  }
+
   addMessage(type, content, timestamp) {
     const messageDiv = document.createElement("div");
     messageDiv.className = `message-item ${type}`;
@@ -1969,14 +1959,15 @@ class ClosedLoop {
                 <span class="message-type">${typeText}</span>
                 <span class="message-time">${timestamp.toLocaleTimeString()}</span>
             </div>
-            <div class="message-content clipboard-text">${content}</div>
+            <div class="message-content clipboard-text">${escapeHTML(content)}</div>
             ${
               type === "received"
-                ? "<button class=\"btn-copy\" onclick=\"this.parentNode.querySelector('.clipboard-text').select(); document.execCommand('copy');\">Copy</button>"
+                ? "<button class=\"btn-copy\" data-copy-text>Copy</button>"
                 : ""
             }
         `;
 
+    messageDiv.querySelector('[data-copy-text]')?.addEventListener('click', () => this.copyMessageText(content));
     // Insert at the top for reverse chronological order (newest first)
     this.messageFeed.insertBefore(messageDiv, this.messageFeed.firstChild);
   }
@@ -1996,50 +1987,36 @@ class ClosedLoop {
       type === "sent" ? "FILE SENT TO DEVICE" : "FILE RECEIVED FROM DEVICE";
     const sizeText = this.formatFileSize(size);
 
-    // Determine MIME type to show
-    const displayMimeType = mimeType || this.getFileMimeType(filename);
-    const mimeTypeDisplay =
-      displayMimeType !== "application/octet-stream"
-        ? `<div class="file-mime">${displayMimeType}</div>`
-        : "";
-
-    // Check if this is an image for preview
-    const isImage = displayMimeType.startsWith('image/');
-    const imagePreview = (fileData && isImage) 
-      ? `<div class="image-preview">
-           <img src="data:${displayMimeType};base64,${fileData}" 
-                alt="${filename}" 
-                style="max-width: 300px; max-height: 200px; border-radius: 8px; cursor: pointer;"
-                onclick="this.style.maxWidth = this.style.maxWidth === '300px' ? '100%' : '300px'">
-           <div class="image-actions">
-             <button class="btn-copy" onclick="closedLoop.saveImageToDevice('${filename}', '${fileData}', '${displayMimeType}')">Save to Device</button>
-           </div>
-         </div>` 
-      : "";
-
-    // Create download button if we have file data (for received files)
-    const downloadButton = fileData && !isImage
-      ? `<button class="btn-copy" onclick="closedLoop.downloadFile('${filename}', '${fileData}', '${displayMimeType}')">Download</button>`
-      : "";
-
+    const displayMimeType = typeof mimeType === 'string' && /^[a-z0-9.+-]+\/[a-z0-9.+-]+$/i.test(mimeType)
+      ? mimeType : this.getFileMimeType(String(filename));
+    // Preview only raster image formats; downloads retain the original name/data.
+    const previewType = /^(image\/(png|jpeg|gif|webp|avif|bmp))$/i.test(displayMimeType);
     messageDiv.innerHTML = `
-            <div class="message-header">
-                <span class="message-type">${typeText}</span>
-                <span class="message-time">${timestamp.toLocaleTimeString()}</span>
-            </div>
-            <div class="file-info">
-                <div class="file-icon">${this.getFileIcon(filename)}</div>
-                <div class="file-details">
-                    <div class="file-name">${filename}</div>
-                    <div class="file-size">${sizeText}</div>
-                    ${mimeTypeDisplay}
-                </div>
-                <div class="file-actions">
-                    ${downloadButton}
-                </div>
-            </div>
-            ${imagePreview}
-        `;
+      <div class="message-header"><span class="message-type">${typeText}</span><span class="message-time">${timestamp.toLocaleTimeString()}</span></div>
+      <div class="file-info"><div class="file-icon">${this.getFileIcon(String(filename))}</div>
+        <div class="file-details"><div class="file-name"></div><div class="file-size">${sizeText}</div><div class="file-mime"></div></div>
+        <div class="file-actions"></div>
+      </div>`;
+    messageDiv.querySelector('.file-name').textContent = String(filename);
+    messageDiv.querySelector('.file-mime').textContent = displayMimeType;
+    if (fileData) {
+      const button = document.createElement('button');
+      button.className = 'btn-copy';
+      button.textContent = previewType ? 'Save to Device' : 'Download';
+      button.addEventListener('click', () => this.downloadFile(filename, fileData, displayMimeType));
+      messageDiv.querySelector('.file-actions').append(button);
+      if (previewType && typeof fileData === 'string' && /^[A-Za-z0-9+/]*={0,2}$/.test(fileData)) {
+        const preview = document.createElement('div');
+        preview.className = 'image-preview';
+        const image = document.createElement('img');
+        image.src = `data:${displayMimeType};base64,${fileData}`;
+        image.alt = String(filename);
+        image.style.cssText = 'max-width:300px;max-height:200px;border-radius:8px;cursor:pointer';
+        image.addEventListener('click', () => { image.style.maxWidth = image.style.maxWidth === '300px' ? '100%' : '300px'; });
+        preview.append(image);
+        messageDiv.append(preview);
+      }
+    }
 
     // Insert at the top for reverse chronological order (newest first)
     this.messageFeed.insertBefore(messageDiv, this.messageFeed.firstChild);
@@ -2110,7 +2087,7 @@ class ClosedLoop {
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
     } catch (error) {
-      console.error("Error downloading file:", error);
+      console.error("Error downloading file:");
       alert("Failed to download file");
     }
   }
@@ -2137,7 +2114,7 @@ class ClosedLoop {
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
     } catch (error) {
-      console.error("Error saving image:", error);
+      console.error("Error saving image:");
       alert("Failed to save image");
     }
   }
@@ -2157,18 +2134,19 @@ class ClosedLoop {
 
       transferElement.innerHTML = `
                 <div class="transfer-header">
-                    <span class="transfer-name">${fileName}</span>
+                    <span class="transfer-name">${escapeHTML(fileName)}</span>
                     <span class="transfer-status">${direction}...</span>
                 </div>
                 <div class="progress-bar">
-                    <div class="progress-fill" style="width: ${percentage}%"></div>
+                    <div class="progress-fill" style="width: 0%"></div>
                 </div>
                 <div class="transfer-controls">
                     <span class="transfer-speed">0 KB/s</span>
-                    <button class="btn-secondary btn-small" onclick="closedLoop.cancelTransfer('${transferId}')">Cancel</button>
+                    <button class="btn-secondary btn-small" data-cancel-transfer>Cancel</button>
                 </div>
             `;
 
+      transferElement.querySelector('[data-cancel-transfer]').addEventListener('click', () => this.cancelTransfer(transferId));
       this.transferList.appendChild(transferElement);
       this.transferSection.style.display = "block";
     }
@@ -2219,7 +2197,7 @@ class ClosedLoop {
 
   completeFileTransfer(transferId) {
     this.transfers.delete(transferId);
-    console.log("Transfer completed:", transferId);
+
   }
 
   async copyToClipboard(type) {
@@ -2245,7 +2223,7 @@ class ClosedLoop {
         content = this.currentAnswerOtp;
         break;
       default:
-        console.error("Unknown copy type:", type);
+        console.error("Unknown copy type:");
         return;
     }
 
@@ -2264,7 +2242,7 @@ class ClosedLoop {
         this.showCopyFeedback(button);
       }
     } catch (err) {
-      console.error("Copy failed:", err);
+      console.error("Copy failed:");
       alert("Copy failed. Please copy manually.");
     }
   }
@@ -2411,15 +2389,15 @@ class ClosedLoop {
 
 // Initialize the application
 document.addEventListener("DOMContentLoaded", () => {
-  console.log("DOM Content Loaded - Initializing Closed Loop");
-  console.log("Current URL:", window.location.href);
-  console.log("Current hash:", window.location.hash);
+
+
+
 
   window.closedLoop = new ClosedLoop();
 
   // Also check for hash changes (in case the page was loaded with a hash)
   window.addEventListener("hashchange", () => {
-    console.log("Hash changed:", window.location.hash);
+
     if (
       window.closedLoop &&
       window.closedLoop.connectionState === "disconnected"

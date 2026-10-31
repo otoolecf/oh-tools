@@ -6,13 +6,13 @@ class OToolboxFooter extends HTMLElement {
 
   connectedCallback() {
     const basePath = this.getAttribute('base-path') || '';
-    
+
     this.shadowRoot.innerHTML = `
       <style>
         :host {
           display: block;
         }
-        
+
         .main-footer {
           background: var(--bg-secondary);
           border-top: 1px solid var(--border-color);
@@ -65,22 +65,24 @@ class OToolboxFooter extends HTMLElement {
         }
 
       </style>
-      
+
       <footer class="main-footer">
         <p>Oh! Tools. Handy tools for everyday annoyances.</p>
+        <p><a href="/licenses/">Licenses and source</a></p>
         <div class="contact-info">
           Something broken? Something missing? Let me know: <a href="mailto:help@oh-tools.net">help@oh-tools.net</a>
         </div>
         <div class="kofi-container">
-          <a 
-            href="https://ko-fi.com/otoolecf" 
-            target="_blank" 
+          <a
+            href="https://ko-fi.com/otoolecf"
+            target="_blank"
+            rel="noopener noreferrer"
             class="custom-kofi-btn"
           >
-            <img 
-              src="${basePath}kofi_symbol.svg" 
-              width="16" 
-              height="16" 
+            <img
+              src="${basePath}kofi_symbol.svg"
+              width="16"
+              height="16"
               alt="Ko-fi icon"
             />
             Buy me a coffee or a beer

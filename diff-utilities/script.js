@@ -131,7 +131,7 @@ function compareJSON() {
             errorMessage += 'Error in modified JSON: ' + e2.message;
         }
 
-        resultDiv.innerHTML = `<div class="json-error">${errorMessage}</div>`;
+        resultDiv.innerHTML = `<div class="json-error">${escapeHtml(errorMessage)}</div>`;
     }
 }
 
@@ -243,7 +243,7 @@ function compareArray() {
         }
 
 
-        resultDiv.innerHTML = `<div class="json-error">${errorMessage}</div>`;
+        resultDiv.innerHTML = `<div class="json-error">${escapeHtml(errorMessage)}</div>`;
     }
 }
 

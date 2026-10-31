@@ -3,7 +3,8 @@
 class BDWSQLConsole extends HTMLElement {
     constructor() {
         super();
-        this.queryHistory = JSON.parse(localStorage.getItem('bdw-sql-history') || '[]');
+        this.queryHistory = [];
+        try { localStorage.removeItem('bdw-sql-history'); } catch { /* Storage may be unavailable. */ }
         this.historyIndex = -1;
     }
 
@@ -25,10 +26,12 @@ class BDWSQLConsole extends HTMLElement {
                         <button class="btn" id="clearBtn">
                             Clear
                         </button>
+                        <button class="btn" id="clearHistoryBtn">Clear History</button>
                         <button class="btn" id="examplesBtn">
                             Examples
                         </button>
                     </div>
+                    <p class="sql-history-note">History stays in this tab. Queries with values, URLs, or credentials aren’t kept.</p>
                     <div class="sql-info">
                         <span id="queryInfo">Ready</span>
                     </div>
@@ -65,6 +68,12 @@ class BDWSQLConsole extends HTMLElement {
             examplesBtn.addEventListener('click', () => this.toggleExamples());
         }
         
+        this.querySelector('#clearHistoryBtn').addEventListener('click', () => {
+            this.queryHistory = [];
+            this.historyIndex = -1;
+            this.showInfo('History cleared.');
+        });
+
         // Keyboard shortcuts
         textarea.addEventListener('keydown', (e) => {
             // Ctrl/Cmd + Enter to execute
@@ -272,6 +281,9 @@ class BDWSQLConsole extends HTMLElement {
     }
 
     addToHistory(query) {
+        // Be conservative: SQL strings/comments/URLs can carry credentials.
+        if (!/^\s*(select|with|describe|explain|show|summarize)\b/i.test(query) ||
+            /['$]|--|\/\*|https?:|secret|password|token|credential|access[_-]?key|api[_-]?key|authorization|signature/i.test(query)) return;
         // Remove if already exists
         const existingIndex = this.queryHistory.indexOf(query);
         if (existingIndex > -1) {
@@ -286,8 +298,7 @@ class BDWSQLConsole extends HTMLElement {
             this.queryHistory = this.queryHistory.slice(0, 50);
         }
         
-        // Save to localStorage
-        localStorage.setItem('bdw-sql-history', JSON.stringify(this.queryHistory));
+        // History lives only in this component, until the tab closes.
         
         this.historyIndex = -1;
     }
@@ -334,11 +345,6 @@ class BDWSQLConsole extends HTMLElement {
     getCurrentQuery() {
         const textarea = this.querySelector('#sqlTextarea');
         const query = textarea ? textarea.value.trim() : '';
-        console.log('getCurrentQuery called - textarea found:', !!textarea, 'query length:', query.length, 'query:', query);
-        if (textarea) {
-            console.log('Textarea value raw:', JSON.stringify(textarea.value));
-            console.log('Parent element:', textarea.parentElement?.tagName);
-        }
         return query;
     }
 }

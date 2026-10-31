@@ -67,13 +67,3 @@ After publishing these changes to production:
    Review changes after Google has recrawled the updated production pages.
 4. Check mobile Core Web Vitals when field data is available. Lab measurements
    help diagnose loading issues but are not real-user data or ranking forecasts.
-
-The connected property was accessible during this work, but the overview
-reported that performance, indexing, and experience data were still processing.
-No traffic or ranking improvement can be inferred from those pending reports.
-The production sitemap was already submitted successfully, last read October
-30, 2026, with 10 discovered pages. The build includes Video Trimmer and an
-About page, for 12 pages total (homepage, About, and ten tools). Those entries
-will reach Google after production publication and a subsequent sitemap fetch.
-The Core Web Vitals report separately confirms insufficient usage data for
-both mobile and desktop over its last 90 days.

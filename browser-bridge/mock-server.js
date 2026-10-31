@@ -60,7 +60,6 @@ const server = http.createServer((req, res) => {
             expiresAt: now + (15 * 60 * 1000) // 15 minutes
           });
 
-          console.log(`Stored data for passcode: ${passcode}`);
           
           res.writeHead(200, { 'Content-Type': 'application/json' });
           res.end(JSON.stringify({ 
@@ -93,7 +92,6 @@ const server = http.createServer((req, res) => {
       
       // Return data and delete (one-time use)
       storage.delete(passcode);
-      console.log(`Retrieved and deleted data for passcode: ${passcode}`);
       
       res.writeHead(200, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify({
@@ -114,7 +112,6 @@ setInterval(() => {
   for (const [key, data] of storage.entries()) {
     if (now > data.expiresAt) {
       storage.delete(key);
-      console.log(`Cleaned up expired passcode: ${key}`);
     }
   }
   
@@ -128,7 +125,7 @@ setInterval(() => {
 }, 60000);
 
 const PORT = 3001;
-server.listen(PORT, () => {
+server.listen(PORT, '127.0.0.1', () => {
   console.log(`Mock OTP server running on http://localhost:${PORT}`);
   console.log(`Update script.js to use: http://localhost:${PORT}`);
 });

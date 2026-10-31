@@ -1,3 +1,5 @@
+import { sqlLiteral, sqlIdentifier } from '../sql.js';
+import { escapeHTML } from '../../components/safe-html.js';
 // Statistics Panel Component for Browser Data Workbench
 
 class BDWStatsPanel extends HTMLElement {
@@ -148,12 +150,12 @@ class BDWStatsPanel extends HTMLElement {
         this.detailedStats.forEach(stats => {
             html += `
                 <div style="margin-bottom: 1rem; padding: 0.75rem; background: var(--input-bg); border-radius: 4px; border-left: 3px solid var(--primary-color);">
-                    <h5 style="margin: 0 0 0.5rem 0; font-size: 0.9rem;">${stats.name}</h5>
+                    <h5 style="margin: 0 0 0.5rem 0; font-size: 0.9rem;">${escapeHTML(stats.name)}</h5>
                     <div style="font-size: 0.8rem; color: var(--text-secondary);">
-                        <span class="type-badge ${this.getTypeBadgeClass(stats.type)}">${stats.type}</span>
+                        <span class="type-badge ${this.getTypeBadgeClass(stats.type)}">${escapeHTML(stats.type)}</span>
                         <div style="margin-top: 0.5rem;">
                             ${stats.error ? 
-                                `<div style="color: var(--error-color);">Error: ${stats.errorMessage}</div>` :
+                                `<div style="color: var(--error-color);">Error: ${escapeHTML(stats.errorMessage)}</div>` :
                                 this.formatColumnDetails(stats)
                             }
                         </div>
@@ -211,9 +213,9 @@ class BDWStatsPanel extends HTMLElement {
 
         } catch (error) {
             if (error.name === 'AbortError') {
-                console.log('Analysis stopped by user');
+
             } else {
-                console.error('Error generating detailed stats:', error);
+                console.error("Error generating detailed stats:");
                 this.showError(`Failed to generate detailed statistics: ${error.message}`);
             }
         } finally {
@@ -275,7 +277,7 @@ class BDWStatsPanel extends HTMLElement {
 
         try {
             // First, get the schema to know how many columns we have
-            const schemaResult = await manager.executeSQL(`DESCRIBE SELECT * FROM ${tableName}`);
+            const schemaResult = await manager.executeSQL(`DESCRIBE SELECT * FROM ${sqlIdentifier(tableName)}`);
             const columns = schemaResult.data;
             const totalColumns = columns.length;
 
@@ -349,7 +351,7 @@ class BDWStatsPanel extends HTMLElement {
             if (error.message === 'Analysis aborted') {
                 throw new Error('AbortError');
             }
-            console.error('Error in batched column statistics:', error);
+            console.error("Error in batched column statistics:");
             throw error;
         }
     }
@@ -370,9 +372,9 @@ class BDWStatsPanel extends HTMLElement {
             // Get null count and unique count
             const basicStatsResult = await manager.executeSQL(`
                 SELECT 
-                    COUNT(*) - COUNT("${columnName}") as null_count,
-                    COUNT(DISTINCT "${columnName}") as unique_count
-                FROM ${tableName}
+                    COUNT(*) - COUNT(${sqlIdentifier(columnName)}) as null_count,
+                    COUNT(DISTINCT ${sqlIdentifier(columnName)}) as unique_count
+                FROM ${sqlIdentifier(tableName)}
             `);
 
             if (basicStatsResult.data.length > 0) {
@@ -384,12 +386,12 @@ class BDWStatsPanel extends HTMLElement {
             if (columnType.includes('INTEGER') || columnType.includes('DOUBLE') || columnType.includes('FLOAT') || columnType.includes('DECIMAL')) {
                 const numericStatsResult = await manager.executeSQL(`
                     SELECT 
-                        MIN("${columnName}") as min_val,
-                        MAX("${columnName}") as max_val,
-                        AVG("${columnName}") as avg_val,
-                        MEDIAN("${columnName}") as median_val
-                    FROM ${tableName}
-                    WHERE "${columnName}" IS NOT NULL
+                        MIN(${sqlIdentifier(columnName)}) as min_val,
+                        MAX(${sqlIdentifier(columnName)}) as max_val,
+                        AVG(${sqlIdentifier(columnName)}) as avg_val,
+                        MEDIAN(${sqlIdentifier(columnName)}) as median_val
+                    FROM ${sqlIdentifier(tableName)}
+                    WHERE ${sqlIdentifier(columnName)} IS NOT NULL
                 `);
 
                 if (numericStatsResult.data.length > 0) {
@@ -402,11 +404,11 @@ class BDWStatsPanel extends HTMLElement {
             } else if (columnType.includes('VARCHAR') || columnType.includes('TEXT') || columnType.includes('STRING')) {
                 const stringStatsResult = await manager.executeSQL(`
                     SELECT 
-                        MIN(LENGTH("${columnName}")) as min_length,
-                        MAX(LENGTH("${columnName}")) as max_length,
-                        AVG(LENGTH("${columnName}")) as avg_length
-                    FROM ${tableName}
-                    WHERE "${columnName}" IS NOT NULL
+                        MIN(LENGTH(${sqlIdentifier(columnName)})) as min_length,
+                        MAX(LENGTH(${sqlIdentifier(columnName)})) as max_length,
+                        AVG(LENGTH(${sqlIdentifier(columnName)})) as avg_length
+                    FROM ${sqlIdentifier(tableName)}
+                    WHERE ${sqlIdentifier(columnName)} IS NOT NULL
                 `);
 
                 if (stringStatsResult.data.length > 0) {
@@ -420,7 +422,7 @@ class BDWStatsPanel extends HTMLElement {
             return stats;
 
         } catch (error) {
-            console.warn(`Error getting stats for column ${columnName}:`, error);
+            console.warn("Tool operation failed.");
             stats.error = true;
             stats.errorMessage = error.message;
             return stats;
@@ -434,12 +436,12 @@ class BDWStatsPanel extends HTMLElement {
         if (stats.error) {
             columnDiv.innerHTML = `
                 <h4 style="margin: 0 0 0.5rem 0; font-size: 0.9rem; color: var(--error-color);">
-                    ${stats.name} (Analysis Failed)
+                    ${escapeHTML(stats.name)} (Analysis Failed)
                 </h4>
                 <div style="font-size: 0.8rem; color: var(--text-secondary);">
-                    <span class="type-badge ${this.getTypeBadgeClass(stats.type)}">${stats.type}</span>
+                    <span class="type-badge ${this.getTypeBadgeClass(stats.type)}">${escapeHTML(stats.type)}</span>
                     <div style="margin-top: 0.5rem; color: var(--error-color);">
-                        Error: ${stats.errorMessage}
+                        Error: ${escapeHTML(stats.errorMessage)}
                     </div>
                 </div>
             `;
@@ -459,9 +461,9 @@ class BDWStatsPanel extends HTMLElement {
             }
 
             columnDiv.innerHTML = `
-                <h4 style="margin: 0 0 0.5rem 0; font-size: 0.9rem;">${stats.name}</h4>
+                <h4 style="margin: 0 0 0.5rem 0; font-size: 0.9rem;">${escapeHTML(stats.name)}</h4>
                 <div style="font-size: 0.8rem; color: var(--text-secondary);">
-                    <span class="type-badge ${this.getTypeBadgeClass(stats.type)}">${stats.type}</span>
+                    <span class="type-badge ${this.getTypeBadgeClass(stats.type)}">${escapeHTML(stats.type)}</span>
                     <div style="margin-top: 0.5rem;">
                         ${detailsHtml}
                     </div>
@@ -479,7 +481,7 @@ class BDWStatsPanel extends HTMLElement {
         try {
             // Get basic info about all columns
             const schemaResult = await manager.executeSQL(`
-                DESCRIBE SELECT * FROM ${tableName}
+                DESCRIBE SELECT * FROM ${sqlIdentifier(tableName)}
             `);
 
             const columns = schemaResult.data;
@@ -499,9 +501,9 @@ class BDWStatsPanel extends HTMLElement {
                     // Get null count and unique count
                     const basicStatsResult = await manager.executeSQL(`
                         SELECT 
-                            COUNT(*) - COUNT("${columnName}") as null_count,
-                            COUNT(DISTINCT "${columnName}") as unique_count
-                        FROM ${tableName}
+                            COUNT(*) - COUNT(${sqlIdentifier(columnName)}) as null_count,
+                            COUNT(DISTINCT ${sqlIdentifier(columnName)}) as unique_count
+                        FROM ${sqlIdentifier(tableName)}
                     `);
 
                     if (basicStatsResult.data.length > 0) {
@@ -513,12 +515,12 @@ class BDWStatsPanel extends HTMLElement {
                     if (columnType.includes('INTEGER') || columnType.includes('DOUBLE') || columnType.includes('FLOAT')) {
                         const numericStatsResult = await manager.executeSQL(`
                             SELECT 
-                                MIN("${columnName}") as min_val,
-                                MAX("${columnName}") as max_val,
-                                AVG("${columnName}") as avg_val,
-                                MEDIAN("${columnName}") as median_val
-                            FROM ${tableName}
-                            WHERE "${columnName}" IS NOT NULL
+                                MIN(${sqlIdentifier(columnName)}) as min_val,
+                                MAX(${sqlIdentifier(columnName)}) as max_val,
+                                AVG(${sqlIdentifier(columnName)}) as avg_val,
+                                MEDIAN(${sqlIdentifier(columnName)}) as median_val
+                            FROM ${sqlIdentifier(tableName)}
+                            WHERE ${sqlIdentifier(columnName)} IS NOT NULL
                         `);
 
                         if (numericStatsResult.data.length > 0) {
@@ -532,11 +534,11 @@ class BDWStatsPanel extends HTMLElement {
                         // String statistics
                         const stringStatsResult = await manager.executeSQL(`
                             SELECT 
-                                MIN(LENGTH("${columnName}")) as min_length,
-                                MAX(LENGTH("${columnName}")) as max_length,
-                                AVG(LENGTH("${columnName}")) as avg_length
-                            FROM ${tableName}
-                            WHERE "${columnName}" IS NOT NULL
+                                MIN(LENGTH(${sqlIdentifier(columnName)})) as min_length,
+                                MAX(LENGTH(${sqlIdentifier(columnName)})) as max_length,
+                                AVG(LENGTH(${sqlIdentifier(columnName)})) as avg_length
+                            FROM ${sqlIdentifier(tableName)}
+                            WHERE ${sqlIdentifier(columnName)} IS NOT NULL
                         `);
 
                         if (stringStatsResult.data.length > 0) {
@@ -550,7 +552,7 @@ class BDWStatsPanel extends HTMLElement {
                     results[columnName] = stats;
 
                 } catch (columnError) {
-                    console.warn(`Error getting stats for column ${columnName}:`, columnError);
+                    console.warn("Tool operation failed.");
                     results[columnName] = stats; // Still include basic info
                 }
             }
@@ -558,7 +560,7 @@ class BDWStatsPanel extends HTMLElement {
             return results;
 
         } catch (error) {
-            console.error('Error getting column statistics:', error);
+            console.error("Error getting column statistics:");
             throw error;
         }
     }
@@ -571,9 +573,9 @@ class BDWStatsPanel extends HTMLElement {
         Object.values(columnStats).forEach(stats => {
             html += `
                 <div style="margin-bottom: 1rem; padding: 0.75rem; background: var(--input-bg); border-radius: 4px; border-left: 3px solid var(--primary-color);">
-                    <h4 style="margin: 0 0 0.5rem 0; font-size: 0.9rem;">${stats.name}</h4>
+                    <h4 style="margin: 0 0 0.5rem 0; font-size: 0.9rem;">${escapeHTML(stats.name)}</h4>
                     <div style="font-size: 0.8rem; color: var(--text-secondary);">
-                        <span class="type-badge ${this.getTypeBadgeClass(stats.type)}">${stats.type}</span>
+                        <span class="type-badge ${this.getTypeBadgeClass(stats.type)}">${escapeHTML(stats.type)}</span>
                         <div style="margin-top: 0.5rem;">
                             <div>Unique: ${this.formatNumber(stats.uniqueCount)} | Nulls: ${this.formatNumber(stats.nullCount)}</div>
             `;
@@ -636,7 +638,7 @@ class BDWStatsPanel extends HTMLElement {
             this.updateStats(tableInfo.stats);
 
         } catch (error) {
-            console.error('Error refreshing stats:', error);
+            console.error("Error refreshing stats:");
             this.showError(`Failed to refresh statistics: ${error.message}`);
         }
     }
@@ -678,7 +680,7 @@ class BDWStatsPanel extends HTMLElement {
         const content = this.querySelector('#statsContent');
         content.innerHTML = `
             <div style="color: var(--error-color); text-align: center; padding: 1rem;">
-                Error: ${message}
+                Error: ${escapeHTML(message)}
                 <div style="margin-top: 0.5rem;">
                     <button class="btn error-retry-btn">
                         Try Again

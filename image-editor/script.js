@@ -1,3 +1,4 @@
+import { escapeHTML } from '../components/safe-html.js';
 import ExifReader from 'exifreader';
 import { createImageEngine } from './engine-client.js';
 
@@ -26,14 +27,14 @@ class ImageEditor {
         this.initialUploadBtn = document.getElementById('initialUploadBtn');
         
         // Debug: Check if elements are found
-        console.log('initializeElements - uploadArea:', this.uploadArea);
-        console.log('initializeElements - fileInput:', this.fileInput);
+
+
         
         if (!this.uploadArea) {
-            console.error('Upload area not found!');
+            console.error("Upload area not found!");
         }
         if (!this.fileInput) {
-            console.error('File input not found!');
+            console.error("File input not found!");
         }
 
         // Metadata elements (now handled by web component)
@@ -106,23 +107,23 @@ class ImageEditor {
 
     bindEvents() {
         // Upload events
-        console.log('Upload area:', this.uploadArea);
-        console.log('File input:', this.fileInput);
+
+
         
         // Disable upload area until wasm-vips is loaded
         this.disableUpload();
         
         this.uploadArea.addEventListener('click', (e) => {
-            console.log('Upload area clicked');
-            console.log('File input element:', this.fileInput);
-            console.log('File input style:', this.fileInput.style.display);
+
+
+
             
             // Try to trigger file picker
             try {
                 this.fileInput.click();
-                console.log('fileInput.click() executed successfully');
+
             } catch (error) {
-                console.error('Error calling fileInput.click():', error);
+                console.error("Error calling fileInput.click():");
             }
         });
         this.fileInput.addEventListener('change', (e) => this.handleFile(e.target.files[0]));
@@ -342,7 +343,7 @@ class ImageEditor {
         this.resetBtn.disabled = true;
         this.showStatus('Applying your change…', 'info');
         try {
-            console.log('Web component operation:', detail);
+
             
             // Update the current image
             this.currentImage = await detail.image;
@@ -383,7 +384,7 @@ class ImageEditor {
             this.showStatus(`${detail.description} applied.`, 'success');
             
         } catch (error) {
-            console.error('Failed to process web component operation:', error);
+            console.error("Failed to process web component operation:");
             this.showStatus(`Couldn’t apply that change: ${error.message}`, 'error');
         } finally {
             this.isProcessing = false;
@@ -452,19 +453,19 @@ class ImageEditor {
             this.currentImage = await this.originalImage.copy();
             
             // Debug: Check if we have metadata fields available
-            console.log('Checking for available metadata fields...');
+
             try {
                 const fieldsResult = this.originalImage.getFields();
                 if (fieldsResult && typeof fieldsResult.size === 'function') {
-                    console.log(`Found ${fieldsResult.size()} metadata fields in loaded image`);
+
                     if (fieldsResult.size() === 0) {
-                        console.warn('No metadata fields found - may have been lost during processing');
+                        console.warn("No metadata fields found - may have been lost during processing");
                     }
                 } else {
-                    console.warn('Cannot access metadata fields');
+                    console.warn("Cannot access metadata fields");
                 }
             } catch (e) {
-                console.warn('Error checking metadata fields:', e.message);
+                console.warn("Error checking metadata fields:");
             }
             
             // Store the original file buffer for metadata extraction
@@ -482,7 +483,7 @@ class ImageEditor {
             this.showStatus('Image loaded.', 'success');
             
         } catch (error) {
-            console.error('Image loading failed:', error);
+            console.error("Image loading failed:");
             let errorMessage = 'Failed to load image: ' + error.message;
             
             if (error.message.includes('HEIC')) {
@@ -509,7 +510,7 @@ class ImageEditor {
             // Crop controls now handled by web component
             
         } catch (error) {
-            console.error('Display conversion error:', error);
+            console.error("Display conversion error:");
             this.showStatus('Failed to display image: ' + error.message, 'error');
         }
     }
@@ -1537,13 +1538,13 @@ class ImageEditor {
         } else {
             if (this.operationList) {
                 this.operationList.innerHTML = this.operations
-                    .map(op => `<span class="queue-item">${op}</span>`)
+                    .map(op => `<span class="queue-item">${escapeHTML(op)}</span>`)
                     .join('');
             }
             if (this.operationTagsContainer) {
                 // Create individual tags for each operation (no deduplication)
                 this.operationTagsContainer.innerHTML = this.operations
-                    .map(op => `<span class="operation-tag">${this.getOperationTag(op)}</span>`)
+                    .map(op => `<span class="operation-tag">${escapeHTML(this.getOperationTag(op))}</span>`)
                     .join('');
             }
         }
@@ -1576,7 +1577,7 @@ class ImageEditor {
                 className = 'text-sm';
         }
         
-        this.uploadStatus.innerHTML = `<div class="${className}">${message}</div>`;
+        this.uploadStatus.innerHTML = `<div class="${className}">${escapeHTML(message)}</div>`;
         
         // Clear status after 5 seconds for success/info messages
         if (type !== 'error') {
@@ -1785,10 +1786,10 @@ class ImageEditor {
                     await this.handleEdgeDetectionApply();
                     break;
                 default:
-                    console.warn('Unknown tab:', this.currentActiveTab);
+                    console.warn("Unknown tab:");
             }
         } catch (error) {
-            console.error('Apply operation failed:', error);
+            console.error("Apply operation failed:");
             this.showStatus(`Couldn’t apply that change: ${error.message}`, 'error');
         }
     }

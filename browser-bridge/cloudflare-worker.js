@@ -1,226 +1,104 @@
-/**
- * Cloudflare Worker for OTP-style WebRTC signaling
- * Provides secure, temporary storage for WebRTC offer/answer exchange
- * With built-in rate limiting using Cloudflare Rate Limiting API
- */
+import { DurableObject } from 'cloudflare:workers';
 
+const TTL_MS = 15 * 60 * 1000;
+const MAX_BODY_BYTES = 32 * 1024;
+const cors = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+  'Access-Control-Allow-Headers': 'Content-Type',
+  'Access-Control-Max-Age': '86400',
+};
+const json = (data, status = 200, headers = {}) => Response.json(data, {
+  status, headers: { ...cors, 'Cache-Control': 'no-store', ...headers },
+});
+
+// Codes are bearer capabilities. This service can decode the connection details;
+// WebRTC encrypts the subsequent device-to-device data channel separately.
 export default {
-  async fetch(request, env, ctx) {
-    // CORS headers for browser requests
-    const corsHeaders = {
-      'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-      'Access-Control-Allow-Headers': 'Content-Type',
-      'Access-Control-Max-Age': '86400',
-    };
-
-    // Handle CORS preflight
-    if (request.method === 'OPTIONS') {
-      return new Response(null, { status: 200, headers: corsHeaders });
-    }
-
+  async fetch(request, env) {
+    if (request.method === 'OPTIONS') return new Response(null, { headers: cors });
+    const match = new URL(request.url).pathname.match(/^\/temp\/(\d{6}|[a-z]+(?:-[a-z]+){2,3})$/);
+    if (!match || match[1].length > 50) return json({ error: 'Not found' }, 404);
+    if (!['GET', 'POST'].includes(request.method)) return json({ error: 'Method not allowed' }, 405, { Allow: 'GET, POST, OPTIONS' });
+    // Fail closed: public deployments must not silently lose abuse controls.
+    if (!env.RATE_LIMITER || !env.SIGNALING_INBOXES) return json({ error: 'Signaling service unavailable' }, 503);
     try {
-      const url = new URL(request.url);
-      const path = url.pathname;
-      const clientIP = request.headers.get('CF-Connecting-IP') || 'unknown';
-
-      // Rate limiting using Cloudflare Rate Limiting API
-      const rateLimitResult = await checkRateLimit(request, env, ctx, clientIP);
-      if (!rateLimitResult.success) {
-        return jsonResponse({
-          error: 'Rate limit exceeded',
-          retryAfter: rateLimitResult.retryAfter
-        }, 429, corsHeaders);
+      const ip = request.headers.get('CF-Connecting-IP');
+      if (!ip) return json({ error: 'Signaling service unavailable' }, 503);
+      const { success } = await env.RATE_LIMITER.limit({ key: `ip:${ip}` });
+      if (!success) return json({ error: 'Rate limit exceeded', retryAfter: 60 }, 429, { 'Retry-After': '60' });
+    } catch { return json({ error: 'Signaling service unavailable' }, 503); }
+    try {
+      const inbox = env.SIGNALING_INBOXES.getByName(match[1]);
+      if (request.method === 'GET') {
+        const record = await inbox.take();
+        return record ? json(record) : json({ error: 'Passcode not found or expired' }, 404);
       }
-
-      // Route handling
-      if (path.startsWith('/temp/')) {
-        const passcode = path.substring(6); // Remove '/temp/'
-        
-        if (request.method === 'POST') {
-          return await handleStore(request, env.TEMP_STORAGE_KV, passcode, clientIP, corsHeaders);
-        } else if (request.method === 'GET') {
-          return await handleRetrieve(env.TEMP_STORAGE_KV, passcode, clientIP, corsHeaders);
+      if (!request.headers.get('Content-Type')?.toLowerCase().startsWith('application/json')) return json({ error: 'Expected JSON' }, 415);
+      const reader = request.body?.getReader();
+      if (!reader) return json({ error: 'Missing request body' }, 400);
+      let length = 0;
+      const chunks = [];
+      try {
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          length += value.byteLength;
+          if (length > MAX_BODY_BYTES) {
+            await reader.cancel();
+            return json({ error: 'Signaling record too large' }, 413);
+          }
+          chunks.push(value);
         }
-      }
-
-      return jsonResponse({ error: 'Not found' }, 404, corsHeaders);
-      
-    } catch (error) {
-      console.error('Worker error:', error);
-      return jsonResponse({ 
-        error: 'Internal server error' 
-      }, 500, corsHeaders);
+      } finally { reader.releaseLock(); }
+      let body;
+      try { body = JSON.parse(await new Blob(chunks).text()); }
+      catch { return json({ error: 'Invalid JSON' }, 400); }
+      // encryptedData is the legacy wire-field name; the content is Base64.
+      if (!body || typeof body.encryptedData !== 'string' ||
+          !/^[A-Za-z0-9+/_-]+={0,2}$/.test(body.encryptedData) ||
+          !['offer', 'answer'].includes(body.type)) return json({ error: 'Invalid signaling record' }, 400);
+      const stored = await inbox.store({ encryptedData: body.encryptedData, type: body.type });
+      return stored ? json({ success: true, expiresIn: TTL_MS / 1000 }) : json({ error: 'Passcode already in use' }, 409);
+    } catch {
+      // Never log connection details, codes, IPs, or record bodies.
+      return json({ error: 'Signaling service unavailable' }, 503);
     }
-  }
+  },
 };
 
-/**
- * Store encrypted WebRTC data with passcode
- */
-async function handleStore(request, kv, passcode, clientIP, corsHeaders) {
-  // Validate passcode format (human-readable: word-word-word format)
-  if (!isValidPasscode(passcode)) {
-    return jsonResponse({
-      error: 'Invalid passcode format'
-    }, 400, corsHeaders);
+// One SQLite-backed object per code. Read/delete is one synchronous transaction.
+export class SignalingInbox extends DurableObject {
+  constructor(ctx, env) {
+    super(ctx, env);
+    ctx.storage.sql.exec('CREATE TABLE IF NOT EXISTS inbox (id INTEGER PRIMARY KEY CHECK (id = 1), payload TEXT NOT NULL, expires INTEGER NOT NULL)');
   }
 
-  try {
-    const body = await request.json();
-    
-    if (!body.encryptedData || !body.type) {
-      return jsonResponse({
-        error: 'Missing required fields: encryptedData, type'
-      }, 400, corsHeaders);
-    }
-
-    // Check if passcode already exists
-    const existing = await kv.get(passcode);
-    if (existing) {
-      return jsonResponse({
-        error: 'Passcode already in use'
-      }, 409, corsHeaders);
-    }
-
-    // Store with metadata
-    const data = {
-      encryptedData: body.encryptedData,
-      type: body.type, // 'offer' or 'answer'
-      timestamp: Date.now(),
-      clientIP: hashIP(clientIP), // Store hashed IP for logging
-    };
-
-    // Store with 15-minute TTL
-    await kv.put(passcode, JSON.stringify(data), {
-      expirationTtl: 15 * 60 // 15 minutes
+  async store(record) {
+    const expires = Date.now() + TTL_MS;
+    const stored = this.ctx.storage.transactionSync(() => {
+      this.ctx.storage.sql.exec('DELETE FROM inbox WHERE expires <= ?', Date.now());
+      if (this.ctx.storage.sql.exec('SELECT id FROM inbox').toArray().length) return false;
+      this.ctx.storage.sql.exec('INSERT INTO inbox (id, payload, expires) VALUES (1, ?, ?)', JSON.stringify({ ...record, timestamp: Date.now() }), expires);
+      return true;
     });
-
-    return jsonResponse({
-      success: true,
-      expiresIn: 15 * 60
-    }, 200, corsHeaders);
-
-  } catch (error) {
-    console.error('Store error:', error);
-    return jsonResponse({
-      error: 'Failed to store data'
-    }, 500, corsHeaders);
-  }
-}
-
-/**
- * Retrieve and delete encrypted WebRTC data
- */
-async function handleRetrieve(kv, passcode, clientIP, corsHeaders) {
-  // Validate passcode format
-  if (!isValidPasscode(passcode)) {
-    return jsonResponse({
-      error: 'Invalid passcode format'
-    }, 400, corsHeaders);
+    if (stored) await this.ctx.storage.setAlarm(expires);
+    return stored;
   }
 
-  try {
-    const stored = await kv.get(passcode);
-    
-    if (!stored) {
-      return jsonResponse({
-        error: 'Passcode not found or expired'
-      }, 404, corsHeaders);
-    }
-
-    const data = JSON.parse(stored);
-    
-    // Delete the data (one-time use)
-    await kv.delete(passcode);
-
-    return jsonResponse({
-      encryptedData: data.encryptedData,
-      type: data.type,
-      timestamp: data.timestamp
-    }, 200, corsHeaders);
-
-  } catch (error) {
-    console.error('Retrieve error:', error);
-    return jsonResponse({
-      error: 'Failed to retrieve data'
-    }, 500, corsHeaders);
-  }
-}
-
-/**
- * Check if passcode follows valid format
- */
-function isValidPasscode(passcode) {
-  // Accept either:
-  // 1. 6-digit numeric codes: 123456
-  // 2. Human-id format: word-word-word (3-4 words, hyphen separated)
-  const numericPattern = /^\d{6}$/;
-  const wordPattern = /^[a-z]+(-[a-z]+){2,3}$/;
-  
-  if (numericPattern.test(passcode)) {
-    return true;
-  }
-  
-  return wordPattern.test(passcode) && passcode.length >= 8 && passcode.length <= 50;
-}
-
-/**
- * Rate limiting using Cloudflare's Rate Limiting API
- */
-async function checkRateLimit(request, env, ctx, clientIP) {
-  // Skip rate limiting if no rate limiter is configured
-  if (!env.RATE_LIMITER) {
-    return { success: true };
+  take() {
+    return this.ctx.storage.transactionSync(() => {
+      const row = this.ctx.storage.sql.exec('SELECT payload, expires FROM inbox WHERE id = 1').toArray()[0];
+      // Keep a payload-free reservation until expiry, so an old retry cannot
+      // consume a new person's record if the same short code is generated.
+      this.ctx.storage.sql.exec("UPDATE inbox SET payload = 'null' WHERE id = 1");
+      return row && row.expires > Date.now() ? JSON.parse(row.payload) : null;
+    });
   }
 
-  try {
-    // Create a unique identifier for rate limiting (by IP)
-    const identifier = `ip:${clientIP}`;
-    
-    // Check rate limit - 10 requests per minute per IP
-    const { success } = await env.RATE_LIMITER.limit({ key: identifier });
-    
-    if (!success) {
-      return { 
-        success: false, 
-        retryAfter: 60 // Retry after 60 seconds
-      };
-    }
-    
-    return { success: true };
-    
-  } catch (error) {
-    console.error('Rate limiting error:', error);
-    // On rate limiter error, allow request through (fail open)
-    return { success: true };
+  async alarm() {
+    this.ctx.storage.sql.exec('DELETE FROM inbox WHERE expires <= ?', Date.now());
+    const row = this.ctx.storage.sql.exec('SELECT expires FROM inbox WHERE id = 1').toArray()[0];
+    if (row) await this.ctx.storage.setAlarm(row.expires);
   }
-}
-
-
-/**
- * Hash IP address for privacy (one-way hash)
- */
-function hashIP(ip) {
-  // Simple hash for IP - not cryptographically secure but sufficient for rate limiting
-  let hash = 0;
-  for (let i = 0; i < ip.length; i++) {
-    const char = ip.charCodeAt(i);
-    hash = ((hash << 5) - hash) + char;
-    hash = hash & hash; // Convert to 32-bit integer
-  }
-  return hash.toString(16);
-}
-
-/**
- * Helper for JSON responses with CORS
- */
-function jsonResponse(data, status = 200, headers = {}) {
-  return new Response(JSON.stringify(data), {
-    status,
-    headers: {
-      'Content-Type': 'application/json',
-      ...headers
-    }
-  });
 }

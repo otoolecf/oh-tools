@@ -1,31 +1,22 @@
-# Cloudflare Worker configuration template for the Browser Bridge signaling service.
-# Copy this file to wrangler.toml and replace the placeholder IDs before deploying.
-
-name = "otoolebox-signaling"
+# Copy to the ignored wrangler.toml. Choose your own Worker name before deploying.
+name = "oh-tools-signaling"
 main = "cloudflare-worker.js"
 compatibility_date = "2026-10-30"
 
-# KV namespace for temporary encrypted WebRTC offer/answer storage.
-# Create these with:
-#   npx wrangler kv namespace create TEMP_STORAGE_KV
-#   npx wrangler kv namespace create TEMP_STORAGE_KV --preview
-[[kv_namespaces]]
-binding = "TEMP_STORAGE_KV"
-id = "your-production-kv-namespace-id"
-preview_id = "your-preview-kv-namespace-id"
+[[durable_objects.bindings]]
+name = "SIGNALING_INBOXES"
+class_name = "SignalingInbox"
 
-# Optional rate limiting - 10 requests per minute per IP.
-# Uncomment and replace namespace_id after creating a Cloudflare Rate Limiting binding.
-# [[ratelimits]]
-# name = "RATE_LIMITER"
-# namespace_id = "1001"
-# simple = { limit = 10, period = 60 }
+[[migrations]]
+tag = "inboxes-v1"
+new_sqlite_classes = ["SignalingInbox"]
 
-[vars]
-# Add non-secret environment variables here.
+# Required. This identifier selects a limiter namespace; it is not a secret.
+# Use a distinct number for another service in the same account.
+[[ratelimits]]
+name = "RATE_LIMITER"
+namespace_id = "1001"
+simple = { limit = 10, period = 60 }
 
-[build]
-command = ""
-
-# Optional custom domain route.
+# Optional custom-domain route, configured only after validating your deployment.
 # route = "signaling.example.com/*"

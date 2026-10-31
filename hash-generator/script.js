@@ -1,4 +1,5 @@
-import CryptoJS from 'crypto-js';
+import { escapeHTML } from '../components/safe-html.js';
+import { md5, ripemd160 } from '@noble/hashes/legacy.js';
 import { sha3_224, sha3_256, sha3_384, sha3_512 } from '@noble/hashes/sha3.js';
 import { bytesToHex } from '@noble/hashes/utils.js';
 
@@ -199,19 +200,7 @@ class HashGenerator {
     }
 
     generateMD5(data) {
-        // Convert Uint8Array to string for CryptoJS
-        let inputString;
-        if (this.treatAsHex.checked) {
-            // For hex data, convert back to hex string
-            inputString = Array.from(data)
-                .map(b => b.toString(16).padStart(2, '0'))
-                .join('');
-            return CryptoJS.MD5(CryptoJS.enc.Hex.parse(inputString)).toString();
-        } else {
-            // For text data, use UTF-8
-            inputString = new TextDecoder().decode(data);
-            return CryptoJS.MD5(inputString).toString();
-        }
+        return bytesToHex(md5(data));
     }
 
     async generateSHA(algorithm, data) {
@@ -239,16 +228,7 @@ class HashGenerator {
     }
 
     generateRIPEMD160(data) {
-        let inputString;
-        if (this.treatAsHex.checked) {
-            inputString = Array.from(data)
-                .map(b => b.toString(16).padStart(2, '0'))
-                .join('');
-            return CryptoJS.RIPEMD160(CryptoJS.enc.Hex.parse(inputString)).toString();
-        } else {
-            inputString = new TextDecoder().decode(data);
-            return CryptoJS.RIPEMD160(inputString).toString();
-        }
+        return bytesToHex(ripemd160(data));
     }
 
     async generateHMAC(algorithm, data) {
@@ -371,11 +351,11 @@ class HashGenerator {
             <div class="hash-result">
                 <div class="hash-header">
                     <div>
-                        <span class="hash-algorithm">${result.algorithm}</span>
-                        <span class="hash-length">(${result.length})</span>
+                        <span class="hash-algorithm">${escapeHTML(result.algorithm)}</span>
+                        <span class="hash-length">(${escapeHTML(result.length)})</span>
                     </div>
                 </div>
-                <div class="hash-value">${result.hash}</div>
+                <div class="hash-value">${escapeHTML(result.hash)}</div>
             </div>
         `;
 
@@ -391,15 +371,15 @@ class HashGenerator {
             <div class="hash-result verification-result ${statusClass}">
                 <div class="hash-header">
                     <div>
-                        <span class="hash-algorithm">${result.algorithm} Verification</span>
+                        <span class="hash-algorithm">${escapeHTML(result.algorithm)} Verification</span>
                         <span class="verification-status ${statusClass}">${statusIcon} ${result.isValid ? 'VALID' : 'INVALID'}</span>
                     </div>
                 </div>
                 <div class="verification-details">
-                    <div class="verification-message">${result.message}</div>
+                    <div class="verification-message">${escapeHTML(result.message)}</div>
                     <div class="expected-hash">
                         <strong>Expected Hash:</strong><br>
-                        <code class="hash-value">${result.expectedHash}</code>
+                        <code class="hash-value">${escapeHTML(result.expectedHash)}</code>
                     </div>
                 </div>
             </div>

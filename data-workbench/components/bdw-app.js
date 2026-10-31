@@ -1,3 +1,4 @@
+import { sqlLiteral, sqlIdentifier } from '../sql.js';
 import { dataAppMarkup } from '../initial-markup.mjs';
 // Main Browser Data Workbench Application Component
 
@@ -54,7 +55,7 @@ class BDWApp extends HTMLElement {
             this.showStatus('Ready. Choose a data file or paste a URL.', 'success');
             
         } catch (error) {
-            console.error('DuckDB initialization failed:', error);
+            console.error("DuckDB initialization failed:");
             this.showStatus(`Failed to initialize DuckDB: ${error.message}`, 'error');
         }
     }
@@ -80,7 +81,7 @@ class BDWApp extends HTMLElement {
             }
             
             this.currentTable = result.tableName;
-            console.log('Setting currentTable to:', this.currentTable);
+
 
             // Get table information - this might also fail with parse errors
             const tableInfo = await window.duckDBManager.getTableInfo(result.tableName);
@@ -109,7 +110,7 @@ class BDWApp extends HTMLElement {
             this.showFileStatus(fileData.fileName, successMessage, 'success');
 
         } catch (error) {
-            console.error('File import failed:', error);
+            console.error("File import failed:");
             this.showFileStatus(fileData.fileName, `Failed to import file: ${error.message}`, 'error');
             
             // Clean up any partial state on error
@@ -181,7 +182,7 @@ class BDWApp extends HTMLElement {
             schema.fields.forEach(field => {
                 html += `<th data-column="${columnIndex}">
                     <div class="column-header">
-                        <span class="column-title">${field.name}</span>
+                        <span class="column-title">${this.escapeHtml(field.name)}</span>
                         <div class="column-resize-handle" data-column="${columnIndex}"></div>
                     </div>
                 </th>`;
@@ -192,7 +193,7 @@ class BDWApp extends HTMLElement {
             Object.keys(data[0]).forEach(key => {
                 html += `<th data-column="${columnIndex}">
                     <div class="column-header">
-                        <span class="column-title">${key}</span>
+                        <span class="column-title">${this.escapeHtml(key)}</span>
                         <div class="column-resize-handle" data-column="${columnIndex}"></div>
                     </div>
                 </th>`;
@@ -221,7 +222,7 @@ class BDWApp extends HTMLElement {
                 html += `<td data-column="${cellIndex}" data-full-value="${this.escapeHtml(fullValue)}" 
                             title="${this.escapeHtml(fullValue)}" class="copyable-cell">
                             <div class="cell-content">${displayValue}</div>
-                            <button class="copy-btn" onclick="this.closest('bdw-app').copyToClipboard('${this.escapeHtml(fullValue)}', this)" title="Copy full content">Copy</button>
+                            <button class="copy-btn" title="Copy full content">Copy</button>
                          </td>`;
                 cellIndex++;
             });
@@ -287,6 +288,11 @@ class BDWApp extends HTMLElement {
 
         this.setupColumnResizing(table);
         this.applyDefaultColumnWidths(table);
+        table.querySelectorAll('.copy-btn').forEach(button => {
+            button.addEventListener('click', () => {
+                this.copyToClipboard(button.closest('td').dataset.fullValue, button);
+            });
+        });
     }
 
     applyDefaultColumnWidths(table) {
@@ -376,7 +382,7 @@ class BDWApp extends HTMLElement {
             }, 1000);
             
         } catch (err) {
-            console.error('Failed to copy to clipboard:', err);
+            console.error("Failed to copy to clipboard:");
             
             // Fallback for older browsers
             const textArea = document.createElement('textarea');
@@ -424,7 +430,7 @@ class BDWApp extends HTMLElement {
             this.showStatus(`Query finished. ${result.rowCount} rows returned.`, 'success');
             
         } catch (error) {
-            console.error('SQL result handling failed:', error);
+            console.error("SQL result handling failed:");
             this.showStatus(`Failed to display SQL results: ${error.message}`, 'error');
         }
     }
@@ -452,7 +458,7 @@ class BDWApp extends HTMLElement {
             this.showStatus(`Your file is ready to download: ${fileName}`, 'success');
             
         } catch (error) {
-            console.error('Export failed:', error);
+            console.error("Export failed:");
             this.showStatus(`Export failed: ${error.message}`, 'error');
         }
     }
@@ -482,21 +488,21 @@ class BDWApp extends HTMLElement {
         
         switch (extension) {
             case 'csv':
-                viewQuery = `CREATE OR REPLACE TEMP VIEW ${tableName} AS FROM read_csv('${fileName}', auto_detect=true${ignoreErrors ? ', ignore_errors=true' : ''})`;
+                viewQuery = `CREATE OR REPLACE TEMP VIEW ${sqlIdentifier(tableName)} AS FROM read_csv(${sqlLiteral(fileName)}, auto_detect=true${ignoreErrors ? ', ignore_errors=true' : ''})`;
                 break;
             case 'json':
-                viewQuery = `CREATE OR REPLACE TEMP VIEW ${tableName} AS FROM read_json('${fileName}', format='auto'${ignoreErrors ? ', ignore_errors=true' : ''})`;
+                viewQuery = `CREATE OR REPLACE TEMP VIEW ${sqlIdentifier(tableName)} AS FROM read_json(${sqlLiteral(fileName)}, format='auto'${ignoreErrors ? ', ignore_errors=true' : ''})`;
                 break;
             case 'jsonl':
             case 'ndjson':
-                viewQuery = `CREATE OR REPLACE TEMP VIEW ${tableName} AS FROM read_json('${fileName}', format='newline_delimited'${ignoreErrors ? ', ignore_errors=true' : ''})`;
+                viewQuery = `CREATE OR REPLACE TEMP VIEW ${sqlIdentifier(tableName)} AS FROM read_json(${sqlLiteral(fileName)}, format='newline_delimited'${ignoreErrors ? ', ignore_errors=true' : ''})`;
                 break;
             case 'parquet':
                 // Parquet doesn't support ignore_errors flag
-                viewQuery = `CREATE OR REPLACE TEMP VIEW ${tableName} AS FROM read_parquet('${fileName}')`;
+                viewQuery = `CREATE OR REPLACE TEMP VIEW ${sqlIdentifier(tableName)} AS FROM read_parquet(${sqlLiteral(fileName)})`;
                 break;
             case 'xlsx':
-                viewQuery = `CREATE OR REPLACE TEMP VIEW ${tableName} AS FROM read_xlsx('${fileName}'${ignoreErrors ? ', ignore_errors=true' : ''})`;
+                viewQuery = `CREATE OR REPLACE TEMP VIEW ${sqlIdentifier(tableName)} AS FROM read_xlsx(${sqlLiteral(fileName)}${ignoreErrors ? ', ignore_errors=true' : ''})`;
                 break;
             default:
                 throw new Error(`Unsupported file type: ${extension}`);
@@ -708,7 +714,7 @@ class BDWApp extends HTMLElement {
             try {
                 await window.duckDBManager.executeSQL('DROP VIEW IF EXISTS input_data');
                 await window.duckDBManager.executeSQL('DROP TABLE IF EXISTS input_data');
-                console.log('Cleaned up existing database objects');
+
             } catch (e) {
                 console.debug('Pre-import cleanup completed (some objects may not have existed)');
             }
@@ -780,8 +786,7 @@ class BDWApp extends HTMLElement {
         if (fileDropComponent && typeof fileDropComponent.clearFileList === 'function') {
             fileDropComponent.clearFileList();
         }
-        
-        console.log('Cleaned up failed import state');
+
     }
 
     showStatus(message, type = 'info') {

@@ -9,5 +9,6 @@ export default defineConfig({
   webServer: [
     { command: 'npm run build && npm run preview', url: 'http://localhost:4173', timeout: 60_000 },
     { command: 'npm run dev:signaling', port: 3001, timeout: 30_000 },
+    { command: 'npx wrangler dev --config tests/fixtures/signaling/wrangler.jsonc --port 3002', url: 'http://localhost:3002', timeout: 30_000 },
   ],
 });

@@ -1,3 +1,4 @@
+import { escapeHTML } from '../../components/safe-html.js';
 // Export Panel Component for Browser Data Workbench
 
 class BDWExportPanel extends HTMLElement {
@@ -276,7 +277,7 @@ class BDWExportPanel extends HTMLElement {
                 }
             }
         } catch (error) {
-            console.warn('Could not check row count:', error);
+            console.warn("Could not check row count:");
             // If we can't check, allow export but show warning
             const warning = this.querySelector('#exportWarning');
             warning.style.display = 'block';
@@ -290,7 +291,7 @@ class BDWExportPanel extends HTMLElement {
     async startExport() {
         try {
             const app = this.closest('bdw-app');
-            console.log('Export: app found:', !!app, 'currentTable:', app?.currentTable);
+
             if (!app || !app.currentTable) {
                 alert('No data available to export');
                 return;
@@ -309,11 +310,11 @@ class BDWExportPanel extends HTMLElement {
                     // Fallback to standalone SQL console (when no data is loaded)
                     sqlConsole = app.querySelector('#standaloneSQL bdw-sql-console');
                 }
-                console.log('SQL Console found:', !!sqlConsole);
-                console.log('All SQL consoles in app:', app.querySelectorAll('bdw-sql-console').length);
+
+
                 if (sqlConsole) {
                     query = sqlConsole.getCurrentQuery();
-                    console.log('Current query from SQL console:', query);
+
                     if (!query || query.trim() === '') {
                         alert('No query available to export. Please:\n1. Go to the SQL Console tab\n2. Type a query (e.g., SELECT * FROM input_data WHERE column > 100)\n3. Come back to export the results');
                         return;
@@ -344,7 +345,7 @@ class BDWExportPanel extends HTMLElement {
             this.dispatchEvent(event);
 
         } catch (error) {
-            console.error('Export error:', error);
+            console.error("Export error:");
             alert(`Export failed: ${error.message}`);
         }
     }
@@ -352,7 +353,7 @@ class BDWExportPanel extends HTMLElement {
     async showPreview() {
         try {
             const app = this.closest('bdw-app');
-            console.log('Preview: app found:', !!app, 'currentTable:', app?.currentTable);
+
             if (!app || !app.currentTable) {
                 alert('No data available to preview');
                 return;
@@ -396,7 +397,7 @@ class BDWExportPanel extends HTMLElement {
             this.showPreviewModal(previewData);
 
         } catch (error) {
-            console.error('Preview error:', error);
+            console.error("Preview error:");
             alert(`Preview failed: ${error.message}`);
         }
     }
@@ -500,7 +501,7 @@ class BDWExportPanel extends HTMLElement {
                     margin: 1rem;
                     border-radius: 4px;
                     border: 1px solid var(--border-color);
-                ">${previewText}</div>
+                ">${escapeHTML(previewText)}</div>
             </div>
         `;
 

@@ -1,3 +1,4 @@
+import { escapeHTML } from '../../components/safe-html.js';
 import { dataFileDropMarkup } from '../initial-markup.mjs';
 // File Drop Component for Browser Data Workbench
 
@@ -74,8 +75,7 @@ class BDWFileDrop extends HTMLElement {
                 if (fileListElement) {
                     fileListElement.innerHTML = '';
                 }
-                
-                console.log(`Ignore errors setting changed to: ${ignoreErrorsCheckbox.checked}`);
+
             });
         }
     }
@@ -127,8 +127,8 @@ class BDWFileDrop extends HTMLElement {
         const dropText = this.querySelector('.drop-text');
         if (dropText) {
             dropText.innerHTML = `
-                <strong>${mainText}</strong><br>
-                ${subText}<br>
+                <strong>${escapeHTML(mainText)}</strong><br>
+                ${escapeHTML(subText)}<br>
                 <small>${this.getSupportedTypesText()}</small>
             `;
         }
@@ -180,9 +180,9 @@ class BDWFileDrop extends HTMLElement {
             <div style="padding: 1rem; border: 1px solid var(--border-color); border-radius: 4px; margin-bottom: 0.5rem;">
                 <div style="display: flex; justify-content: space-between; align-items: center;">
                     <div>
-                        <strong>${file.name}</strong>
+                        <strong>${escapeHTML(file.name)}</strong>
                         <div style="font-size: 0.9rem; color: var(--text-secondary);">
-                            ${this.formatFileSize(file.size)} • ${this.detectFileType(file)}
+                            ${this.formatFileSize(file.size)} • ${escapeHTML(this.detectFileType(file))}
                         </div>
                     </div>
                     <div class="loading">
@@ -222,7 +222,7 @@ class BDWFileDrop extends HTMLElement {
             this.showFileStatus(fileDiv, 'Ready to analyze', 'success');
 
         } catch (error) {
-            console.error('Error processing file:', error);
+            console.error("Error processing file:");
             const loadingDiv = fileDiv.querySelector('.loading');
             loadingDiv.innerHTML = 'Error';
             loadingDiv.className = 'error';
@@ -252,9 +252,9 @@ class BDWFileDrop extends HTMLElement {
             <div style="padding: 1rem; border: 1px solid var(--border-color); border-radius: 4px; margin-bottom: 0.5rem;">
                 <div style="display: flex; justify-content: space-between; align-items: center;">
                     <div>
-                        <strong>${this.getFileNameFromURL(url)}</strong>
+                        <strong>${escapeHTML(this.getFileNameFromURL(url))}</strong>
                         <div style="font-size: 0.9rem; color: var(--text-secondary);">
-                            Remote URL • ${this.detectFileTypeFromURL(url)}
+                            Remote URL • ${escapeHTML(this.detectFileTypeFromURL(url))}
                         </div>
                     </div>
                     <div class="loading">
@@ -277,7 +277,7 @@ class BDWFileDrop extends HTMLElement {
             const registerResult = await window.duckDBManager.registerFileURL(fileName, url);
             
             if (registerResult.success) {
-                console.log('Successfully registered URL directly');
+
                 
                 // Emit file-imported event for direct URL registration
                 const event = new CustomEvent('file-imported', {
@@ -295,7 +295,7 @@ class BDWFileDrop extends HTMLElement {
                 this.dispatchEvent(event);
             } else {
                 // Fallback to fetch + blob approach
-                console.log('Direct URL registration failed, falling back to fetch method:', registerResult.error);
+
                 
                 const response = await fetch(url);
                 if (!response.ok) {
@@ -337,9 +337,9 @@ class BDWFileDrop extends HTMLElement {
             urlInput.value = '';
 
         } catch (error) {
-            console.error('Error loading from URL:', error);
+            console.error("Error loading from URL:");
             const loadingDiv = urlDiv.querySelector('.loading');
-            loadingDiv.innerHTML = `Error: ${error.message}`;
+            loadingDiv.textContent = `Error: ${error.message}`;
             loadingDiv.className = 'error';
         }
     }
@@ -424,9 +424,9 @@ class BDWFileDrop extends HTMLElement {
             <div style="padding: 1rem; border: 1px solid var(--error-color); border-radius: 4px; margin-bottom: 0.5rem; background: color-mix(in srgb, var(--error-color) 10%, var(--panel-bg));">
                 <div style="display: flex; justify-content: space-between; align-items: center;">
                     <div>
-                        <strong>${fileName}</strong>
+                        <strong>${escapeHTML(fileName)}</strong>
                         <div style="font-size: 0.9rem; color: var(--error-color);">
-                            ${error}
+                            ${escapeHTML(error)}
                         </div>
                     </div>
                     <div style="color: var(--error-color);">Error</div>

@@ -71,17 +71,16 @@ From the repository root:
 
 ```bash
 cp browser-bridge/wrangler.example.toml browser-bridge/wrangler.toml
-npx wrangler kv namespace create TEMP_STORAGE_KV --config browser-bridge/wrangler.toml
-npx wrangler kv namespace create TEMP_STORAGE_KV --preview --config browser-bridge/wrangler.toml
+npx wrangler deploy --dry-run --config browser-bridge/wrangler.toml
 ```
 
-Put the returned namespace IDs in the ignored local config. Configure the optional `RATE_LIMITER` binding for a public deployment, then deploy explicitly:
+Choose a Worker name and a distinct rate-limiter namespace number in the ignored local config. The example declares the SQLite Durable Object migration and mandatory `RATE_LIMITER` binding. Missing/failing bindings return 503. Validate on staging, then deploy explicitly:
 
 ```bash
 npm run deploy:signaling
 ```
 
-The site deployment does not deploy or modify this Worker. Keep credentials in Wrangler secrets or CI settings, never in a frontend variable or source file.
+The site deployment does not deploy or modify this Worker. The new backend replaces KV with atomic SQLite inboxes; old KV records do not migrate. Let old sessions expire before changing the production signaling deployment. Never bind test harnesses to a public deployment. Keep credentials in Wrangler secrets or CI settings, never in a frontend variable or source file.
 
 For a fork's frontend, copy `.env.example` to `.env.local`, set `VITE_SIGNALING_URL=https://your-signaling-worker.example`, and rebuild. The real `oh-tools.net` hostname automatically uses `https://signaling.oh-tools.net`; localhost uses http://localhost:3001.
 
@@ -92,3 +91,5 @@ For a fork's frontend, copy `.env.example` to `.env.local`, set `VITE_SIGNALING_
 - Image-editor's versioned vendor files include the COEP header required by Emscripten pthread workers. Keep that rule when changing WASM library versions.
 - `_headers` also provides the image/video page isolation headers and immutable caching for hashed bundles and versioned vendor files.
 - Build output intentionally excludes source configs, environment files, documentation, and `node_modules`.
+
+Source downloads under `/licenses/` accompany the compiled libraries. Builds fetch and checksum these archives into `.license-sources/` and split oversized archives into numbered parts for the 25 MiB asset limit. Keep these source assets available when deploying the matching library versions.

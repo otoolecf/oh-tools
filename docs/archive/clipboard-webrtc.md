@@ -1,3 +1,7 @@
+> Historical proposal, not current implementation or setup instructions.
+> See [the current architecture](../architecture.md), [README](../../README.md), and
+> [security policy](../../SECURITY.md) for supported behavior and build commands.
+
 P2P Clipboard & File/Image Share — Summary Architecture (WebRTC + QR/URL)
 
 1. Goal

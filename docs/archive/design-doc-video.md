@@ -1,3 +1,7 @@
+> Historical proposal, not current implementation or setup instructions.
+> See [the current architecture](../architecture.md), [README](../../README.md), and
+> [security policy](../../SECURITY.md) for supported behavior and build commands.
+
 # Browser Video Trimmer & Converter (Mediabunny)
 
 Lightweight, in-browser video trimmer and format converter. Trim videos with a visual timeline, convert between container formats/codecs, and export — all client-side using Mediabunny. No uploads, no servers.

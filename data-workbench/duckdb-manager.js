@@ -1,3 +1,4 @@
+import { sqlLiteral, sqlIdentifier } from './sql.js';
 // DuckDB Manager - bundled JavaScript with version-pinned oversized WASM assets
 class DuckDBManager extends EventTarget {
   constructor() {
@@ -25,13 +26,13 @@ class DuckDBManager extends EventTarget {
   async initialize() {
     let workerUrl;
     try {
-      console.log("Initializing DuckDB...");
+
 
       // Load the locked package only when Data Workbench initializes.
       this.duckdb = await import(
         "@duckdb/duckdb-wasm"
       );
-      console.log("DuckDB module loaded successfully");
+
 
       // WASM files exceed Workers Static Assets' 25 MiB limit. The package
       // supplies CDN URLs pinned to its own version; never use a floating URL.
@@ -41,7 +42,6 @@ class DuckDBManager extends EventTarget {
       const DUCKDB_CONFIG = await this.duckdb.selectBundle(JSDELIVR_BUNDLES);
       //   const DUCKDB_CONFIG = JSDELIVR_BUNDLES.mvp;
 
-      console.log("DuckDB config selected:", DUCKDB_CONFIG);
 
       // Create logger
       const logger = new this.duckdb.ConsoleLogger(
@@ -114,7 +114,7 @@ class DuckDBManager extends EventTarget {
       this.isInitialized = true;
       return { success: true, message: "DuckDB initialized successfully" };
     } catch (error) {
-      console.error("DuckDB initialization failed:", error);
+      console.error("DuckDB initialization failed:");
       this.worker?.terminate();
       this.worker = null;
       this.db = null;
@@ -189,20 +189,15 @@ class DuckDBManager extends EventTarget {
         this.duckdb.DuckDBDataProtocol.BROWSER_FILEREADER,
         true
       );
-      console.log(`File ${name} registered using BROWSER_FILEREADER protocol`);
+
       return { success: true, message: `File ${name} registered` };
     } catch (error) {
-      console.error(
-        "registerFileHandle failed, falling back to registerFileBuffer:",
-        error
-      );
+      console.error("registerFileHandle failed, falling back to registerFileBuffer:");
       // Fallback to the old method if registerFileHandle fails
       try {
         const buffer = await file.arrayBuffer();
         await this.db.registerFileBuffer(name, new Uint8Array(buffer));
-        console.log(
-          `File ${name} registered using registerFileBuffer fallback`
-        );
+
         return { success: true, message: `File ${name} registered` };
       } catch (bufferError) {
         return { success: false, error: bufferError.message };
@@ -221,12 +216,10 @@ class DuckDBManager extends EventTarget {
         this.duckdb.DuckDBDataProtocol.HTTP,
         false
       );
-      console.log(
-        `File ${name} registered from URL using HTTP protocol: ${url}`
-      );
+
       return { success: true, message: `File ${name} registered from URL` };
     } catch (error) {
-      console.error("registerFileURL failed:", error);
+      console.error("registerFileURL failed:");
       return { success: false, error: error.message };
     }
   }
@@ -250,7 +243,7 @@ class DuckDBManager extends EventTarget {
   async describe(tableName) {
     try {
       const result = await this.executeSQL(
-        `DESCRIBE SELECT * FROM ${tableName};`
+        `DESCRIBE SELECT * FROM ${sqlIdentifier(tableName)};`
       );
       if (result.success) {
         return {
@@ -269,7 +262,7 @@ class DuckDBManager extends EventTarget {
       if (!this.conn) throw new Error("DuckDB connection not established");
 
       // Build COPY statement based on file extension and options
-      let copyQuery = `COPY (${query}) TO '${fileName}'`;
+      let copyQuery = `COPY (${query}) TO ${sqlLiteral(fileName)}`;
 
       const ext = fileName.split(".").pop().toLowerCase();
       await this.prepareFormat(ext);
@@ -280,7 +273,7 @@ class DuckDBManager extends EventTarget {
           formatOptions.push("FORMAT CSV");
           if (options.header !== false) formatOptions.push("HEADER true");
           if (options.delimiter)
-            formatOptions.push(`DELIMITER '${options.delimiter}'`);
+            formatOptions.push(`DELIMITER ${sqlLiteral(options.delimiter)}`);
           break;
         case "json":
           formatOptions.push("FORMAT JSON");
@@ -289,12 +282,12 @@ class DuckDBManager extends EventTarget {
         case "parquet":
           formatOptions.push("FORMAT PARQUET");
           if (options.compression)
-            formatOptions.push(`COMPRESSION ${options.compression}`);
+            formatOptions.push(`COMPRESSION ${sqlLiteral(options.compression)}`);
           break;
         case "xlsx":
           formatOptions.push("FORMAT xlsx");
           if (options.header !== false) formatOptions.push("HEADER true");
-          if (options.sheetName) formatOptions.push(`SHEET '${options.sheetName}'`);
+          if (options.sheetName) formatOptions.push(`SHEET ${sqlLiteral(options.sheetName)}`);
           break;
       }
 
@@ -302,32 +295,31 @@ class DuckDBManager extends EventTarget {
         copyQuery += ` WITH (${formatOptions.join(", ")})`;
       }
 
-      console.log(`Executing COPY query: ${copyQuery}`);
       await this.conn.query(copyQuery);
 
       // Get the exported file
       let fileBuffer = await this.db.copyFileToBuffer(fileName);
-      
+
       // Fix Excel file if it has corrupted header
       if (ext === 'xlsx') {
         const expectedHeader = [80, 75, 3, 4]; // ZIP file signature (xlsx is a ZIP)
         const actualHeader = [...fileBuffer.slice(0,4)];
         const offsetHeader = [...fileBuffer.slice(1,5)]; // Check if ZIP signature is offset by 1 byte
-        
+
         if (actualHeader.join(',') === expectedHeader.join(',')) {
-          console.log('Excel file has correct ZIP magic header');
+
         } else if (offsetHeader.join(',') === expectedHeader.join(',')) {
-          console.log('Excel file has corrupted header - removing extra prefix byte');
+
           fileBuffer = fileBuffer.slice(1); // Remove the first corrupted byte
-          console.log(`Fixed Excel buffer length: ${fileBuffer.length}`);
+
         } else {
-          console.warn(`Excel file has unexpected header. Expected: [${expectedHeader}], Got: [${actualHeader}]`);
+          console.warn("Tool operation failed.");
         }
       }
-      
+
       return { success: true, buffer: fileBuffer, fileName };
     } catch (error) {
-      console.error("Export error details:", error);
+      console.error("Export error details:");
       return { success: false, error: error.message };
     }
   }
@@ -363,11 +355,11 @@ class DuckDBManager extends EventTarget {
     const extension = originalFileName.split(".").pop().toLowerCase();
     await this.prepareFormat(extension);
     const ignoreErrors = options.ignoreErrors || false;
-    
+
     // Create unique filename to avoid DuckDB caching issues when settings change
     const timestamp = Date.now();
-    const fileName = ignoreErrors ? 
-      `${originalFileName}_ignore_${timestamp}` : 
+    const fileName = ignoreErrors ?
+      `${originalFileName}_ignore_${timestamp}` :
       `${originalFileName}_${timestamp}`;
 
     // Register the file with unique name
@@ -382,28 +374,28 @@ class DuckDBManager extends EventTarget {
 
     switch (extension) {
       case "csv":
-        viewQuery = `CREATE OR REPLACE TEMP VIEW ${tableName} AS FROM read_csv('${fileName}', auto_detect=true${ignoreErrors ? ', ignore_errors=true' : ''})`;
+        viewQuery = `CREATE OR REPLACE TEMP VIEW ${sqlIdentifier(tableName)} AS FROM read_csv(${sqlLiteral(fileName)}, auto_detect=true${ignoreErrors ? ', ignore_errors=true' : ''})`;
         break;
       case "json":
-        viewQuery = `CREATE OR REPLACE TEMP VIEW ${tableName} AS FROM read_json('${fileName}', format='auto'${ignoreErrors ? ', ignore_errors=true' : ''})`;
+        viewQuery = `CREATE OR REPLACE TEMP VIEW ${sqlIdentifier(tableName)} AS FROM read_json(${sqlLiteral(fileName)}, format='auto'${ignoreErrors ? ', ignore_errors=true' : ''})`;
         break;
       case "jsonl":
       case "ndjson":
-        viewQuery = `CREATE OR REPLACE TEMP VIEW ${tableName} AS FROM read_json('${fileName}', format='newline_delimited'${ignoreErrors ? ', ignore_errors=true' : ''})`;
+        viewQuery = `CREATE OR REPLACE TEMP VIEW ${sqlIdentifier(tableName)} AS FROM read_json(${sqlLiteral(fileName)}, format='newline_delimited'${ignoreErrors ? ', ignore_errors=true' : ''})`;
         break;
       case "parquet":
         // Parquet doesn't support ignore_errors flag
-        viewQuery = `CREATE OR REPLACE TEMP VIEW ${tableName} AS FROM read_parquet('${fileName}')`;
+        viewQuery = `CREATE OR REPLACE TEMP VIEW ${sqlIdentifier(tableName)} AS FROM read_parquet(${sqlLiteral(fileName)})`;
         break;
       case "xlsx":
-        viewQuery = `CREATE OR REPLACE TEMP VIEW ${tableName} AS FROM read_xlsx('${fileName}'${ignoreErrors ? ', ignore_errors=true' : ''})`;
+        viewQuery = `CREATE OR REPLACE TEMP VIEW ${sqlIdentifier(tableName)} AS FROM read_xlsx(${sqlLiteral(fileName)}${ignoreErrors ? ', ignore_errors=true' : ''})`;
         break;
       default:
         throw new Error(`Unsupported file type: ${extension}`);
     }
 
     const result = await this.executeSQL(viewQuery);
-    
+
     if (!result.success) {
       throw new Error(result.error);
     }
@@ -412,10 +404,10 @@ class DuckDBManager extends EventTarget {
   }
 
   async cleanupOldFiles() {
-    // This would ideally clean up old registered files, but DuckDB-WASM 
+    // This would ideally clean up old registered files, but DuckDB-WASM
     // doesn't provide a direct way to unregister files. The files will be
     // cleaned up when the database connection is closed/reset.
-    console.log('Note: Old file registrations will be cleaned up on page refresh');
+
   }
 
   async getTableInfo(tableName) {
@@ -424,21 +416,21 @@ class DuckDBManager extends EventTarget {
 
     // Get basic stats
     const statsResult = await this.executeSQL(`
-            SELECT 
+            SELECT
                 COUNT(*) as row_count
-            FROM ${tableName}
+            FROM ${sqlIdentifier(tableName)}
         `);
 
     // Get distinct count separately (DISTINCT * is not supported)
     let distinctResult;
     try {
       distinctResult = await this.executeSQL(`
-                SELECT COUNT(*) as distinct_rows 
-                FROM (SELECT DISTINCT COLUMNS(*) FROM ${tableName})
+                SELECT COUNT(*) as distinct_rows
+                FROM (SELECT DISTINCT COLUMNS(*) FROM ${sqlIdentifier(tableName)})
             `);
     } catch (error) {
       // Fallback: just use row count if distinct fails
-      console.warn("Could not calculate distinct rows:", error);
+      console.warn("Could not calculate distinct rows:");
       distinctResult = {
         success: true,
         data: [{ distinct_rows: statsResult.data[0]?.row_count || 0 }],
@@ -447,13 +439,13 @@ class DuckDBManager extends EventTarget {
 
     // Get sample data
     const sampleResult = await this.executeSQL(`
-            SELECT * FROM ${tableName} LIMIT 100
+            SELECT * FROM ${sqlIdentifier(tableName)} LIMIT 100
         `);
 
     // Combine stats with safety checks
     const statsData = statsResult.success ? (statsResult.data[0] || {}) : {};
     const distinctData = distinctResult.success ? (distinctResult.data[0] || {}) : {};
-    
+
     const combinedStats = {
       ...statsData,
       ...distinctData,
@@ -469,10 +461,6 @@ class DuckDBManager extends EventTarget {
 }
 
 // Create global instance immediately
-console.log("Creating DuckDB Manager (ES Module version)...");
+
 const duckDBManager = new DuckDBManager();
 window.duckDBManager = duckDBManager;
-console.log(
-  "DuckDB Manager created and assigned to window:",
-  window.duckDBManager
-);
