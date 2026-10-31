@@ -12,6 +12,8 @@
     "deploy:check": "npm run build && wrangler deploy --dry-run",
     "dev:signaling": "node browser-bridge/mock-server.js",
     "deploy:signaling": "wrangler deploy --config browser-bridge/wrangler.toml",
+    "deploy:signaling:production": "wrangler deploy --config browser-bridge/wrangler.production.jsonc",
+    "deploy:signaling:staging": "wrangler deploy --config browser-bridge/wrangler.staging.jsonc",
     "test": "playwright test"
   },
   "repository": {

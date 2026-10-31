@@ -4,6 +4,30 @@ Simple Codes uses encoded WebRTC offer/answer records and six-digit codes to est
 
 The current frontend uses Base64 encoding, not encryption, for signaling metadata. The service can decode these records. WebRTC encrypts the subsequent data-channel transport; this does not make the signaling records confidential.
 
+## Hosted Production Backend
+
+`signaling.oh-tools.net` runs the hardened `oh-tools-signaling` Worker with
+SQLite inboxes and the mandatory rate limiter. Its configuration is committed
+as `wrangler.production.jsonc`. Deploy the hosted environments explicitly:
+
+```bash
+npm run deploy:signaling:production
+npm run deploy:signaling:staging
+```
+
+Production is reachable only through its custom domain; its `workers.dev`
+and preview URLs are disabled. The former KV Worker is retained for rollback
+with its public endpoints disabled. The cutover observed no pending legacy
+codes; the old KV namespace was retained rather than deleted.
+
+The configured rate is 10 requests per 60 seconds per IP in each Cloudflare
+location. Cloudflare's rate limiter is approximate and eventually consistent,
+so bursts can exceed that threshold before counters synchronize.
+
+For rollback, move the custom domain to the retained previous Worker through
+Cloudflare. Leave the new inbox namespace intact: codes created after the
+cutover are stored there and are not available to the old KV backend.
+
 ## Local Testing
 
 Install dependencies once at the repository root with `npm ci`. Run these commands in separate terminals:

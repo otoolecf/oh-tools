@@ -37,6 +37,8 @@ jobs:
       - run: npx wrangler deploy --dry-run
       - run: npm run build:staging
       - run: npx wrangler deploy --env staging --dry-run
+      - run: npx wrangler deploy --config browser-bridge/wrangler.production.jsonc --dry-run
+      - run: npx wrangler deploy --config browser-bridge/wrangler.staging.jsonc --dry-run
       - uses: actions/upload-artifact@v7
         if: failure()
         with:

@@ -15,6 +15,13 @@ deployments disabled. Its original repository remains private. Browser Bridge's
 production signaling Worker is deployed separately; switching the site's Git
 source does not migrate that backend.
 
+The production signaling rollout is now complete. `signaling.oh-tools.net`
+targets the SQLite-backed `oh-tools-signaling` Worker. Its public custom domain,
+bindings and migration are in `browser-bridge/wrangler.production.jsonc`;
+`npm run deploy:signaling:production` deploys it explicitly. The previous Worker
+is retained with public endpoints disabled. See the Browser Bridge setup guide
+for the cutover and rollback behavior.
+
 ## Build And Preview
 
 Use Node.js 22.12 or newer. From the repository root:
