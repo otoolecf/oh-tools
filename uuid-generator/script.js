@@ -52,7 +52,7 @@ class UUIDGenerator {
             }
 
             this.displayResults();
-            this.showMessage(`Generated ${count} UUID${count > 1 ? 's' : ''} successfully`, 'success');
+            this.showMessage(`Generated ${count} UUID${count > 1 ? 's' : ''}.`, 'success');
             
         } catch (error) {
             this.showMessage('Error generating UUIDs: ' + error.message, 'error');
@@ -95,7 +95,7 @@ class UUIDGenerator {
     async copySingleUUID(uuid, index) {
         try {
             await navigator.clipboard.writeText(uuid);
-            this.showMessage(`UUID ${index + 1} copied to clipboard`, 'success');
+            this.showMessage(`Copied.`, 'success');
         } catch (error) {
             this.fallbackCopy(uuid);
         }
@@ -108,7 +108,7 @@ class UUIDGenerator {
         
         try {
             await navigator.clipboard.writeText(allUUIDs);
-            this.showMessage(`All ${this.generatedUUIDs.length} UUIDs copied to clipboard`, 'success');
+            this.showMessage(`Copied.`, 'success');
         } catch (error) {
             this.fallbackCopy(allUUIDs);
         }
@@ -126,9 +126,9 @@ class UUIDGenerator {
         
         try {
             document.execCommand('copy');
-            this.showMessage('Copied to clipboard', 'success');
+            this.showMessage('Copied.', 'success');
         } catch (error) {
-            this.showMessage('Failed to copy to clipboard', 'error');
+            this.showMessage('Couldn’t copy that. Try selecting the text and copying it.', 'error');
         }
         
         document.body.removeChild(textArea);
@@ -165,4 +165,4 @@ class UUIDGenerator {
 }
 
 // Initialize the UUID generator when the page loads
-const uuidGenerator = new UUIDGenerator();
+window.uuidGenerator = new UUIDGenerator();

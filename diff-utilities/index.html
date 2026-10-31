@@ -3,13 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Diff Utilities - Oh! Tools</title>
+    <title>Text, JSON, CSS &amp; Array Diff — Oh! Tools</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="../global.css">
     <link rel="stylesheet" href="styles.css">
-</head>
+    <meta name="description" content="Compare two versions of text, JSON, CSS, or arrays and see what changed." />
+    <meta property="og:title" content="Text, JSON, CSS &amp; Array Diff — Oh! Tools" />
+    <meta property="og:description" content="Compare two versions of text, JSON, CSS, or arrays and see what changed." />
+    <meta name="twitter:title" content="Text, JSON, CSS &amp; Array Diff — Oh! Tools" />
+    <meta name="twitter:description" content="Compare two versions of text, JSON, CSS, or arrays and see what changed." />
+  </head>
 <body>
     <otoolebox-header current-tool="Diff Utilities" base-path="../"></otoolebox-header>
 
@@ -17,6 +22,7 @@
         <tool-hero data-tool-path="/diff-utilities/"></tool-hero>
 
         <main>
+            <p class="tool-instructions">Choose the type of data, paste both versions, and compare.</p>
             <div class="tool-section">
                 <div class="tool-tabs">
                     <button class="tab-button active" data-tab="text">Text Diff</button>
@@ -119,13 +125,6 @@
 
         <otoolebox-footer base-path="../"></otoolebox-footer>
     </div>
-
-    <script src="node_modules/diff/dist/diff.min.js"></script>
-    <script src="script.js"></script>
-    <!-- Load web components -->
-    <script src="../components/otoolebox-header.js"></script>
-    <script src="../components/otoolebox-footer.js"></script>
-    <script src="../components/tool-hero.js"></script>
-    <script src="../components/tool-data-loader.js"></script>
+    <script type="module" src="./main.js"></script>
 </body>
 </html>

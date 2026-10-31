@@ -1,0 +1,26 @@
+/* Public content is rendered at build time, including when JavaScript is off. */
+tool-hero { display: block; }
+tool-hero .tool-hero-content { text-align: center; padding: 3rem 0; }
+tool-hero h1 { margin: 0 0 1rem; font-size: 2.5rem; color: var(--primary-color); }
+tool-hero .tool-description,
+tool-hero .tool-hero-extra > p { max-width: 600px; margin: 0 auto 1rem; color: var(--text-secondary); line-height: 1.6; }
+tool-hero .tool-description { font-size: 1.2rem; }
+tool-hero .tool-hero-extra { margin-top: 2rem; }
+tool-hero .tool-powered-by { font-size: 0.9rem; font-style: italic; }
+tool-hero .tool-powered-by a,
+tool-hero .tool-powered-by a:visited { color: inherit; text-decoration: underline; text-underline-offset: 0.15em; }
+.tool-guide { max-width: 760px; min-width: 0; margin: 3rem auto 1rem; padding-top: 2rem; border-top: 1px solid var(--border-color); text-align: left; line-height: 1.7; color: var(--text-secondary); }
+.tool-guide h2, .tool-guide h3 { color: var(--text-primary); line-height: 1.35; margin: 1.5rem 0 0.75rem; }
+.tool-guide h2 { font-size: 1.5rem; }
+.tool-guide h3 { font-size: 1.1rem; }
+.tool-guide p, .tool-guide ol { margin: 0 0 1rem; }
+.tool-guide ol { padding-left: 1.5rem; }
+.tool-guide li + li { margin-top: 0.5rem; }
+.tool-guide pre { max-width: 100%; overflow-x: auto; padding: 1rem; border-radius: 8px; background: var(--bg-secondary); border: 1px solid var(--border-color); font-size: 0.9rem; }
+.tool-guide nav { margin-top: 1.5rem; }
+.tool-guide a, .tool-guide a:visited { color: var(--text-secondary); text-decoration: underline; text-underline-offset: 0.15em; }
+@media (max-width: 768px) {
+  tool-hero .tool-hero-content { padding: 2rem 0; }
+  tool-hero h1 { font-size: 2rem; }
+  tool-hero .tool-description { font-size: 1.1rem; padding: 0 1rem; }
+}

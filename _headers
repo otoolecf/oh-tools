@@ -1,57 +1,23 @@
-# Most specific WASM rules first - Cloudflare processes in order
-/image-editor/lib/*.wasm
-  Content-Type: application/wasm
-  Cross-Origin-Resource-Policy: cross-origin
-  Cross-Origin-Embedder-Policy: require-corp
-
-# Block access to node_modules
-/*/node_modules/*
-  X-Robots-Tag: noindex, nofollow
-  
-# Special headers for image-editor to enable SharedArrayBuffer/WASM
-/image-editor/*
-  Cross-Origin-Embedder-Policy: require-corp
-  Cross-Origin-Opener-Policy: same-origin
-  Cross-Origin-Resource-Policy: cross-origin
-
-# Default headers for all pages
 /*
   X-Frame-Options: DENY
   X-Content-Type-Options: nosniff
   Referrer-Policy: strict-origin-when-cross-origin
+  Cross-Origin-Resource-Policy: same-origin
 
-# Allow WASM files globally (content-type handled by specific rules above)
-/*.wasm
-  Cross-Origin-Resource-Policy: cross-origin
-
-# Allow nested WASM files (content-type handled by specific rules above)
-/*/*.wasm
-  Cross-Origin-Resource-Policy: cross-origin
-
-# Allow JS modules globally
-/*.js
-  Cross-Origin-Resource-Policy: cross-origin
-
-# Allow nested JS files
-/*/*.js
-  Cross-Origin-Resource-Policy: cross-origin
-
-# Force correct MIME types for all lib directories
-/*/lib/*.js
-  Content-Type: application/javascript
-  Cross-Origin-Resource-Policy: cross-origin
-
-# Force correct MIME types for node_modules JS files
-/*/node_modules/*/*.js
-  Content-Type: application/javascript
-  Cross-Origin-Resource-Policy: cross-origin
-
-# Force correct MIME types for deeply nested node_modules JS files (like dist folders)
-/*/node_modules/*/*/*.js
-  Content-Type: application/javascript
-  Cross-Origin-Resource-Policy: cross-origin
-# SharedArrayBuffer support for video-trimmer (WebCodecs)
+# These pages need SharedArrayBuffer for browser-side image/video processing.
+/image-editor/*
+  Cross-Origin-Embedder-Policy: require-corp
+  Cross-Origin-Opener-Policy: same-origin
 /video-trimmer/*
   Cross-Origin-Embedder-Policy: require-corp
   Cross-Origin-Opener-Policy: same-origin
-  Cross-Origin-Resource-Policy: cross-origin
+
+# Emscripten starts pthread workers from this loader; workers need COEP too.
+/vendor/wasm-vips-0.0.14/*
+  Cross-Origin-Embedder-Policy: require-corp
+
+# Vite emits content-hashed bundles; vendor directories include package versions.
+/assets/*
+  Cache-Control: public, max-age=31536000, immutable
+/vendor/*
+  Cache-Control: public, max-age=31536000, immutable

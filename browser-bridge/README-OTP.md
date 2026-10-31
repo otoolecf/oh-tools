@@ -1,208 +1,56 @@
-# OTP Connection Mode Setup
+# Browser Bridge Simple Codes Setup
 
-This guide explains how to set up the OTP (One-Time Passcode) connection mode for the Closed Loop tool using Cloudflare Workers.
+Simple Codes uses encoded WebRTC offer/answer records and six-digit codes to establish a peer-to-peer connection. The Worker stores encoded signaling records for up to 15 minutes and deletes a record after retrieval. Workers KV is eventually consistent, so this is not a guarantee of atomic one-time retrieval. Direct Exchange avoids the signaling service.
 
-## What is OTP Mode?
+The current frontend uses Base64 encoding, not encryption, for signaling metadata. The service can decode these records. WebRTC encrypts the subsequent data-channel transport; this does not make the signaling records confidential.
 
-OTP mode provides an easier way to connect devices using human-memorable codes instead of QR codes or long URLs. The process works like this:
+## Local Testing
 
-1. **Device A** creates a session and gets a code like `happy-tiger-runs`
-2. **Device B** enters that code to join
-3. **Device B** gets a second code like `clever-bird-soars`
-4. **Device A** enters the second code to complete the connection
-5. Devices are now connected peer-to-peer for secure file/clipboard sharing
+Install dependencies once at the repository root with `npm ci`. Run these commands in separate terminals:
 
-## Benefits
-
-- **Easier**: No QR scanning or URL copying needed
-- **Memorable**: Uses human-readable phrases like "happy-tiger-runs"
-- **Secure**: Data is encrypted before being stored temporarily
-- **Private**: Server never sees your actual data, just encrypted blobs
-- **Cost-effective**: Very cheap on Cloudflare's free tier
-
-## Setup Instructions
-
-### 1. Deploy the Cloudflare Worker
-
-1. Install Wrangler CLI:
-
-   ```bash
-   npm install -g wrangler
-   ```
-
-2. Login to Cloudflare:
-
-   ```bash
-   wrangler login
-   ```
-
-3. Create KV namespaces:
-
-   ```bash
-   # For temporary storage
-   wrangler kv:namespace create "TEMP_STORAGE_KV"
-   wrangler kv:namespace create "TEMP_STORAGE_KV" --preview
-
-   # For rate limiting
-   wrangler kv:namespace create "RATE_LIMIT_KV"
-   wrangler kv:namespace create "RATE_LIMIT_KV" --preview
-   ```
-
-4. Update `wrangler.toml` with your namespace IDs:
-
-   ```toml
-   [[kv_namespaces]]
-   binding = "TEMP_STORAGE_KV"
-   id = "your-actual-namespace-id"
-   preview_id = "your-actual-preview-id"
-
-   [[kv_namespaces]]
-   binding = "RATE_LIMIT_KV"
-   id = "your-actual-rate-limit-id"
-   preview_id = "your-actual-rate-limit-preview-id"
-   ```
-
-5. Deploy the worker:
-
-   ```bash
-   wrangler deploy
-   ```
-
-6. Note your worker URL (e.g., `https://otoolebox-signaling.your-subdomain.workers.dev`)
-
-### 2. Update the Frontend
-
-1. Edit `script.js` and update the `otpServerUrl`:
-
-   ```javascript
-   this.otpServerUrl = "https://your-actual-worker-url.workers.dev";
-   ```
-
-2. That's it! The OTP mode should now work.
-
-## How It Works Technically
-
-### Security Model
-
-1. **Encryption**: WebRTC offer/answer data is encrypted with the passcode before being stored
-2. **One-time use**: Data is deleted immediately after retrieval
-3. **Expiration**: All data expires after 15 minutes automatically
-4. **Rate limiting**: Prevents brute force attacks (10 requests/minute, 50/hour per IP)
-5. **No logging**: Server doesn't log connection data or track users
-
-### API Endpoints
-
-- `POST /temp/{passcode}` - Store encrypted data
-- `GET /temp/{passcode}` - Retrieve and delete data
-
-### Data Flow
-
-```
-Device A                    Server                     Device B
---------                    ------                     --------
-1. Generate offer      →
-2. Encrypt with code   →    Store encrypted offer  →
-3. Show code to user   →                            →   Enter code
-                       ←    Retrieve offer         ←
-                       ←    Generate answer        ←
-                       ←    Encrypt with new code  ←    Store encrypted answer
-Enter final code       →    Retrieve answer        ←    Show final code
-Complete connection    ←                           ←
+```bash
+npm run dev
+npm run dev:signaling
 ```
 
-## Cost Estimates
+Open two tabs at http://localhost:8000/browser-bridge/. Localhost automatically uses the mock signaling server on port 3001. It stores data in memory and is intended only for local testing.
 
-**Cloudflare Workers pricing:**
+## Deploy The Signaling Worker
 
-- Free tier: 100,000 requests/day
-- Paid: $5/month for 10M requests
+From the repository root:
 
-**Usage estimates:**
+```bash
+cp browser-bridge/wrangler.example.toml browser-bridge/wrangler.toml
+npx wrangler kv namespace create TEMP_STORAGE_KV --config browser-bridge/wrangler.toml
+npx wrangler kv namespace create TEMP_STORAGE_KV --preview --config browser-bridge/wrangler.toml
+```
 
-- Light use (100 connections/day): **FREE**
-- Moderate (1,000 connections/day): **FREE**
-- Heavy (10,000 connections/day): ~**$5-10/month**
+Set your namespace IDs in the local config; configure its optional rate limiter for a public deployment. Keep the real config untracked, then run:
 
-Each connection uses ~4 requests (store offer, get offer, store answer, get answer).
+```bash
+npm run deploy:signaling
+```
+
+The frontend's `npm run deploy` is separate and never changes signaling resources.
+
+## Configure The Frontend
+
+The hosted `oh-tools.net` site uses https://signaling.oh-tools.net automatically. Localhost uses http://localhost:3001. For forks or alternate hosts, copy the root `.env.example` to `.env.local` and set:
+
+```dotenv
+VITE_SIGNALING_URL=https://your-signaling-worker.example
+```
+
+Rebuild or restart the dev server after changing this value. This is a public URL embedded in the client bundle, not a secret. Do not put credentials in it. Forks/previews without a configured endpoint default to Direct Exchange and disable Simple Codes.
+
+## API
+
+- `POST /temp/{passcode}` stores encoded offer/answer data.
+- `GET /temp/{passcode}` retrieves and deletes a record.
 
 ## Troubleshooting
 
-### "Failed to store connection data"
-
-- Check that your worker URL is correct in `script.js`
-- Verify KV namespaces are properly configured
-- Check Cloudflare dashboard for worker errors
-
-### "Connection code not found"
-
-- Codes expire after 15 minutes
-- Codes are one-time use only
-- Check for typos (codes are case-insensitive)
-
-### Rate limiting errors
-
-- Wait a minute and try again
-- Default limits: 10 requests/minute, 50/hour per IP
-
-## Fallback
-
-If OTP mode isn't working, users can always switch back to "Direct Sharing" mode, which works without any server and provides maximum privacy.
-
-## Development
-
-### Option 1: Quick Local Testing (Recommended)
-
-For easy local testing without setting up Cloudflare:
-
-1. **Start the mock server:**
-
-   ```bash
-   cd /browser-bridge
-   node mock-server.js
-   ```
-
-2. **Start your web server:**
-
-   ```bash
-   # From the project root directory
-   python -m http.server 8000
-   # OR
-   npx serve .
-   # OR however you usually serve your site
-   ```
-
-3. **Test the flow:**
-   - Open two browser tabs to `http://localhost:8000/browser-bridge/`
-   - In both tabs, select "Simple Codes (human-memorable)" mode
-   - Tab 1: Create Session → get first code (e.g., `happy-tiger-runs`)
-   - Tab 2: Join Session → enter first code → get second code (e.g., `clever-bird-soars`)
-   - Tab 1: Enter second code → connection established!
-
-The mock server will show logs like:
-
-```
-Mock OTP server running on http://localhost:3001
-Stored data for passcode: happy-tiger-runs
-Retrieved and deleted data for passcode: happy-tiger-runs
-Stored data for passcode: clever-bird-soars
-Retrieved and deleted data for passcode: clever-bird-soars
-```
-
-### Option 2: Test with Real Cloudflare Worker
-
-To test with the actual Cloudflare infrastructure:
-
-```bash
-cd /path/to/browser-bridge
-wrangler dev
-```
-
-This will start a local development server that connects to Cloudflare's infrastructure. Update `otpServerUrl` in `script.js` to the URL shown by `wrangler dev`.
-
-### Production Deployment
-
-Once testing is complete:
-
-1. Change `otpServerUrl` back to your production worker URL
-2. Deploy with `wrangler deploy`
-3. Test with the live worker
+- If Simple Codes is unavailable, configure `VITE_SIGNALING_URL` and rebuild, or use Direct Exchange.
+- If a code is not found, it may have expired, been mistyped, or already retrieved. KV propagation can also delay visibility between locations.
+- If storage fails, check the signaling Worker logs and KV bindings.
+- Production signaling storage and consistency improvements are separate from the frontend build migration.

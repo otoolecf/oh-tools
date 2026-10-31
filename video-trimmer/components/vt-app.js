@@ -184,7 +184,7 @@ class VTApp extends HTMLElement {
     this.exportPanel.setExporting(true);
     this.exportPanel.setOperationBadge(operation);
     this.exportPanel.hideDownload();
-    this.exportPanel.setProgress(null, operation === 'transmux' ? 'Transmuxing...' : 'Transcoding...', true);
+    this.exportPanel.setProgress(null, 'Exporting video…', true);
 
     try {
       const result = await this.engine.exportVideo({
@@ -198,9 +198,9 @@ class VTApp extends HTMLElement {
       }, ({ percent, message, indeterminate }) => this.exportPanel.setProgress(percent, message, indeterminate));
 
       if (fileHandle) {
-        this.exportPanel.setProgress(100, `Video saved successfully. Output size ${(result.fileSize / (1024 * 1024)).toFixed(2)} MB`, false);
+        this.exportPanel.setProgress(100, `Video saved. Output size ${(result.fileSize / (1024 * 1024)).toFixed(2)} MB`, false);
       } else {
-        this.exportPanel.setProgress(100, `Done. Output size ${(result.fileSize / (1024 * 1024)).toFixed(2)} MB`, false);
+        this.exportPanel.setProgress(100, `Your file is ready to download. Output size ${(result.fileSize / (1024 * 1024)).toFixed(2)} MB`, false);
         this.exportPanel.showDownload(result.blob, suggestedName);
       }
     } catch (error) {

@@ -1,3 +1,5 @@
+import bwipjs from 'bwip-js';
+
 let currentSVG = null;
 
 document.addEventListener('DOMContentLoaded', function() {

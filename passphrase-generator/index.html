@@ -3,21 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Passphrase Generator - Generate Secure and Memorable Passphrases | Oh! Tools</title>
+    <title>Password &amp; Passphrase Generator — Oh! Tools</title>
     <link rel="stylesheet" href="../global.css">
     <link rel="stylesheet" href="styles.css">
-    <script src="passhelp.min.js"></script>
-    <script>
-        // Check if passhelp loaded successfully
-        if (typeof passhelp !== 'undefined') {
-            console.log('passhelp loaded successfully');
-            window.dispatchEvent(new CustomEvent('passhelpReady'));
-        } else {
-            console.error('Failed to load passhelp');
-            window.dispatchEvent(new CustomEvent('passhelpFailed'));
-        }
-    </script>
-</head>
+    <meta name="description" content="Generate word-based passphrases or random passwords. Customize length and character options in your browser." />
+    <meta property="og:title" content="Password &amp; Passphrase Generator — Oh! Tools" />
+    <meta property="og:description" content="Generate word-based passphrases or random passwords. Customize length and character options in your browser." />
+    <meta name="twitter:title" content="Password &amp; Passphrase Generator — Oh! Tools" />
+    <meta name="twitter:description" content="Generate word-based passphrases or random passwords. Customize length and character options in your browser." />
+  </head>
 <body>
     <otoolebox-header current-tool="Passphrase Generator" base-path="../"></otoolebox-header>
     
@@ -25,6 +19,7 @@
         <tool-hero data-tool-path="/passphrase-generator/"></tool-hero>
         
         <main class="tool-container">
+            <p class="tool-instructions">Choose words or random characters, adjust the options, and generate.</p>
             
             <!-- Passphrase Type Selection -->
             <div class="section-card">
@@ -181,12 +176,6 @@
         
         <otoolebox-footer base-path="../"></otoolebox-footer>
     </div>
-    
-    <script src="script.js"></script>
-    <!-- Load web components -->
-    <script src="../components/otoolebox-header.js"></script>
-    <script src="../components/otoolebox-footer.js"></script>
-    <script src="../components/tool-hero.js"></script>
-    <script src="../components/tool-data-loader.js"></script>
+    <script type="module" src="./main.js"></script>
 </body>
 </html>

@@ -4,7 +4,7 @@ class VTFileDrop extends HTMLElement {
       <section class="vt-panel vt-file-drop">
         <h3>Import video</h3>
         <div class="vt-drop-zone" id="dropZone">
-          <p>Drag and drop a video file here</p>
+          <p>Choose a video or drop one here.</p>
           <p class="muted">or</p>
           <button class="btn" id="pickBtn" type="button">Choose file</button>
           <input id="fileInput" type="file" accept="video/*" hidden />

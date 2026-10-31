@@ -1,4 +1,4 @@
-// DuckDB Manager - Direct CDN import
+// DuckDB Manager - bundled JavaScript with version-pinned oversized WASM assets
 class DuckDBManager {
   constructor() {
     this.db = null;
@@ -11,15 +11,16 @@ class DuckDBManager {
 
   async init(options = {}) {
     try {
-      console.log("Initializing DuckDB with JSDelivr CDN...");
+      console.log("Initializing DuckDB...");
 
-      // Import DuckDB directly from JSDelivr CDN
+      // Load the locked package only when Data Workbench initializes.
       this.duckdb = await import(
-        "https://cdn.jsdelivr.net/npm/@duckdb/duckdb-wasm@1.29.1-dev266.0/+esm"
+        "@duckdb/duckdb-wasm"
       );
       console.log("DuckDB module loaded successfully");
 
-      // Use JSDelivr bundles
+      // WASM files exceed Workers Static Assets' 25 MiB limit. The package
+      // supplies CDN URLs pinned to its own version; never use a floating URL.
       const JSDELIVR_BUNDLES = this.duckdb.getJsDelivrBundles();
 
       // Select a bundle based on browser checks

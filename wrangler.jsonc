@@ -1,0 +1,22 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "oh-tools",
+  "compatibility_date": "2026-10-30",
+  "assets": {
+    "directory": "./dist",
+    "html_handling": "force-trailing-slash",
+    "not_found_handling": "404-page"
+  },
+  "env": {
+    "staging": {
+      "name": "oh-tools-staging",
+      "assets": {
+        "directory": "./dist-staging",
+        "html_handling": "force-trailing-slash",
+        "not_found_handling": "404-page"
+      },
+      "workers_dev": true,
+      "routes": []
+    }
+  }
+}

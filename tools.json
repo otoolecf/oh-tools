@@ -2,7 +2,7 @@
   "tools": [
     {
       "name": "Browser Bridge",
-      "description": "Share clipboards, files, and messages directly between devices through your browser. No downloads, no accounts - just secure peer-to-peer connections using WebRTC technology.",
+      "description": "Send files, text, and clipboard contents between devices. An alternative to emailing something to yourself and hoping you remember which account you used.",
       "path": "/browser-bridge/",
       "status": "active",
       "poweredBy": [
@@ -15,7 +15,7 @@
     },
     {
       "name": "Image Editor",
-      "description": "Fast and lightweight image manipulation tool with resize, crop, rotate, effects, and format conversion. All processing happens in your browser - no data is sent to any server. Supports various import and export formats and metadata inspection (EXIF, IPTC, XMP, ICC).",
+      "description": "Crop, resize, rotate, adjust, and convert images in your browser. Check the metadata while you’re there, if that’s what brought you here.",
       "path": "/image-editor/",
       "status": "active",
       "poweredBy": [
@@ -32,11 +32,11 @@
           "url": "https://github.com/mattiasw/ExifReader"
         }
       ],
-      "heroExtra": "<p style=\"font-size: 0.95rem; font-weight: 500; color: var(--text-primary); margin-top: 1rem;\">Wide format browser or tablet recommended for best editing experience.</p>"
+      "heroExtra": "<p>Changes build on each other. Use Reset to return to the original image.</p><p>This one works best on a tablet or computer.</p>"
     },
     {
       "name": "Barcode Generator",
-      "description": "Generate QR codes, barcodes, and 2D codes with customization options. Adjust colors, transparencies, sizes, and save to common file formats like PNG or SVG. Supports popular formats including Code 128, Data Matrix, and postal codes.",
+      "description": "Make QR codes and barcodes, adjust the colors and size, and save them as PNG, JPEG, or SVG.",
       "path": "/barcode-generator/",
       "status": "active",
       "poweredBy": [
@@ -49,7 +49,7 @@
     },
     {
       "name": "Data Workbench",
-      "description": "Browser-based BI tool powered by DuckDB for CSV, JSON, Parquet, and Excel files. Convert between formats, adjust delimiters, run SQL queries, and analyze data entirely in your browser. All processing happens locally - no data leaves your browser.",
+      "description": "Open CSV, JSON, Parquet, and Excel files. Inspect the data, run SQL queries, and convert between formats in your browser.",
       "path": "/data-workbench/",
       "status": "active",
       "poweredBy": [
@@ -58,11 +58,11 @@
           "url": "https://duckdb.org/docs/api/wasm/overview"
         }
       ],
-      "heroExtra": "<p style=\"font-size: 0.9rem; color: var(--text-secondary); margin-top: 0.5rem;\">Supports <strong>CSV \u21c4 JSON \u21c4 Parquet \u21c4 Excel</strong> conversions with advanced SQL analytics. Features auto-schema detection, statistics generation, full-text search, and a complete SQL console for complex queries. Powered by DuckDB extensions: excel, fts, json, parquet.</p><p style=\"font-size: 0.85rem; color: var(--text-secondary); margin-top: 0.75rem;\">For SQL help and advanced queries, see the <a href=\"https://duckdb.org/docs/stable/\" target=\"_blank\" style=\"color: var(--link-color);\">DuckDB documentation</a>.</p>"
+      "heroExtra": "<p>Choose a file or paste a URL to get started. You can inspect the data, query it with SQL, or export it to another format.</p><p>Loading remote files or database extensions makes requests to those services.</p>"
     },
     {
       "name": "JSON Utilities",
-      "description": "Clean, format, validate JSON data with intelligent processing. Repairs malformed JSON, removes comments and fixes quotes, and prettifies formatting.",
+      "description": "Fix broken JSON, clean up the formatting, and check whether it’s valid. Missing quotes happen.",
       "path": "/json-utilities/",
       "status": "active",
       "poweredBy": [
@@ -75,11 +75,11 @@
           "url": "https://github.com/json5/json5"
         }
       ],
-      "heroExtra": "<p style=\"font-size: 0.9rem; color: var(--text-secondary); margin-top: 0.5rem;\"><strong>Clean</strong> removes comments, fixes quotes, handles MongoDB syntax, and repairs malformed JSON. If validation or formatting fails, try using <strong>Clean</strong> first to fix syntax errors.</p>"
+      "heroExtra": "<p><strong>Validate</strong> checks the JSON. <strong>Clean</strong> tries to repair it. <strong>Format</strong> makes it easier to read.</p><p>If formatting fails, try Clean first.</p>"
     },
     {
       "name": "Diff Utilities",
-      "description": "Compare two sets of text, JSON, CSS, and array data with visual diff highlighting. See additions, deletions, and changes side-by-side with intelligent semantic comparison.",
+      "description": "Compare text, JSON, CSS, or arrays and see what changed. Saves a bit of squinting.",
       "path": "/diff-utilities/",
       "status": "active",
       "poweredBy": [
@@ -92,7 +92,7 @@
     },
     {
       "name": "UUID Generator",
-      "description": "Generate secure UUIDs and unique identifiers instantly using browser crypto APIs. Perfect for developers needing fast database keys, session IDs, or unique reference numbers.",
+      "description": "Generate one UUID or a whole batch. Pick the format and copy what you need.",
       "path": "/uuid-generator/",
       "status": "active",
       "poweredBy": [
@@ -105,7 +105,7 @@
     },
     {
       "name": "Passphrase Generator",
-      "description": "Create memorable yet secure passphrases using natural language patterns or random character sequences. Customizable length and complexity for any security requirement. Fast and simple.",
+      "description": "Make a passphrase you can remember, or a random password you probably won’t. Adjust the length and character options to suit the job.",
       "path": "/passphrase-generator/",
       "status": "active",
       "poweredBy": [
@@ -118,20 +118,24 @@
     },
     {
       "name": "Hash Generator",
-      "description": "Generate cryptographic hashes and checksums using algorithms like SHA-256, MD5, SHA-3, and more. Perfect for data integrity verification, quick troubleshooting, and security applications.",
+      "description": "Generate hashes from text or hexadecimal data. Includes SHA-2, SHA-3, MD5, RIPEMD-160, and HMAC generation and verification.",
       "path": "/hash-generator/",
       "status": "active",
       "poweredBy": [
         {
           "name": "CryptoJS",
           "url": "https://github.com/brix/crypto-js"
+        },
+        {
+          "name": "noble-hashes",
+          "url": "https://github.com/paulmillr/noble-hashes"
         }
       ],
       "heroExtra": ""
     },
     {
       "name": "Video Trimmer",
-      "description": "Trim and convert videos directly in your browser. Visual timeline with frame-by-frame precision, keyframe indicators, and format conversion. All processing happens locally \u2014 no data is sent to any server.",
+      "description": "Keep the parts you want, cut the parts you don’t, and change formats if needed. Your browser does the processing.",
       "path": "/video-trimmer/",
       "status": "active",
       "poweredBy": [
@@ -140,7 +144,7 @@
           "url": "https://mediabunny.dev/"
         }
       ],
-      "heroExtra": "<p style=\"font-size: 0.95rem; font-weight: 500; color: var(--text-primary); margin-top: 1rem;\">Desktop or wide-screen tablet recommended for best editing experience.</p>"
+      "heroExtra": "<p>Set the start and end points for the part you want to keep. Use Split at Playhead to keep multiple sections.</p><p>Available export formats and codecs depend on your browser. A tablet or computer is recommended.</p>"
     }
   ]
 }

@@ -205,6 +205,9 @@ class BDWSQLConsole extends HTMLElement {
             
             // Execute SQL query
             const result = await window.duckDBManager.executeSQL(query);
+            if (!result.success) {
+                throw new Error(result.error || 'The database could not execute this query.');
+            }
             
             // Emit SQL execute event with results
             const event = new CustomEvent('sql-execute', {
@@ -217,11 +220,11 @@ class BDWSQLConsole extends HTMLElement {
             
             this.dispatchEvent(event);
             
-            this.showInfo(`Query executed successfully (${result.rowCount} rows) - Results shown in Data Preview tab`);
+            this.showInfo(`Query finished. ${result.rowCount} rows returned.`);
             
         } catch (error) {
             console.error('SQL execution error:', error);
-            this.showError(`Query failed: ${error.message}`);
+            this.showError(`Couldn’t run that query: ${error.message}`);
         }
     }
 

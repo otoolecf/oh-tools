@@ -1,3 +1,5 @@
+import { brandStyles, wordmark } from './brand.mjs';
+
 class OToolboxHeader extends HTMLElement {
   constructor() {
     super();
@@ -7,9 +9,11 @@ class OToolboxHeader extends HTMLElement {
   connectedCallback() {
     const currentPath = this.getAttribute('current-path') || '/';
     const currentTool = this.getAttribute('current-tool') || '';
+    const isHome = !currentTool && currentPath === '/';
     
     this.shadowRoot.innerHTML = `
       <style>
+        ${brandStyles}
         :host {
           display: block;
         }
@@ -50,7 +54,6 @@ class OToolboxHeader extends HTMLElement {
           font-size: 0.75rem;
           font-weight: 400;
           color: var(--text-secondary);
-          opacity: 0.8;
           margin-top: -2px;
         }
 
@@ -143,21 +146,37 @@ class OToolboxHeader extends HTMLElement {
           content: '🌙';
           left: 8px;
         }
+
+        @media (max-width: 768px) {
+          .nav {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) auto auto;
+            gap: 0.5rem;
+          }
+
+          .nav-brand { min-width: 0; white-space: nowrap; }
+          .nav-brand-tagline { white-space: normal; }
+          .nav-links { display: contents; }
+          .theme-toggle { margin-right: 0; }
+          .nav-link { padding: 0.5rem 0.75rem; white-space: nowrap; }
+          /* The page heading already identifies the current tool. */
+          .current-tool { display: none; }
+        }
       </style>
       
       <header class="main-header">
         <div class="container">
           <nav class="nav">
             <a href="/" class="nav-brand">
-              Oh! Tools
-              <span class="nav-brand-tagline">mildly interesting, mildly helpful tools</span>
+              ${wordmark()}
+              <span class="nav-brand-tagline">Handy tools for everyday annoyances.</span>
             </a>
             <div class="nav-links">
               <button id="themeToggle" class="theme-toggle" title="Toggle theme"></button>
-              <a href="/" class="nav-link ${currentPath === '/' ? 'active' : ''}">
-                ${currentPath === '/' ? 'Tools' : 'All Tools'}
+              <a href="/" class="nav-link ${isHome ? 'active' : ''}" ${isHome ? 'aria-current="page"' : ''}>
+                ${isHome ? 'Tools' : 'All Tools'}
               </a>
-              ${currentTool ? `<a href="./" class="nav-link active">${currentTool}</a>` : ''}
+              ${currentTool ? `<a href="./" class="nav-link active current-tool" aria-current="page">${currentTool}</a>` : ''}
             </div>
           </nav>
         </div>

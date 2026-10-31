@@ -3,17 +3,22 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Data Workbench - Oh! Tools</title>
+    <title>Data Workbench — SQL &amp; File Conversion — Oh! Tools</title>
     
     
-    <link rel="stylesheet" href="../global.css?v=1">
-    <link rel="stylesheet" href="styles.css?v=31">
-</head>
+    <link rel="stylesheet" href="../global.css">
+    <link rel="stylesheet" href="styles.css">
+    <meta name="description" content="Open CSV, JSON, Parquet, and Excel files. Inspect data, run SQL queries, and convert formats in your browser." />
+    <meta property="og:title" content="Data Workbench — SQL &amp; File Conversion — Oh! Tools" />
+    <meta property="og:description" content="Open CSV, JSON, Parquet, and Excel files. Inspect data, run SQL queries, and convert formats in your browser." />
+    <meta name="twitter:title" content="Data Workbench — SQL &amp; File Conversion — Oh! Tools" />
+    <meta name="twitter:description" content="Open CSV, JSON, Parquet, and Excel files. Inspect data, run SQL queries, and convert formats in your browser." />
+  </head>
 <body>
     <otoolebox-header current-tool="Data Workbench" base-path="../"></otoolebox-header>
     
     <div class="container">
-        <tool-hero data-tool-path="/duckdb-browser/"></tool-hero>
+        <tool-hero data-tool-path="/data-workbench/"></tool-hero>
         
         <main class="tool-container">
             <bdw-app></bdw-app>
@@ -21,23 +26,6 @@
         
         <otoolebox-footer base-path="../"></otoolebox-footer>
     </div>
-
-    <!-- DuckDB Manager and Core - Load these first -->
-    <script src="duckdb-manager.js?v=24"></script>
-    <script src="app.js?v=10"></script>
-    
-    <!-- App Components -->
-    <script src="components/bdw-app.js?v=32"></script>
-    <script src="components/bdw-file-drop.js?v=15"></script>
-    <script src="components/bdw-schema-card.js?v=10"></script>
-    <script src="components/bdw-stats-panel.js?v=12"></script>
-    <script src="components/bdw-export-panel.js?v=10"></script>
-    <script src="components/bdw-sql-console.js?v=14"></script>
-    
-    <!-- Load web components -->
-    <script src="../components/otoolebox-header.js"></script>
-    <script src="../components/otoolebox-footer.js"></script>
-    <script src="../components/tool-hero.js"></script>
-    <script src="../components/tool-data-loader.js"></script>
+    <script type="module" src="./main.js"></script>
 </body>
 </html>

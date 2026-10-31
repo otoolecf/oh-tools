@@ -1,3 +1,5 @@
+import ExifReader from 'exifreader';
+
 /**
  * Metadata Operator Web Component
  * Handles image metadata display and copying functionality

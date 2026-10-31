@@ -1,3 +1,6 @@
+import JSON5 from 'json5';
+import * as JSONRepair from 'jsonrepair';
+
 // JSON Utilities Script - Simplified Version
 
 // Get textarea element
@@ -92,14 +95,14 @@ function validateJSON() {
   clearErrorHighlight(); // Clear error highlighting
   const content = jsonEditor.value.trim();
   if (!content) {
-    showMessage("Please enter some JSON content to validate", "error", false);
+    showMessage("Add some text first.", "error", false);
     return;
   }
 
   try {
     // First try standard JSON parse
     JSON.parse(content);
-    showMessage("Valid JSON!", "success", false); // Don't auto-hide success
+    showMessage("Valid JSON.", "success", false); // Don't auto-hide success
   } catch (jsonError) {
     // Try JSON5 parse to get better error messages
     try {
@@ -153,7 +156,7 @@ function cleanJSON() {
   clearErrorHighlight(); // Clear error highlighting
   const content = jsonEditor.value.trim();
   if (!content) {
-    showMessage("Please enter some JSON content to clean", "error", false);
+    showMessage("Add some text first.", "error", false);
     return;
   }
 
@@ -170,7 +173,7 @@ function cleanJSON() {
     undoBtn.style.display = "inline-block";
     undoBtn.disabled = false;
     
-    showMessage("JSON cleaned successfully!", "success", false); // Don't auto-hide success
+    showMessage("JSON cleaned up.", "success", false); // Don't auto-hide success
   } catch (error) {
     // Reset undo state on error
     originalJsonBeforeClean = null;
@@ -187,7 +190,7 @@ function cleanJSON() {
       );
       highlightError(line, col);
     } else {
-      showMessage(`Error cleaning JSON: ${error.message}`, "error", false);
+      showMessage(`Couldn’t clean up that JSON: ${error.message}`, "error", false);
     }
   }
 }
@@ -198,7 +201,7 @@ function formatJSON() {
   clearErrorHighlight(); // Clear error highlighting
   const content = jsonEditor.value.trim();
   if (!content) {
-    showMessage("Please enter some JSON content to format", "error", false);
+    showMessage("Add some text first.", "error", false);
     return;
   }
 
@@ -222,7 +225,7 @@ function formatJSON() {
       } catch (repairError) {
         // Reset undo state on error
         originalJsonBeforeFormat = null;
-        showMessage(`Invalid JSON: ${parseError.message}`, "error", false);
+        showMessage(`This isn’t valid JSON yet. Try Clean first. ${parseError.message}`, "error", false);
         return;
       }
     }
@@ -238,15 +241,15 @@ function formatJSON() {
     
     showMessage(
       wasRepaired
-        ? "JSON repaired and formatted!"
-        : "JSON formatted successfully!",
+        ? "JSON repaired and formatted."
+        : "JSON formatted.",
       "success",
       false // Don't auto-hide success
     );
   } catch (error) {
     // Reset undo state on error
     originalJsonBeforeFormat = null;
-    showMessage(`Error formatting JSON: ${error.message}`, "error", false);
+    showMessage(`Couldn’t format that JSON: ${error.message}`, "error", false);
   }
 }
 
@@ -260,9 +263,9 @@ async function copyToClipboard() {
   
   try {
     await navigator.clipboard.writeText(content);
-    showMessage("Copied to clipboard!", "success", false);
+    showMessage("Copied.", "success", false);
   } catch (error) {
-    showMessage("Failed to copy to clipboard", "error", false);
+    showMessage("Couldn’t copy that. Try selecting the text and copying it.", "error", false);
   }
 }
 
@@ -277,7 +280,7 @@ function undoOperation() {
     undoBtn.disabled = true;
     hideMessage();
     clearErrorHighlight();
-    showMessage("Undo successful! Original content restored.", "success", false);
+    showMessage("Original content restored.", "success", false);
   } else if (originalJsonBeforeFormat !== null) {
     jsonEditor.value = originalJsonBeforeFormat;
     originalJsonBeforeFormat = null;
@@ -287,7 +290,7 @@ function undoOperation() {
     undoBtn.disabled = true;
     hideMessage();
     clearErrorHighlight();
-    showMessage("Undo successful! Original content restored.", "success", false);
+    showMessage("Original content restored.", "success", false);
   }
 }
 

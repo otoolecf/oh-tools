@@ -1,0 +1,9 @@
+import '../components/site.js';
+import './duckdb-manager.js';
+import './app.js';
+import './components/bdw-file-drop.js';
+import './components/bdw-schema-card.js';
+import './components/bdw-stats-panel.js';
+import './components/bdw-export-panel.js';
+import './components/bdw-sql-console.js';
+import './components/bdw-app.js';

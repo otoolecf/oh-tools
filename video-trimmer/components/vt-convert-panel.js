@@ -169,7 +169,7 @@ class VTConvertPanel extends HTMLElement {
   #codecOption(codec, label) {
     const support = this.codecSupport.get(codec);
     if (support === false) {
-      return `<option value="${codec}" disabled title="Not supported in this browser.">${label} (Not supported)</option>`;
+      return `<option value="${codec}" disabled title="Your browser can’t export that codec. Try another option.">${label} (Not supported)</option>`;
     }
     return `<option value="${codec}">${label}</option>`;
   }

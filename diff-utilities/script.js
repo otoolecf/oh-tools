@@ -1,3 +1,5 @@
+import * as Diff from 'diff';
+
 // Tab functionality
 document.addEventListener('DOMContentLoaded', function() {
     const tabButtons = document.querySelectorAll('.tab-button');

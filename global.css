@@ -1,4 +1,13 @@
+@font-face {
+  font-family: "Oh Tools Inter";
+  src: url("./brand/inter-variable.woff2") format("woff2");
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+
 :root {
+  --brand-ink: #475569;
   --primary-color: #64748b;
   --primary-hover: #475569;
   --primary-dark: #334155;
@@ -23,6 +32,7 @@
 }
 
 [data-theme="dark"] {
+  --brand-ink: #cbd5e1;
   --primary-color: #94a3b8;
   --primary-hover: #cbd5e1;
   --primary-dark: #475569;

@@ -3,13 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>
-      Browser Bridge - Secure File Transfer Between Devices | Oh! Tools
-    </title>
-    <meta
-      name="description"
-      content="Share files, clipboards, and messages securely between devices using WebRTC. Direct peer-to-peer connection with no servers, no uploads, complete privacy."
-    />
+    <title>Browser Bridge — Oh! Tools</title>
     <meta
       name="keywords"
       content="file transfer, secure file sharing, WebRTC transfer, peer to peer, device to device, clipboard sync, private file share, browser file transfer"
@@ -18,19 +12,15 @@
     <link rel="canonical" href="https://oh-tools.net/browser-bridge/" />
 
     <!-- Open Graph -->
-    <meta
-      property="og:title"
-      content="Browser Bridge - Secure File Transfer Between Devices"
-    />
-    <meta
-      property="og:description"
-      content="Share files, clipboards, and messages securely between devices using WebRTC. Direct peer-to-peer connection with complete privacy."
-    />
     <meta property="og:url" content="https://oh-tools.net/browser-bridge/" />
     <meta property="og:type" content="website" />
     <link rel="stylesheet" href="../global.css" />
     <link rel="stylesheet" href="styles.css" />
-    <script src="https://cdn.jsdelivr.net/npm/bwip-js@4.7.0/dist/bwip-js.min.js"></script>
+    <meta name="description" content="Send files and text between devices using WebRTC. Connect with short codes or exchange connection links yourself." />
+    <meta property="og:title" content="Browser Bridge — Oh! Tools" />
+    <meta property="og:description" content="Send files and text between devices using WebRTC. Connect with short codes or exchange connection links yourself." />
+    <meta name="twitter:title" content="Browser Bridge — Oh! Tools" />
+    <meta name="twitter:description" content="Send files and text between devices using WebRTC. Connect with short codes or exchange connection links yourself." />
   </head>
   <body>
     <otoolebox-header
@@ -93,13 +83,11 @@
                 name="connection-method"
                 value="direct"
               />
-              <label for="direct-mode">Direct Sharing (QR/Links)</label>
+              <label for="direct-mode">Direct Exchange</label>
             </div>
             <div class="method-description">
               <span id="method-description-text"
-                >Share simple 6-digit codes through a secure server. Easy to
-                type and remember.</span
-              >
+                >Connect by exchanging two short codes. Uses a temporary signaling service.</span>
             </div>
           </div>
 
@@ -114,15 +102,17 @@
                 value="lan"
                 checked
               />
-              <label for="lan-mode">LAN Only (same Wi-Fi)</label>
+              <label for="lan-mode">Same Wi-Fi</label>
               <input
                 type="radio"
                 id="internet-mode"
                 name="connection-mode"
                 value="internet"
               />
-              <label for="internet-mode">Internet (with STUN)</label>
+              <label for="internet-mode">Different networks</label>
             </div>
+            <p class="text-sm"><strong>Same Wi-Fi:</strong> Use this when both devices are on the same local network.</p>
+            <p class="text-sm"><strong>Different networks:</strong> Uses a public connection-discovery service to help the devices find each other. Some networks may still block the connection.</p>
           </div>
 
           <!-- Role Selection -->
@@ -144,10 +134,7 @@
 
           <!-- Browser Warning -->
           <div class="browser-warning">
-            <p>
-              <strong>Important:</strong> Stay on this page during file
-              transfers. Switching apps or tabs will disconnect the session.
-            </p>
+            <p>Keep this page open on both devices until the transfer finishes. Switching apps or putting a device to sleep can interrupt the connection.</p>
           </div>
 
           <!-- URL Processing Banner -->
@@ -156,8 +143,8 @@
             class="url-banner"
             style="display: none"
           >
-            <h3>Processing URL Offer</h3>
-            <p>Automatically joining session from the shared URL...</p>
+            <h3>Joining Session</h3>
+            <p>Joining from the shared link…</p>
           </div>
         </div>
 
@@ -176,40 +163,21 @@
             style="display: none"
           >
             <div class="otp-instruction">
-              <p>
-                <strong>Step 1:</strong> Share this code with the other device
-              </p>
-              <p><strong>On the other device:</strong></p>
-              <ol>
-                <li>Open https://oh-tools.net/browser-bridge/ in their browser</li>
-                <li>Choose "Simple Codes" connection method</li>
-                <li>Click "Join Session" and enter this code</li>
-              </ol>
-              <p>
-                <strong>Step 2:</strong> Wait for them to give you a second code
-              </p>
-              <p>
-                <strong>Step 3:</strong> Enter their second code when prompted
-                below
-              </p>
+              <ol><li>Share this code with the other device.</li><li>On that device, open Browser Bridge, choose Simple Codes, and select Join Session.</li><li>Enter the code. That device will show a second code.</li><li>Enter the second code here to finish connecting.</li></ol>
             </div>
             <div class="otp-code-display">
               <div class="otp-code" id="otp-code-text"></div>
               <button id="copy-otp-btn" class="btn-copy">Copy Code</button>
             </div>
             <div class="otp-status">
-              <p>Waiting for the other device to join...</p>
+              <p>Waiting for the other device…</p>
             </div>
           </div>
 
           <!-- OTP Join Input -->
           <div id="otp-join-display" class="otp-display" style="display: none">
             <div class="otp-instruction">
-              <p>
-                <strong>Step 1:</strong> Enter the connection code from the
-                other device
-              </p>
-              <p>After connecting, you'll get a second code to share back</p>
+              <p>Enter the code from the first device. You’ll get a second code to send back.</p>
             </div>
             <div class="otp-input-group">
               <input
@@ -227,12 +195,7 @@
           <!-- OTP Final Code Display -->
           <div id="otp-final-display" class="otp-display" style="display: none">
             <div class="otp-instruction">
-              <p>
-                <strong>Step 2:</strong> Share this code with the first device
-              </p>
-              <p>
-                Give this code to the person who shared the first code with you
-              </p>
+              <p>Send this code back to the first device to finish connecting.</p>
             </div>
             <div class="otp-code-display">
               <div class="otp-code" id="otp-final-code-text"></div>
@@ -249,10 +212,7 @@
             style="display: none"
           >
             <div class="otp-instruction">
-              <p>
-                Enter the final code from the other device to complete
-                connection:
-              </p>
+              <p>Enter the second code from the other device to finish connecting.</p>
             </div>
             <div class="otp-input-group">
               <input
@@ -274,6 +234,7 @@
 
         <!-- Session Creation/Join Section -->
         <div id="session-section" class="section-card" style="display: none">
+          <ol class="direct-instructions"><li>Start a session and share the invitation link or QR code.</li><li>Open it on the other device.</li><li>Send the response link or QR code back to the first device to finish connecting.</li></ol>
           <h3 id="session-title">Create Session</h3>
 
           <!-- QR Code Display -->
@@ -379,7 +340,7 @@
             <div class="connected-icon">✓</div>
             <div class="connected-text">
               <h3>Connected</h3>
-              <p>Secure peer-to-peer connection established</p>
+              <p>Connected. You can send text and files.</p>
             </div>
           </div>
 
@@ -445,12 +406,6 @@
     </main>
 
     <otoolebox-footer base-path="../"></otoolebox-footer>
-
-    <script src="script.js?v=2025-01-21-03"></script>
-    <!-- Load web components -->
-    <script src="../components/otoolebox-header.js"></script>
-    <script src="../components/otoolebox-footer.js"></script>
-    <script src="../components/tool-hero.js"></script>
-    <script src="../components/tool-data-loader.js"></script>
-  </body>
+    <script type="module" src="./main.js"></script>
+</body>
 </html>

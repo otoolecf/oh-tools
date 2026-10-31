@@ -112,7 +112,7 @@ class BDWApp extends HTMLElement {
 
     async initializeDuckDB() {
         try {
-            this.showStatus('Initializing DuckDB...', 'info');
+            this.showStatus('Getting the database ready…', 'info');
             
             // Wait for DuckDB manager to be available
             let retries = 0;
@@ -130,7 +130,7 @@ class BDWApp extends HTMLElement {
                 extensions: ['json', 'parquet']  // Load common extensions
             });
 
-            this.showStatus('DuckDB initialized successfully', 'success');
+            this.showStatus('Ready. Choose a data file or paste a URL.', 'success');
             
         } catch (error) {
             console.error('DuckDB initialization failed:', error);
@@ -180,7 +180,7 @@ class BDWApp extends HTMLElement {
             };
 
             // Create success message based on file type
-            let successMessage = `Successfully loaded ${fileData.fileName} (${tableInfo.stats.row_count} rows)`;
+            let successMessage = `Loaded ${fileData.fileName}. ${tableInfo.stats.row_count} rows.`;
             if (result.usedIgnoreErrors) {
                 successMessage += ' (errors ignored)';
             }
@@ -446,7 +446,7 @@ class BDWApp extends HTMLElement {
             
             // Visual feedback
             const originalText = button.innerHTML;
-            button.innerHTML = 'Copied!';
+            button.innerHTML = 'Copied.';
             button.style.background = 'var(--success-color)';
             
             setTimeout(() => {
@@ -467,7 +467,7 @@ class BDWApp extends HTMLElement {
             
             // Visual feedback
             const originalText = button.innerHTML;
-            button.innerHTML = 'Copied!';
+            button.innerHTML = 'Copied.';
             button.style.background = 'var(--success-color)';
             
             setTimeout(() => {
@@ -500,7 +500,7 @@ class BDWApp extends HTMLElement {
             // Switch to data tab to show results
             this.switchTab('data');
             
-            this.showStatus(`Query executed successfully (${result.rowCount} rows)`, 'success');
+            this.showStatus(`Query finished. ${result.rowCount} rows returned.`, 'success');
             
         } catch (error) {
             console.error('SQL result handling failed:', error);
@@ -528,7 +528,7 @@ class BDWApp extends HTMLElement {
             document.body.removeChild(a);
             URL.revokeObjectURL(url);
             
-            this.showStatus(`Successfully exported to ${fileName}`, 'success');
+            this.showStatus(`Your file is ready to download: ${fileName}`, 'success');
             
         } catch (error) {
             console.error('Export failed:', error);

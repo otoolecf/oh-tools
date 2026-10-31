@@ -1,13 +1,5 @@
-# No redirects needed - closed-loop worker will be deployed separately
-# The client-side code will call the worker directly via otpServerUrl
-
-# SPA fallback for tool directories only (avoid infinite loops)
-/barcode-generator     /barcode-generator/index.html   200
-/closed-loop          /closed-loop/index.html          200
-/diff-utilities       /diff-utilities/index.html       200
-/duckdb-browser       /duckdb-browser/index.html       200
-/hash-generator       /hash-generator/index.html       200
-/image-editor         /image-editor/index.html         200
-/json-utilities       /json-utilities/index.html       200
-/passphrase-generator /passphrase-generator/index.html 200
-/uuid-generator       /uuid-generator/index.html       200
+# Preserve links to the tools' previous names. Current tools use directory URLs.
+/closed-loop /browser-bridge/ 301
+/duckdb-browser /data-workbench/ 301
+/closed-loop/* /browser-bridge/:splat 301
+/duckdb-browser/* /data-workbench/:splat 301

@@ -1,3 +1,5 @@
+import bwipjs from 'bwip-js';
+
 // Closed Loop Tool - WebRTC P2P Implementation
 class ClosedLoop {
   constructor() {
@@ -26,6 +28,11 @@ class ClosedLoop {
   }
 
   getOtpServerUrl() {
+    const configuredUrl = import.meta.env.VITE_SIGNALING_URL?.trim();
+    if (configuredUrl) {
+      return configuredUrl.replace(/\/$/, "");
+    }
+
     const hostname = window.location.hostname;
 
     // Local development
@@ -38,13 +45,16 @@ class ClosedLoop {
       return "https://signaling.oh-tools.net";
     }
 
-    // Fallback to .pages.dev domain
-    if (hostname.includes("otoolebox.pages.dev")) {
+    // Hosted preview domain for this project.
+    if (hostname === "otoolebox.pages.dev" || hostname.endsWith(".otoolebox.pages.dev")) {
       return "https://otoolebox-signaling.otoolecf.workers.dev";
     }
 
-    // Default fallback
-    return "https://otoolebox-signaling.otoolecf.workers.dev";
+    return null;
+  }
+
+  isOtpAvailable() {
+    return Boolean(this.otpServerUrl);
   }
 
   initializeElements() {
@@ -241,17 +251,10 @@ class ClosedLoop {
   }
 
   initializeDefaultState() {
-    // Set default connection method description text for OTP mode
-    const descriptionElement = document.getElementById('method-description-text');
-    if (descriptionElement) {
-      descriptionElement.textContent = 'Share simple 6-digit codes through a secure server. Easy to type and remember.';
-    }
-    
-    // Hide connection type group for OTP mode by default
-    const connectionTypeGroup = document.getElementById('connection-type-group');
-    if (connectionTypeGroup) {
-      connectionTypeGroup.style.display = 'none';
-    }
+    this.otpModeRadio.disabled = !this.isOtpAvailable();
+    this.directModeRadio.checked = !this.isOtpAvailable();
+    this.otpModeRadio.checked = this.isOtpAvailable();
+    this.updateConnectionMethod();
   }
 
   async regenerateQRCodesForTheme() {
@@ -559,15 +562,18 @@ class ClosedLoop {
 
     this.connectionMethod = this.otpModeRadio.checked ? "otp" : "direct";
 
+    this.connectionTypeGroup.style.display = this.connectionMethod === "otp" ? "none" : "";
+
     // Update UI based on selected method
     if (this.connectionMethod === "otp") {
       document.body.classList.add("otp-mode");
-      this.methodDescriptionText.textContent =
-        "Use simple 6-digit codes to connect. Requires temporary signaling server.";
+      this.methodDescriptionText.textContent = this.isOtpAvailable()
+        ? "Connect by exchanging two short codes. Uses a temporary signaling service."
+        : "Simple Codes isn’t available on this site. Use Direct Exchange instead.";
     } else {
       document.body.classList.remove("otp-mode");
       this.methodDescriptionText.textContent =
-        "Share QR codes or URLs directly between devices. Maximum privacy - no servers involved.";
+        "Exchange connection links or QR codes yourself, without the Simple Codes service.";
     }
   }
 
@@ -637,6 +643,14 @@ class ClosedLoop {
   }
 
   async createOtpSession() {
+    if (!this.isOtpAvailable()) {
+      this.updateStatus(
+        "Simple Codes isn’t available on this site. Use Direct Exchange instead.",
+        "error"
+      );
+      return;
+    }
+
     // Set OTP flow state
     this.otpFlowState = "creating";
     
@@ -794,6 +808,14 @@ class ClosedLoop {
   }
 
   async joinWithOtpCode() {
+    if (!this.isOtpAvailable()) {
+      this.updateStatus(
+        "Simple Codes isn’t available on this site. Use Direct Exchange instead.",
+        "error"
+      );
+      return;
+    }
+
     const code = this.otpJoinInput.value.trim().toLowerCase();
     if (!code) {
       alert("Please enter a connection code");
@@ -870,7 +892,7 @@ class ClosedLoop {
       // Enhanced error handling
       let userMessage = "Failed to join: ";
       if (error.message.includes("not found") || error.message.includes("expired")) {
-        userMessage += "Code not found or expired. Please check the code or ask for a new one.";
+        userMessage = "That code wasn’t found. It may have expired or already been used.";
       } else if (error.message.includes("Server error")) {
         userMessage += "Server error. Please try again in a moment.";
       } else if (error.message.includes("network") || error.message.includes("fetch")) {
@@ -913,6 +935,14 @@ class ClosedLoop {
   }
 
   async completeOtpConnection() {
+    if (!this.isOtpAvailable()) {
+      this.updateStatus(
+        "Simple Codes isn’t available on this site. Use Direct Exchange instead.",
+        "error"
+      );
+      return;
+    }
+
     const code = this.otpAnswerInput.value.trim().toLowerCase();
     if (!code) {
       alert("Please enter the final connection code");
@@ -951,14 +981,14 @@ class ClosedLoop {
         console.log("Data channel not ready, will send when connected");
       }
       
-      this.updateStatus("Connection established!", "connected");
+      this.updateStatus("Connected. You can send text and files.", "connected");
     } catch (error) {
       console.error("Failed to complete OTP connection:", error);
       
       // Enhanced error handling with specific messages
       let userMessage = "Connection failed: ";
       if (error.message.includes("not found") || error.message.includes("invalid")) {
-        userMessage += "Code expired or already used. Please restart the connection process.";
+        userMessage = "That code wasn’t found. It may have expired or already been used.";
       } else if (error.message.includes("network") || error.message.includes("fetch")) {
         userMessage += "Network error. Check your connection and try again.";
       } else if (error.message.includes("Invalid passphrase")) {
@@ -1570,7 +1600,7 @@ class ClosedLoop {
     }
     
     // Normal connection completion
-    this.updateStatus("Connected", "connected");
+    this.updateStatus("Connected. You can send text and files.", "connected");
     this.updateProgress("connected");
 
     // Hide session sections and show communication
@@ -1584,7 +1614,7 @@ class ClosedLoop {
 
   onDisconnected() {
     this.connectionState = "disconnected";
-    this.updateStatus("Disconnected", "error");
+    this.updateStatus("Connection lost. Start a new session to reconnect.", "error");
     
     
     this.resetUI();
@@ -2242,7 +2272,7 @@ class ClosedLoop {
   showCopyFeedback(button) {
     const originalText = button.textContent;
     button.classList.add("copied");
-    button.textContent = "Copied!";
+    button.textContent = "Copied.";
 
     setTimeout(() => {
       button.classList.remove("copied");

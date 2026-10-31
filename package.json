@@ -1,11 +1,18 @@
 {
   "name": "otoolebox",
   "version": "1.0.0",
-  "description": "A collection of client-side web tools that run entirely in the browser. No data is sent to servers, ensuring privacy and security for all operations.",
-  "main": "dev-server.js",
+  "description": "Browser-based utilities with local file processing and optional WebRTC signaling.",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "cd image-editor && npm install && cp node_modules/wasm-vips/lib/vips.js lib/ && cp node_modules/wasm-vips/lib/vips.wasm lib/ && cp node_modules/wasm-vips/lib/vips-heif.wasm lib/ && cp node_modules/wasm-vips/lib/vips-resvg.wasm lib/ && cp node_modules/heic-to/dist/iife/heic-to.js lib/ && cp node_modules/exifreader/dist/exif-reader.js lib/ && cd ../barcode-generator && npm install && mkdir -p lib && cp node_modules/bwip-js/dist/bwip-js-min.js lib/ && cd ../hash-generator && npm install && mkdir -p lib && cp node_modules/crypto-js/crypto-js.js lib/ && cd ../json-utilities && npm install && mkdir -p lib && cp node_modules/jsonrepair/lib/umd/jsonrepair.js lib/ && cp node_modules/json5/dist/index.min.js lib/ && cd ../diff-utilities && npm install && mkdir -p lib && cp node_modules/diff/dist/diff.min.js lib/ && cd ../passphrase-generator && npm install && cd ../data-workbench && npm install && cd ../browser-bridge && npm install && mkdir -p lib && cp node_modules/bwip-js/dist/bwip-js-min.js lib/ && cd ../video-trimmer && npm install && mkdir -p lib && cp node_modules/mediabunny/dist/bundles/mediabunny.mjs lib/mediabunny.esm.js"
+    "dev": "node scripts/prepare-assets.mjs && vite --host 127.0.0.1",
+    "build": "node scripts/prepare-assets.mjs && vite build && node scripts/check-build.mjs",
+    "build:staging": "node scripts/prepare-assets.mjs --staging && vite build --mode staging && node scripts/check-build.mjs --staging",
+    "preview": "wrangler dev --port 4173",
+    "deploy": "npm run build && wrangler deploy",
+    "deploy:staging": "npm run build:staging && wrangler deploy --env staging",
+    "deploy:check": "npm run build && wrangler deploy --dry-run",
+    "dev:signaling": "node browser-bridge/mock-server.js",
+    "deploy:signaling": "wrangler deploy --config browser-bridge/wrangler.toml",
+    "test": "playwright test"
   },
   "repository": {
     "type": "git",
@@ -19,6 +26,26 @@
   },
   "homepage": "https://github.com/otoolecf/otoolebox#readme",
   "dependencies": {
-    "wasm-vips": "^0.0.14"
+    "@duckdb/duckdb-wasm": "1.29.1-dev266.0",
+    "@noble/hashes": "2.4.0",
+    "bwip-js": "4.7.0",
+    "crypto-js": "4.2.0",
+    "diff": "8.0.2",
+    "exifreader": "4.31.1",
+    "heic-to": "1.2.1",
+    "json5": "2.2.3",
+    "jsonrepair": "3.13.0",
+    "mediabunny": "1.32.0",
+    "passhelp": "1.1.1",
+    "wasm-vips": "0.0.14"
+  },
+  "private": true,
+  "engines": {
+    "node": ">=22.12.0"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.64.1",
+    "vite": "8.3.5",
+    "wrangler": "4.156.0"
   }
 }

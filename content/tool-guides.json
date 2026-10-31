@@ -1,0 +1,199 @@
+{
+  "/browser-bridge/": {
+    "title": "Send something to your other device",
+    "intro": "Browser Bridge moves files, text, and clipboard contents between two browsers. Useful when the cable has gone missing again.",
+    "steps": [
+      "Open Browser Bridge on both devices and choose the same connection method.",
+      "With Direct Exchange, share the invitation link or QR code with the second device, then send its response back to the first. Simple Codes is another option when available.",
+      "Once connected, choose the files or text you want to send. The receiving device can save or copy them."
+    ],
+    "example": {
+      "title": "A photo from your phone to your laptop",
+      "description": "Connect the two browsers, choose the photo on your phone, and download it on your laptop. You choose what gets shared; connecting does not grant access to the rest of either device."
+    },
+    "notes": [
+      "Transfers use a WebRTC data channel with encrypted transport. Connection details exchanged through codes, links, or signaling are not themselves encrypted by this app; share them only with the person or device you intend to connect to.",
+      "Keep both pages open during the transfer. Firewalls and network restrictions can prevent a connection; trying the same Wi-Fi network may help.",
+      "Simple Codes uses a signaling service to exchange connection details. Direct Exchange lets you pass those details yourself. Connection setup may also contact public STUN services."
+    ],
+    "related": ["/image-editor/", "/video-trimmer/"]
+  },
+  "/image-editor/": {
+    "title": "Crop, resize, or convert an image",
+    "intro": "Make the picture fit where it needs to go. The image processing happens in your browser.",
+    "steps": [
+      "Choose an image or drop it into the editor.",
+      "Use the tabs to crop, resize, rotate, or adjust it. Changes build on each other; Reset takes you back to the original.",
+      "Open Export, choose JPEG, PNG, WebP, or TIFF, and download the result."
+    ],
+    "example": {
+      "title": "Convert a HEIC photo to JPEG",
+      "description": "Open the HEIC or HEIF file, make any edits you need, then select JPEG in Export. Save a new copy for the app that still refuses to open the original."
+    },
+    "notes": [
+      "Import formats include JPEG, PNG, WebP, HEIC/HEIF, TIFF, SVG, and GIF. Export formats are JPEG, PNG, WebP, and TIFF. This editor is intended for still images.",
+      "The Metadata tab shows information found in the original file. Exporting a new image can change or discard that information; check the saved file if metadata matters to you.",
+      "Large images need more browser memory. A tablet or computer works best. The page downloads processing libraries, but does not upload your image to our servers for editing."
+    ],
+    "related": ["/browser-bridge/", "/barcode-generator/"]
+  },
+  "/barcode-generator/": {
+    "title": "Make a QR code or barcode",
+    "intro": "Turn a link, label, or identifier into something a scanner can read.",
+    "steps": [
+      "Choose a barcode type and enter the data you want it to contain.",
+      "Adjust the size and colors, then generate a preview.",
+      "Save it as PNG, JPEG, or SVG. Check the saved code with a scanner before printing a hundred of them."
+    ],
+    "example": {
+      "title": "A QR code for a website",
+      "description": "Select QR Code and enter a complete URL, including https://. Generate the code, save it, and scan it with your phone to check the destination.",
+      "code": "https://example.com/"
+    },
+    "notes": [
+      "Available types include QR Code, Code 128, Code 39, EAN-13, EAN-8, UPC-A, UPC-E, Data Matrix, PDF417, and Aztec. Each type has its own rules for data and length.",
+      "A dark code on a light background with space around the edges is easier to scan. SVG is useful when you need to resize a code for print.",
+      "Codes are generated in your browser. A QR code containing a URL does not create or host the destination page."
+    ],
+    "related": ["/image-editor/", "/uuid-generator/"]
+  },
+  "/data-workbench/": {
+    "title": "Inspect a data file, run SQL, or change formats",
+    "intro": "Open a dataset without setting up a database. DuckDB runs inside your browser.",
+    "steps": [
+      "Choose a local file or enter a URL. Inspect the preview and detected columns.",
+      "Use the SQL Console to query the loaded input_data table.",
+      "Use the export controls to save data in another available format."
+    ],
+    "example": {
+      "title": "Preview a CSV before converting it to JSON",
+      "description": "Load a CSV, run this query to check a few rows, then choose JSON in the export controls. If the columns look wrong, fix the import before exporting the whole thing.",
+      "code": "SELECT *\nFROM input_data\nLIMIT 10;"
+    },
+    "notes": [
+      "The workbench handles CSV, JSON, newline-delimited JSON, and Parquet. Excel .xlsx support depends on the DuckDB Excel extension loading successfully.",
+      "Local files are processed in the browser. Loading a URL contacts that host, and downloading the engine or extensions contacts their providers. Some remote files cannot be opened because their host restricts browser access.",
+      "Available memory limits dataset size. Converting a file does not preserve spreadsheet formatting, formulas, or workbook layout."
+    ],
+    "related": ["/json-utilities/", "/diff-utilities/"]
+  },
+  "/json-utilities/": {
+    "title": "Validate, repair, and format JSON",
+    "intro": "Check whether JSON is valid, repair common syntax problems, and make the result easier to read.",
+    "steps": [
+      "Paste your JSON into the editor.",
+      "Choose Validate to check it. If it is broken, try Clean to repair it.",
+      "Choose Format for readable indentation, then copy the result."
+    ],
+    "example": {
+      "title": "Missing quotes and an extra comma",
+      "description": "Clean can turn this JavaScript-style object into JSON with quoted keys and no trailing comma. Format can then lay it out neatly.",
+      "code": "Before:\n{name: 'Ada', active: true,}\n\nAfter:\n{\n  \"name\": \"Ada\",\n  \"active\": true\n}"
+    },
+    "notes": [
+      "Repair makes a best effort to interpret malformed input. Check the result before using it; valid JSON can still contain the wrong data.",
+      "Validation checks JSON syntax, not a schema or the meaning of your fields. Formatting changes whitespace rather than sorting out your data model.",
+      "Pasted content is processed in your browser. For converting entire datasets between JSON, CSV, and Parquet, use Data Workbench."
+    ],
+    "related": ["/data-workbench/", "/diff-utilities/"]
+  },
+  "/diff-utilities/": {
+    "title": "Compare two versions and see what changed",
+    "intro": "Paste the original and the changed version side by side. Let the highlights handle the squinting.",
+    "steps": [
+      "Choose Text, JSON, CSS, or Array mode.",
+      "Paste the original on the left and the modified version on the right.",
+      "Run the comparison and inspect additions and removals. Text mode also has options to ignore whitespace or letter case."
+    ],
+    "example": {
+      "title": "Find a changed setting",
+      "description": "Choose JSON mode and compare these objects. The difference highlights the changed retries value.",
+      "code": "Original:\n{\"retries\": 2, \"enabled\": true}\n\nModified:\n{\"retries\": 3, \"enabled\": true}"
+    },
+    "notes": [
+      "Text mode works with ordinary text, including code. JSON and Array modes expect valid JSON input; JSON Utilities can help repair it first.",
+      "The comparison shows differences between the supplied inputs. It does not run your code, merge changes, or prove that two programs behave the same way.",
+      "Comparisons happen in your browser. Very large inputs can take more time and memory."
+    ],
+    "related": ["/json-utilities/", "/hash-generator/"]
+  },
+  "/uuid-generator/": {
+    "title": "Generate random UUIDs, one or a batch",
+    "intro": "Make version 4 UUIDs for records, fixtures, or whatever needs an identifier.",
+    "steps": [
+      "Choose how many UUIDs to generate.",
+      "Pick lowercase or uppercase, with or without dashes.",
+      "Generate the batch and copy the identifiers you need."
+    ],
+    "example": {
+      "title": "The same UUID in two formats",
+      "description": "Removing dashes changes the presentation, not the identifier. Your generated values will be different from this example.",
+      "code": "With dashes:\n550e8400-e29b-41d4-a716-446655440000\n\nWithout dashes:\n550e8400e29b41d4a716446655440000"
+    },
+    "notes": [
+      "The generator creates random version 4 UUIDs using the browser Crypto API. It does not generate time-ordered UUID versions.",
+      "UUIDs are identifiers. Do not use the example above, or the fact that a value looks like a UUID, as an access-control mechanism.",
+      "Generation happens in your browser. Copying a value puts it on your device clipboard."
+    ],
+    "related": ["/passphrase-generator/", "/barcode-generator/"]
+  },
+  "/passphrase-generator/": {
+    "title": "Generate a passphrase or random password",
+    "intro": "Choose words you have a chance of remembering, or characters you can leave to a password manager.",
+    "steps": [
+      "Choose a passphrase or password style.",
+      "Adjust the length, separator, and character options available for that style.",
+      "Generate a result and copy it to where you need it."
+    ],
+    "example": {
+      "title": "A passphrase with a separator",
+      "description": "Choose a dash separator to keep the words apart, as in the example below. Generate your own; this one is on a public website.",
+      "code": "Quiet-Maple-River"
+    },
+    "notes": [
+      "Match the settings to the service's password rules. Length matters, and a strength estimate cannot account for reuse or a compromised device.",
+      "Use a different password for each account and keep it in a password manager. Never use an example from this page as a real password.",
+      "Generation happens in your browser. A copied password remains on your device clipboard until replaced or cleared."
+    ],
+    "related": ["/uuid-generator/", "/hash-generator/"]
+  },
+  "/hash-generator/": {
+    "title": "Hash text or hexadecimal data",
+    "intro": "Generate a digest, or use HMAC with a shared secret to generate and check an authentication code.",
+    "steps": [
+      "Enter text, or enable hexadecimal input for bytes written as hex pairs.",
+      "Choose an algorithm. HMAC options also require a secret key.",
+      "Generate the result and copy the digest, or use the HMAC verification controls to compare an expected value."
+    ],
+    "example": {
+      "title": "SHA-256 of a small piece of text",
+      "description": "Enter abc with no spaces or newline and select SHA-256. This is the expected hexadecimal digest; even a trailing newline changes it.",
+      "code": "Input:\nabc\n\nSHA-256:\nba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad"
+    },
+    "notes": [
+      "Available algorithms include SHA-256, SHA-384, SHA-512, SHA3-224/256/384/512, SHA-1, MD5, and RIPEMD-160. HMAC supports SHA-256, SHA-512, and SHA-1.",
+      "MD5 and SHA-1 are legacy options with known security weaknesses. A plain hash is not encryption or a suitable password-storage scheme.",
+      "Inputs and HMAC keys are processed in your browser. The input here is text or hexadecimal data, rather than a file upload."
+    ],
+    "related": ["/diff-utilities/", "/passphrase-generator/"]
+  },
+  "/video-trimmer/": {
+    "title": "Trim a video and keep the useful parts",
+    "intro": "Cut a clip down, keep several sections, or export to another supported format. Your browser handles the processing.",
+    "steps": [
+      "Choose a video and inspect it in the preview.",
+      "Set the start and end points for the section you want. Use Split at Playhead when you need multiple sections.",
+      "Review the export settings and save the result."
+    ],
+    "example": {
+      "title": "Remove the first few seconds",
+      "description": "Move the start point past the part you do not need, leave the end point where you want the clip to finish, and export. Play the saved file to check the cut."
+    },
+    "notes": [
+      "Import, export, and codec support depend on your browser and device. Changing a container does not guarantee that every player will support the resulting video.",
+      "Large videos and re-encoding can take time and memory. A tablet or computer is recommended; keep the page open until the export finishes.",
+      "The page downloads the media engine, but does not upload your video to our servers for trimming or conversion."
+    ],
+    "related": ["/browser-bridge/", "/image-editor/"]
+  }
+}

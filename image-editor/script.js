@@ -1,3 +1,5 @@
+import ExifReader from 'exifreader';
+
 class ImageEditor {
     constructor() {
         this.vips = null;
@@ -327,7 +329,7 @@ class ImageEditor {
         });
         
         document.addEventListener('operation-error', (event) => {
-            this.showStatus(`${event.detail.operatorName} error: ${event.detail.error}`, 'error');
+            this.showStatus(`Couldn’t apply that change: ${event.detail.error}`, 'error');
         });
     }
 
@@ -371,17 +373,17 @@ class ImageEditor {
                 }
             });
             
-            this.showStatus(`${detail.description} applied successfully!`, 'success');
+            this.showStatus(`${detail.description} applied.`, 'success');
             
         } catch (error) {
             console.error('Failed to process web component operation:', error);
-            this.showStatus(`Failed to apply ${detail.description}: ${error.message}`, 'error');
+            this.showStatus(`Couldn’t apply that change: ${error.message}`, 'error');
         }
     }
 
     async initializeLibraries() {
         try {
-            this.showStatus('Initializing image processing engines...', 'info');
+            this.showStatus('Getting the image editor ready…', 'info');
             
             // Debug info
             console.log('crossOriginIsolated:', window.crossOriginIsolated);
@@ -410,7 +412,7 @@ class ImageEditor {
             // Initialize VIPS with HEIF and SVG support
             console.log('Attempting Vips initialization with HEIF and SVG support...');
             this.vips = await Vips({
-                locateFile: (path) => `lib/${path}`,
+                locateFile: (path) => `/vendor/wasm-vips-0.0.14/${path}`,
                 dynamicLibraries: ['vips-heif.wasm', 'vips-resvg.wasm'],   // Load HEIF and SVG plugins
             });
             console.log('Vips initialized successfully:', this.vips);
@@ -424,7 +426,7 @@ class ImageEditor {
             // Enable upload area now that libraries are ready
             this.enableUpload();
             
-            this.showStatus('Image editor ready!', 'success');
+            this.showStatus('Ready. Choose an image to get started.', 'success');
         } catch (error) {
             this.showStatus('Failed to initialize image processing: ' + error.message, 'error');
             console.error('Library initialization failed:', error);
@@ -554,7 +556,7 @@ class ImageEditor {
             this.resetBtn.disabled = true;
             
             this.uploadArea.classList.add('has-image');
-            this.showStatus('Image loaded successfully!', 'success');
+            this.showStatus('Image loaded.', 'success');
             
         } catch (error) {
             console.error('Image loading failed:', error);
@@ -745,10 +747,10 @@ class ImageEditor {
             this.updateOperationList();
             this.resetBtn.disabled = false;
             
-            this.showStatus(`${operationName} applied successfully!`, 'success');
+            this.showStatus(`${operationName} applied.`, 'success');
             
         } catch (error) {
-            this.showStatus(`Failed to apply ${operationName}: ${error.message}`, 'error');
+            this.showStatus(`Couldn’t apply that change: ${error.message}`, 'error');
         } finally {
             this.isProcessing = false;
             this.enableAllOperationButtons();
@@ -1352,18 +1354,18 @@ class ImageEditor {
             const basicData = JSON.parse(this.basicMetadataJson);
             const text = this.createTextDisplay(basicData);
             navigator.clipboard.writeText(text).then(() => {
-                this.showStatus('Basic metadata copied as text!', 'success');
+                this.showStatus('Copied.', 'success');
             });
         } catch (e) {
             navigator.clipboard.writeText(this.basicMetadataJson).then(() => {
-                this.showStatus('Basic metadata copied!', 'success');
+                this.showStatus('Copied.', 'success');
             });
         }
     }
 
     copyMetadataJson() {
         navigator.clipboard.writeText(this.basicMetadataJson).then(() => {
-            this.showStatus('Basic metadata JSON copied to clipboard!', 'success');
+            this.showStatus('Copied.', 'success');
         });
     }
 
@@ -1372,18 +1374,18 @@ class ImageEditor {
             const extendedData = JSON.parse(this.extendedMetadataJson);
             const text = this.createTextDisplay(extendedData);
             navigator.clipboard.writeText(text).then(() => {
-                this.showStatus('Extended metadata copied as text!', 'success');
+                this.showStatus('Copied.', 'success');
             });
         } catch (e) {
             navigator.clipboard.writeText(this.extendedMetadataJson).then(() => {
-                this.showStatus('Extended metadata copied!', 'success');
+                this.showStatus('Copied.', 'success');
             });
         }
     }
 
     copyExtendedJson() {
         navigator.clipboard.writeText(this.extendedMetadataJson).then(() => {
-            this.showStatus('Extended metadata JSON copied to clipboard!', 'success');
+            this.showStatus('Copied.', 'success');
         });
     }
 
@@ -1394,7 +1396,7 @@ class ImageEditor {
         const allJson = JSON.stringify(combined, null, 2);
         
         navigator.clipboard.writeText(allJson).then(() => {
-            this.showStatus('All metadata copied as JSON!', 'success');
+            this.showStatus('Copied.', 'success');
         }).catch(() => {
             // Fallback - create a temporary textarea
             const temp = document.createElement('textarea');
@@ -1403,7 +1405,7 @@ class ImageEditor {
             temp.select();
             document.execCommand('copy');
             document.body.removeChild(temp);
-            this.showStatus('All metadata copied as JSON!', 'success');
+            this.showStatus('Copied.', 'success');
         });
     }
     */
@@ -1668,7 +1670,7 @@ class ImageEditor {
         // Update text to show loading state
         const uploadText = this.uploadArea.querySelector('p');
         if (uploadText) {
-            uploadText.textContent = 'Loading image processing engine...';
+            uploadText.textContent = 'Getting the image editor ready…';
         }
         
         // Disable initial upload button
@@ -1688,7 +1690,7 @@ class ImageEditor {
         // Restore original text
         const uploadText = this.uploadArea.querySelector('p');
         if (uploadText) {
-            uploadText.textContent = 'Click to select an image or drag and drop here';
+            uploadText.textContent = 'Choose an image or drop one here.';
         }
         
         // Enable initial upload button
@@ -1863,7 +1865,7 @@ class ImageEditor {
             }
         } catch (error) {
             console.error('Apply operation failed:', error);
-            this.showStatus(`Failed to apply operation: ${error.message}`, 'error');
+            this.showStatus(`Couldn’t apply that change: ${error.message}`, 'error');
         }
     }
 

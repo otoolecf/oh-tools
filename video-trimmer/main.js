@@ -1,0 +1,10 @@
+import '../components/site.js';
+import './video-engine.js';
+import './components/vt-file-drop.js';
+import './components/vt-video-preview.js';
+import './components/vt-timeline.js';
+import './components/vt-convert-panel.js';
+import './components/vt-trim-controls.js';
+import './components/vt-export-panel.js';
+import './components/vt-info-panel.js';
+import './components/vt-app.js';

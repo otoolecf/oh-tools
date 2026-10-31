@@ -1,3 +1,5 @@
+import * as passhelp from 'passhelp';
+
 class PassphraseGenerator {
     constructor() {
         this.initializeWordLists();
@@ -688,7 +690,7 @@ class PassphraseGenerator {
         
         this.copyToClipboard(passphrase).then(() => {
             const originalText = button.textContent;
-            button.textContent = 'Copied!';
+            button.textContent = 'Copied.';
             button.classList.add('copied');
             
             setTimeout(() => {
@@ -703,7 +705,7 @@ class PassphraseGenerator {
         
         this.copyToClipboard(allPassphrases).then(() => {
             const originalText = this.copyAllBtn.textContent;
-            this.copyAllBtn.textContent = 'Copied!';
+            this.copyAllBtn.textContent = 'Copied.';
             
             setTimeout(() => {
                 this.copyAllBtn.textContent = originalText;
@@ -729,8 +731,8 @@ class PassphraseGenerator {
                 document.body.removeChild(textArea);
             }
         } catch (err) {
-            console.error('Failed to copy to clipboard:', err);
-            throw new Error('Failed to copy to clipboard');
+            console.error('Couldn’t copy that. Try selecting the text and copying it.:', err);
+            throw new Error('Couldn’t copy that. Try selecting the text and copying it.');
         }
     }
 
@@ -840,6 +842,7 @@ let passphraseGenerator;
 function initializeGenerator() {
     console.log('Initializing PassphraseGenerator...');
     passphraseGenerator = new PassphraseGenerator();
+    window.passphraseGenerator = passphraseGenerator;
 }
 
 // Wait for both DOM and passhelp library to be ready

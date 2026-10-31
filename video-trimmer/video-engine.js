@@ -17,7 +17,7 @@ import {
   AudioSample,
   canEncodeAudio,
   canEncodeVideo,
-} from 'https://cdn.jsdelivr.net/npm/mediabunny@1.32.0/dist/bundles/mediabunny.mjs';
+} from 'mediabunny';
 
 const US_PER_SECOND = 1_000_000;
 

@@ -1,3 +1,7 @@
+import CryptoJS from 'crypto-js';
+import { sha3_224, sha3_256, sha3_384, sha3_512 } from '@noble/hashes/sha3.js';
+import { bytesToHex } from '@noble/hashes/utils.js';
+
 class HashGenerator {
     constructor() {
         this.initializeElements();
@@ -96,7 +100,7 @@ class HashGenerator {
     async generateHash() {
         const inputValue = this.inputText.value.trim();
         if (!inputValue) {
-            this.showMessage('Please enter some text to hash', 'error');
+            this.showMessage('Add some text first.', 'error');
             return;
         }
 
@@ -139,7 +143,7 @@ class HashGenerator {
                     length: this.getHashLength(selectedAlgorithm)
                 });
                 
-                this.showMessage(`Generated ${selectedAlgorithm} hash successfully`, 'success');
+                this.showMessage(`${selectedAlgorithm} hash generated.`, 'success');
             }
 
         } catch (error) {
@@ -221,28 +225,17 @@ class HashGenerator {
     }
 
     generateSHA3(algorithm, data) {
-        // Convert Uint8Array to string for CryptoJS
-        let inputString;
-        if (this.treatAsHex.checked) {
-            inputString = Array.from(data)
-                .map(b => b.toString(16).padStart(2, '0'))
-                .join('');
-            const hexParsed = CryptoJS.enc.Hex.parse(inputString);
-            switch (algorithm) {
-                case 'SHA3-224': return CryptoJS.SHA3(hexParsed, { outputLength: 224 }).toString();
-                case 'SHA3-256': return CryptoJS.SHA3(hexParsed, { outputLength: 256 }).toString();
-                case 'SHA3-384': return CryptoJS.SHA3(hexParsed, { outputLength: 384 }).toString();
-                case 'SHA3-512': return CryptoJS.SHA3(hexParsed, { outputLength: 512 }).toString();
-            }
-        } else {
-            inputString = new TextDecoder().decode(data);
-            switch (algorithm) {
-                case 'SHA3-224': return CryptoJS.SHA3(inputString, { outputLength: 224 }).toString();
-                case 'SHA3-256': return CryptoJS.SHA3(inputString, { outputLength: 256 }).toString();
-                case 'SHA3-384': return CryptoJS.SHA3(inputString, { outputLength: 384 }).toString();
-                case 'SHA3-512': return CryptoJS.SHA3(inputString, { outputLength: 512 }).toString();
-            }
-        }
+        // CryptoJS.SHA3 implements Keccak, whose padding differs from FIPS SHA-3.
+        // Hash the original bytes so text and hexadecimal inputs use the same path.
+        const hashers = {
+            'SHA3-224': sha3_224,
+            'SHA3-256': sha3_256,
+            'SHA3-384': sha3_384,
+            'SHA3-512': sha3_512,
+        };
+        const hash = hashers[algorithm];
+        if (!hash) throw new Error(`Unsupported SHA-3 algorithm: ${algorithm}`);
+        return bytesToHex(hash(data));
     }
 
     generateRIPEMD160(data) {
@@ -421,7 +414,7 @@ class HashGenerator {
         
         try {
             await navigator.clipboard.writeText(this.currentHash);
-            this.showMessage('Hash copied to clipboard', 'success');
+            this.showMessage('Copied.', 'success');
         } catch (error) {
             this.fallbackCopy(this.currentHash);
         }
@@ -439,9 +432,9 @@ class HashGenerator {
         
         try {
             document.execCommand('copy');
-            this.showMessage('Copied to clipboard', 'success');
+            this.showMessage('Copied.', 'success');
         } catch (error) {
-            this.showMessage('Failed to copy to clipboard', 'error');
+            this.showMessage('Couldn’t copy that. Try selecting the text and copying it.', 'error');
         }
         
         document.body.removeChild(textArea);

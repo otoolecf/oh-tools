@@ -1,0 +1,11 @@
+import '../components/site.js';
+import './components/rotate-flip-operator.js';
+import './components/crop-operator.js';
+import './components/resize-operator.js';
+import './components/blur-sharpen-operator.js';
+import './components/tint-grayscale-operator.js';
+import './components/metadata-operator.js';
+import './components/filters-operator.js';
+import './components/edge-detection-operator.js';
+import './components/export-operator.js';
+import './script.js';

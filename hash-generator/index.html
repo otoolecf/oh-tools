@@ -3,10 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hash Generator - Create Checksums and Digests | Oh! Tools</title>
+    <title>Hash &amp; HMAC Generator — Oh! Tools</title>
     <link rel="stylesheet" href="../global.css">
     <link rel="stylesheet" href="styles.css">
-</head>
+    <meta name="description" content="Generate hashes from text or hexadecimal data. Supports SHA-2, SHA-3, MD5, RIPEMD-160, and HMAC verification." />
+    <meta property="og:title" content="Hash &amp; HMAC Generator — Oh! Tools" />
+    <meta property="og:description" content="Generate hashes from text or hexadecimal data. Supports SHA-2, SHA-3, MD5, RIPEMD-160, and HMAC verification." />
+    <meta name="twitter:title" content="Hash &amp; HMAC Generator — Oh! Tools" />
+    <meta name="twitter:description" content="Generate hashes from text or hexadecimal data. Supports SHA-2, SHA-3, MD5, RIPEMD-160, and HMAC verification." />
+  </head>
 <body>
     <otoolebox-header current-tool="Hash Generator" base-path="../"></otoolebox-header>
     
@@ -14,6 +19,7 @@
         <tool-hero data-tool-path="/hash-generator/"></tool-hero>
         
         <main class="tool-container">
+            <p class="tool-instructions">Enter text or hexadecimal data, then choose an algorithm. HMAC also needs a key.</p>
             
             <!-- Input Section -->
             <div class="section-card">
@@ -111,14 +117,6 @@
     </div>
     
     <!-- Crypto-JS Library -->
-    <script src="lib/crypto-js.js"></script>
-    
-    <script src="script.js"></script>
-    
-    <!-- Load web components -->
-    <script src="../components/otoolebox-header.js"></script>
-    <script src="../components/otoolebox-footer.js"></script>
-    <script src="../components/tool-hero.js"></script>
-    <script src="../components/tool-data-loader.js"></script>
+    <script type="module" src="./main.js"></script>
 </body>
 </html>

@@ -66,9 +66,9 @@ class OToolboxFooter extends HTMLElement {
       </style>
       
       <footer class="main-footer">
-        <p>2025 Oh! Tools. Simple tools, no servers, no nonsense.</p>
+        <p>Oh! Tools. Handy tools for everyday annoyances.</p>
         <div class="contact-info">
-          Issues, feedback, or anything else? <a href="mailto:help@oh-tools.net">help@oh-tools.net</a>
+          Something broken? Something missing? Let me know: <a href="mailto:help@oh-tools.net">help@oh-tools.net</a>
         </div>
         <div class="kofi-container">
           <a 
@@ -82,7 +82,7 @@ class OToolboxFooter extends HTMLElement {
               height="16" 
               alt="Ko-fi icon"
             />
-            Buy Me a Coffee or Beer
+            Buy me a coffee or a beer
           </a>
         </div>
       </footer>

@@ -3,19 +3,21 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Free JSON Formatter, Validator & Cleaner | JSON Utilities | Oh! Tools</title>
-    <meta name="description" content="Free online JSON formatter, validator, and cleaner. Fix malformed JSON, remove comments, and prettify formatting. All processing in your browser." />
+    <title>JSON Formatter, Validator &amp; Repair — Oh! Tools</title>
     <meta name="keywords" content="JSON formatter, JSON validator, JSON cleaner, JSON prettify, fix JSON, JSON repair, online JSON tool" />
     <meta name="robots" content="index, follow" />
     <link rel="canonical" href="https://oh-tools.net/json-utilities/" />
     
     <!-- Open Graph -->
-    <meta property="og:title" content="Free JSON Formatter, Validator & Cleaner | JSON Utilities" />
-    <meta property="og:description" content="Free online JSON formatter, validator, and cleaner. Fix malformed JSON, remove comments, and prettify formatting." />
     <meta property="og:url" content="https://oh-tools.net/json-utilities/" />
     <meta property="og:type" content="website" />
-    <link rel="stylesheet" href="../global.css?v=1" />
+    <link rel="stylesheet" href="../global.css" />
     <link rel="stylesheet" href="styles.css" />
+    <meta name="description" content="Repair malformed JSON, clean up formatting, and check for errors in your browser." />
+    <meta property="og:title" content="JSON Formatter, Validator &amp; Repair — Oh! Tools" />
+    <meta property="og:description" content="Repair malformed JSON, clean up formatting, and check for errors in your browser." />
+    <meta name="twitter:title" content="JSON Formatter, Validator &amp; Repair — Oh! Tools" />
+    <meta name="twitter:description" content="Repair malformed JSON, clean up formatting, and check for errors in your browser." />
   </head>
   <body>
     <otoolebox-header current-tool="JSON Utilities" base-path="../"></otoolebox-header>
@@ -48,7 +50,7 @@
             <textarea
               id="jsonEditor"
               class="json-textarea"
-              placeholder="Paste your JSON here..."
+              placeholder="Paste your JSON here."
               rows="20"
             ></textarea>
             <div id="errorMarker" class="error-marker" style="display: none">
@@ -72,15 +74,6 @@
     </div>
 
     <!-- External Libraries -->
-    <script src="lib/jsonrepair.js"></script>
-    <script src="lib/index.min.js"></script>
-
-    <script src="script.js?v=1"></script>
-    
-    <!-- Load web components -->
-    <script src="../components/otoolebox-header.js"></script>
-    <script src="../components/otoolebox-footer.js"></script>
-    <script src="../components/tool-hero.js"></script>
-    <script src="../components/tool-data-loader.js"></script>
-  </body>
+    <script type="module" src="./main.js"></script>
+</body>
 </html>

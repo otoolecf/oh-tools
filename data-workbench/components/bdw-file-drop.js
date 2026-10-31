@@ -10,8 +10,8 @@ class BDWFileDrop extends HTMLElement {
         this.innerHTML = `
             <div class="file-drop-zone" id="dropZone">
                 <div class="drop-text">
-                    <strong>Drop your data files here</strong><br>
-                    or choose files to upload<br>
+                    <strong>Choose a data file or paste a URL.</strong><br>
+                    You can also drop files here.<br>
                     <small>Supports: CSV, JSON, JSONL, Parquet, Excel</small>
                 </div>
                 
@@ -142,7 +142,7 @@ class BDWFileDrop extends HTMLElement {
         while (retries < maxRetries) {
             if (window.duckDBManager && window.duckDBManager.isInitialized) {
                 this.setFileInputsEnabled(true);
-                this.updateDropZoneText('Drop your data files here', 'or choose files to upload');
+                this.updateDropZoneText('Choose a data file or paste a URL.', 'You can also drop files here.');
                 break;
             }
             
