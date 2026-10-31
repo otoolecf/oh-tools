@@ -217,6 +217,7 @@ test('unconfigured alternate hosts default to Direct Exchange', async ({ browser
   await page.goto('http://fork.test/browser-bridge/');
   await expect(page.locator('#direct-mode')).toBeChecked();
   await expect(page.locator('#otp-mode')).toBeDisabled();
+  await context.unrouteAll({ behavior: 'ignoreErrors' });
   await context.close();
 });
 
@@ -232,6 +233,7 @@ test('production host retains its existing signaling endpoint', async ({ browser
   await page.goto('https://oh-tools.net/browser-bridge/');
   await expect(page.locator('#otp-mode')).toBeChecked();
   expect(await page.evaluate(() => window.closedLoop.otpServerUrl)).toBe('https://signaling.oh-tools.net');
+  await context.unrouteAll({ behavior: 'ignoreErrors' });
   await context.close();
 });
 

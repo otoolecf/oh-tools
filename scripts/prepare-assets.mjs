@@ -15,7 +15,7 @@ async function copy(source, destination = source) {
   await copyFile(resolve(source), target);
 }
 
-for (const file of ['_headers', '_redirects', 'tools.json', 'kofi_symbol.svg', 'og-image.png', 'favicon.svg', 'favicon.ico', 'favicon-16x16.png', 'favicon-32x32.png', 'apple-touch-icon.png']) {
+for (const file of ['404.html', '_headers', '_redirects', 'tools.json', 'kofi_symbol.svg', 'og-image.png', 'favicon.svg', 'favicon.ico', 'favicon-16x16.png', 'favicon-32x32.png', 'apple-touch-icon.png']) {
   await copy(file);
 }
 

@@ -2,6 +2,19 @@
 
 The site builds into `dist/` and can run on Workers Static Assets or the existing Pages project. Browser Bridge's signaling Worker stays separate. No domain or existing production service is changed by building or running a deployment dry run.
 
+## Current Hosted Site
+
+The production Pages project is `oh-tools`, connected to
+`otoolecf/oh-tools` on GitHub. Pushes to `main` build with Node.js 22,
+`npm run build`, and publish only `dist/` to `oh-tools.net` and
+`www.oh-tools.net`. Automatic Pages preview deployments are disabled; use
+the explicit Workers staging deployment below for review.
+
+The previous `otoolebox` Pages project is retained for rollback, with automatic
+deployments disabled. Its original repository remains private. Browser Bridge's
+production signaling Worker is deployed separately; switching the site's Git
+source does not migrate that backend.
+
 ## Build And Preview
 
 Use Node.js 22.12 or newer. From the repository root:
